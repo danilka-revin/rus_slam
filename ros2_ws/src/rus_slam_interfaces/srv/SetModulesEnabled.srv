@@ -1,0 +1,7 @@
+# Включение/снятие момента с модулей
+# Пустой список = все модули
+bool enable
+uint8[] module_ids
+---
+bool success
+string message

@@ -1,0 +1,23 @@
+# ============================================================================
+# Восприятие: камера, детектор знаков, детектор светофора
+# ============================================================================
+
+camera_node:
+  ros__parameters:
+    device: 0                   # /dev/video0
+    width: 640
+    height: 480
+    fps: 15.0
+    frame_id: camera_link
+
+sign_detector_node:
+  ros__parameters:
+    process_every: 3            # обрабатывать каждый 3-й кадр (~5 Гц)
+    min_area_px: 400
+    focal_px: 640.0             # уточняется после калибровки камеры
+    max_detections: 5
+
+traffic_light_node:
+  ros__parameters:
+    process_every: 3
+    min_blob_px: 80

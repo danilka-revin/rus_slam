@@ -1,0 +1,18 @@
+# ============================================================================
+# Стабильные имена устройств робота-курьера НТЦ АО «АВТОВАЗ»
+#
+# Идентификация физических портов:
+#   1. Подключить модуль к нужному USB-разъему бортового ПК.
+#   2. `udevadm info -a /dev/ttyUSBx` — найти ATTRS{devpath} (или серийный
+#      номер преобразователя, если платы на CH340/CP2102 различаются).
+#   3. Вписать найденные значения ниже вместо шаблонов.
+# ============================================================================
+
+# Модули поворота-тяги (4× Arduino Mega Pro)
+SUBSYSTEM=="tty", ATTRS{devpath}=="1.1", SYMLINK+="rus_module_fl", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{devpath}=="1.2", SYMLINK+="rus_module_fr", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{devpath}=="1.3", SYMLINK+="rus_module_rl", MODE="0666"
+SUBSYSTEM=="tty", ATTRS{devpath}=="1.4", SYMLINK+="rus_module_rr", MODE="0666"
+
+# Лидар ЛДС-01
+SUBSYSTEM=="tty", ATTRS{devpath}=="2.1", SYMLINK+="rus_lidar", MODE="0666"

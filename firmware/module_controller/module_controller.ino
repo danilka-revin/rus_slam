@@ -5,10 +5,14 @@
  * 
  * Назначение:
  *  - Прием команд по UART от бортового компьютера Ubuntu с проверкой CRC16
+ *  - Телеметрия модуля в бортовой компьютер 20 Гц (угол, энкодер, АКБ, ток)
  *  - Управление шаговым двигателем NEMA 23 через драйвер TB6600 (редуктор 1:7.5)
  *  - 6-тактная коммутация собственного драйвера BLDC (3-фазный MOSFET-инвертор собственной разработки) тягового мотор-колеса
  *  - Обработка сигналов с датчиков Холла мотор-колеса и концевика нулевого азимута
+ *  - Хоминг по команде с ПК (флаг FLAG_HOME)
  *  - Сторожевой таймер безопасности (Watchdog) при обрыве связи
+ *
+ * Протокол обмена полностью описан в docs/SERIAL_PROTOCOL.md
  */
 
 #include <Arduino.h>
@@ -19,6 +23,23 @@
 #define MODULE_ID           1        // ID модуля: 1=FL, 2=FR, 3=RL, 4=RR
 #define BAUD_RATE           115200   // Скорость шины связи с Ubuntu
 #define TIMEOUT_MS          300      // Таймаут сторожевого таймера (мс)
+
+// Телеметрия МК -> ПК (кадр 16 байт, 20 Гц, см. docs/SERIAL_PROTOCOL.md)
+#define TLM_PERIOD_MS       50
+#define TLM_SYNC0           0xBB
+#define TLM_SYNC1           0x44
+
+// Флаги байта FLAGS кадра команды
+#define FLAG_ENABLE         0x01
+#define FLAG_HOME           0x02
+
+// Флаги байта STATUS кадра телеметрии
+#define STATUS_ENABLED      0x01
+#define STATUS_HOMED        0x02
+
+// Калибровочные коэффициенты аналоговых цепей
+#define VBAT_DIVIDER_RATIO  10.0f    // Делитель 90к/10к: 38.4 В -> 3.84 В на АЦП
+#define CURRENT_FULL_MA     25000    // 0..5 В с усилителя шунта 5 мОм <-> 0..25 А
 
 // Пины управления шаговым двигателем (TB6600)
 #define PIN_STEP_PUL        4
@@ -64,6 +85,11 @@ int  target_traction_pwm         = 0;
 bool motor_enabled               = false;
 bool is_homed                    = false;
 unsigned long last_packet_time   = 0;
+
+// Телеметрия и хоминг
+unsigned long last_tlm_time       = 0;
+volatile long last_sent_enc_ticks = 0;
+bool homing_pending               = false;
 
 // Одометрия по квадратурному энкодеру Xiaomi M365 Pro
 volatile long wheel_encoder_ticks = 0;
@@ -193,6 +219,50 @@ void run_homing_sequence() {
 }
 
 // ============================================================================
+// ТЕЛЕМЕТРИЯ МОДУЛЯ (МК -> ПК): кадр 16 байт с CRC16
+// ============================================================================
+void send_telemetry() {
+    uint8_t status = 0;
+    if (motor_enabled) status |= STATUS_ENABLED;
+    if (is_homed)      status |= STATUS_HOMED;
+
+    // Приращение тиков энкодера колеса с прошлого кадра
+    long enc_delta = wheel_encoder_ticks - last_sent_enc_ticks;
+    last_sent_enc_ticks = wheel_encoder_ticks;
+    enc_delta = constrain(enc_delta, -32767, 32767);
+
+    // Фактический угол модуля, сотые доли градуса
+    int16_t steer_cdeg = (int16_t)constrain(
+        (long)((float)current_step_pos / STEPS_PER_DEGREE * 100.0f),
+        -32767, 32767);
+
+    uint16_t vbat_cv    = (uint16_t)(analogRead(PIN_VBAT_SENSE) * 5.0f
+                                     / 1023.0f * VBAT_DIVIDER_RATIO * 100.0f);
+    uint16_t current_ma = (uint16_t)(analogRead(PIN_CURRENT_SENSE)
+                                     * (float)CURRENT_FULL_MA / 1023.0f);
+
+    uint8_t buffer[16];
+    buffer[0]  = TLM_SYNC0;
+    buffer[1]  = TLM_SYNC1;
+    buffer[2]  = MODULE_ID;
+    buffer[3]  = status;
+    buffer[4]  = (steer_cdeg >> 8) & 0xFF;
+    buffer[5]  = steer_cdeg & 0xFF;
+    buffer[6]  = (enc_delta >> 8) & 0xFF;
+    buffer[7]  = enc_delta & 0xFF;
+    buffer[8]  = (target_traction_pwm >> 8) & 0xFF;
+    buffer[9]  = target_traction_pwm & 0xFF;
+    buffer[10] = (vbat_cv >> 8) & 0xFF;
+    buffer[11] = vbat_cv & 0xFF;
+    buffer[12] = (current_ma >> 8) & 0xFF;
+    buffer[13] = current_ma & 0xFF;
+    uint16_t crc = calc_crc16(buffer, 14);
+    buffer[14] = (crc >> 8) & 0xFF;
+    buffer[15] = crc & 0xFF;
+    Serial.write(buffer, 16);
+}
+
+// ============================================================================
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================================
 void setup() {
@@ -260,8 +330,12 @@ void loop() {
                     target_step_pos = (long)(target_deg * STEPS_PER_DEGREE);
                     target_traction_pwm = traction_pwm;
 
-                    motor_enabled = (flags & 0x01);
+                    motor_enabled = (flags & FLAG_ENABLE);
                     digitalWrite(PIN_STEP_ENA, motor_enabled ? LOW : HIGH);
+
+                    if (flags & FLAG_HOME) {
+                        homing_pending = true; // Отложенный хоминг до концевика
+                    }
 
                     last_packet_time = millis();
 
@@ -277,7 +351,21 @@ void loop() {
     // 2. Отработка шагового двигателя NEMA 23
     update_stepper();
 
-    // 3. Сторожевой таймер безопасности (Watchdog)
+    // 3. Отложенный хоминг (поиск нулевого азимута по команде с ПК)
+    if (homing_pending) {
+        homing_pending = false;
+        run_homing_sequence();
+        last_packet_time = millis(); // Сброс сторожа: хоминг занимает до 10 с
+        last_tlm_time = millis();
+    }
+
+    // 4. Телеметрия модуля в бортовой компьютер, 20 Гц
+    if (millis() - last_tlm_time >= TLM_PERIOD_MS) {
+        last_tlm_time = millis();
+        send_telemetry();
+    }
+
+    // 5. Сторожевой таймер безопасности (Watchdog)
     if (millis() - last_packet_time > TIMEOUT_MS) {
         motor_enabled = false;
         target_traction_pwm = 0;
