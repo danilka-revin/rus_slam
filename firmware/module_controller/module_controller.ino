@@ -25,10 +25,14 @@
 #define PIN_STEP_DIR        5
 #define PIN_STEP_ENA        6
 
-// Пины датчиков Холла мотор-колеса (прерывания)
+// Пины датчиков Холла мотор-колеса Xiaomi M365 Pro (прерывания)
 #define PIN_HALL_A          2
 #define PIN_HALL_B          3
 #define PIN_HALL_C          18
+
+// Пины квадратурного энкодера мотор-колеса Xiaomi M365 Pro
+#define PIN_ENC_A           20       // INT3
+#define PIN_ENC_B           21       // INT2
 
 // Концевой датчик нулевого азимута
 #define PIN_HOME_SW         19
@@ -60,6 +64,17 @@ int  target_traction_pwm         = 0;
 bool motor_enabled               = false;
 bool is_homed                    = false;
 unsigned long last_packet_time   = 0;
+
+// Одометрия по квадратурному энкодеру Xiaomi M365 Pro
+volatile long wheel_encoder_ticks = 0;
+
+void encoder_isr() {
+    if (digitalRead(PIN_ENC_A) == digitalRead(PIN_ENC_B)) {
+        wheel_encoder_ticks++;
+    } else {
+        wheel_encoder_ticks--;
+    }
+}
 
 // ============================================================================
 // ТАБЛИЦА КОММУТАЦИИ 6-СТУПЕНЧАТОГО BLDC ИНВЕРТОРА
@@ -194,6 +209,11 @@ void setup() {
     pinMode(PIN_HALL_B, INPUT_PULLUP);
     pinMode(PIN_HALL_C, INPUT_PULLUP);
     pinMode(PIN_HOME_SW, INPUT_PULLUP);
+
+    // Квадратурный энкодер мотор-колеса Xiaomi M365 Pro
+    pinMode(PIN_ENC_A, INPUT_PULLUP);
+    pinMode(PIN_ENC_B, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(PIN_ENC_A), encoder_isr, CHANGE);
 
     attachInterrupt(digitalPinToInterrupt(PIN_HALL_A), hall_change_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(PIN_HALL_B), hall_change_isr, CHANGE);

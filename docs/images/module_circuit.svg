@@ -33,7 +33,7 @@
     <!-- Feedback Sensors -->
     <rect x="15" y="355" width="250" height="70" rx="5" fill="#0f172a" stroke="#22c55e"/>
     <text x="140" y="373" fill="#4ade80" font-size="11" font-weight="bold" text-anchor="middle">Датчики обратной связи</text>
-    <text x="25" y="393" fill="#e2e8f0" font-size="10">Pin D2, D3, D18 ← Датчики Холла БК мотора</text>
+    <text x="25" y="393" fill="#e2e8f0" font-size="10">Pin D2,D3,D18: Холл | D20,D21: Энкодер</text>
     <text x="25" y="411" fill="#e2e8f0" font-size="10">Pin D19 / A0 ← Концевик нуля азимута / Ток (ACS)</text>
   </g>
 
