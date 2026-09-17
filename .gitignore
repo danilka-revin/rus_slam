@@ -1,0 +1,19 @@
+# Артефакты сборки ROS 2
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# IDE / ОС
+.vscode/
+.idea/
+.DS_Store
+
+# Карты и данные телеметрии (большие файлы хранить вне git)
+*.pgm
+maps_data/

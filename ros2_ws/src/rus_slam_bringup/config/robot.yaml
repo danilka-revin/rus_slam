@@ -1,0 +1,38 @@
+# ============================================================================
+# Параметры уровня движения: геометрия шасси, модули, одометрия
+# ============================================================================
+
+module_bridge_node:
+  ros__parameters:
+    baud_rate: 115200
+    sim: false                  # true — полная симуляция модулей
+    sim_on_fail: true           # эмуляция модуля при недоступном порте
+    max_speed_mps: 2.0          # скорость колеса при ШИМ 1000
+    wheel_radius_m: 0.127       # мотор-колесо Xiaomi M365 Pro, 10 дюймов
+    encoder_ticks_per_rev: 120.0
+    telemetry_rate_hz: 20.0
+    command_watchdog_sec: 0.5
+    stale_telemetry_sec: 1.0
+    # Порты модулей (симлинки из udev-правил; без них — /dev/ttyUSB*)
+    port_fl: /dev/rus_module_fl
+    port_fr: /dev/rus_module_fr
+    port_rl: /dev/rus_module_rl
+    port_rr: /dev/rus_module_rr
+
+crab_drive_node:
+  ros__parameters:
+    wheelbase_L: 0.55           # продольная база модулей, м
+    track_W: 0.46               # колея, м
+    max_linear_speed: 2.0       # м/с
+    deadband: 0.01
+    control_rate_hz: 20.0
+    cmd_timeout_sec: 0.5
+
+odometry_node:
+  ros__parameters:
+    wheelbase_L: 0.55
+    track_W: 0.46
+    wheel_radius_m: 0.127
+    odom_frame: odom
+    base_frame: base_link
+    max_period_sec: 0.5

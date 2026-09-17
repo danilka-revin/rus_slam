@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rus_slam_safety</name>
+  <version>0.1.0</version>
+  <description>Безопасность (гейт скоростей, e-stop, контроль связи и АКБ) и менеджер миссии (конечный автомат доставки)</description>
+  <maintainer email="team@rus-slam.local">RUS SLAM Team</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>rus_slam_interfaces</depend>
+  <depend>nav2_msgs</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

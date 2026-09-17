@@ -21,9 +21,11 @@
 | 📘 **Полный технический паспорт** | Инженерные расчеты прочности рамы под 250 кг, редуктора GT2 150/20, ступиц Subaru, АКБ | [`docs/TECHNICAL_SPECIFICATION.md`](docs/TECHNICAL_SPECIFICATION.md) |
 | 📑 **Пояснительная записка по регламенту** | Пояснительная записка по критериям задания № 2 (экономика, сравнение с 3 аналогами, методика тестов) | [`docs/EXPLANATORY_NOTE_AVTOVAZ.md`](docs/EXPLANATORY_NOTE_AVTOVAZ.md) |
 | ⚡ **Электрические схемы и подключения** | Таблицы соединений Mega Pro, TB6600 и собственного драйвера BLDC (MOSFET), расчет предохранителей | [`docs/ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md) |
-| 💻 **Прошивка микроконтроллеров** | C++ исходный код для 4 плат Arduino Mega Pro с 6-тактной коммутацией собственного драйвера BLDC | [`firmware/module_controller/`](firmware/module_controller/module_controller.ino) |
+| 💻 **Прошивка микроконтроллеров** | C++ исходный код для 4 плат Arduino Mega Pro с 6-тактной коммутацией собственного драйвера BLDC и телеметрией 20 Гц | [`firmware/module_controller/`](firmware/module_controller/module_controller.ino) |
 | 🎛 **Печатная плата модуля (PCB)** | Полный пакет для разводки платы (BOM, Netlist KiCad/EasyEDA, распиновки, гайд) | [`pcb/`](pcb/README.md) |
-| 🤖 **Узел ROS 2 (Крабовый ход)** | Python нода для кинематики 4WIS/4WID, оптимизации углов колес и связи по UART | [`ros2_ws/src/crab_drive_controller/`](ros2_ws/src/crab_drive_controller/crab_drive_node.py) |
+| 🧠 **Архитектура ПО (ROS 2)** | Полная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) |
+| 🔌 **Протокол обмена** | Кадры команд и телеметрии между бортовым ПК и модулями (CRC16) | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) |
+| 🤖 **Пакеты ROS 2** | 8 пакетов: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск | [`ros2_ws/src/`](ros2_ws/src/) |
 
 ---
 
@@ -148,33 +150,61 @@
 3. Выберите плату **Arduino Mega or Mega 2560** и порт подключения `/dev/ttyUSB0`...`/dev/ttyUSB3`.
 4. Загрузите прошивку в микроконтроллеры.
 
-### 2. Запуск узла управления крабовым ходом в ROS 2 (Ubuntu)
+### 2. Сборка ПО (бортовой компьютер, Ubuntu 24.04/26.04 + ROS 2)
 ```bash
-# Клонирование и переход в репозиторий
-cd ~/rus_slam
+cd ~/rus_slam/ros2_ws
 
-# Установка прав на исполнение скрипта
-chmod +x ros2_ws/src/crab_drive_controller/crab_drive_node.py
+# Зависимости (один раз)
+sudo apt install -y python3-serial python3-opencv \
+     ros-$ROS_DISTRO-slam-toolbox ros-$ROS_DISTRO-navigation2 \
+     ros-$ROS_DISTRO-nav2-bringup ros-$ROS_DISTRO-robot-state-publisher \
+     ros-$ROS_DISTRO-xacro python3-colcon-common-extensions
 
-# Предоставление прав на последовательные порты
+# Сборка всех пакетов
+colcon build --symlink-install
+source install/setup.bash
+
+# Права на порты и стабильные имена устройств (один раз)
 sudo usermod -a -G dialout $USER
-sudo chmod 666 /dev/ttyUSB*
-
-# Запуск ROS 2 ноды кинематики крабового хода
-python3 ros2_ws/src/crab_drive_controller/crab_drive_node.py
+sudo cp src/rus_slam_bringup/udev/99-rus-slam.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### 3. Тестирование движения публикацией команды скорости
+### 3. Запуск робота
 ```bash
+# Базовый запуск (железо + кинематика + сенсоры + безопасность)
+ros2 launch rus_slam_bringup robot.launch.py
+
+# Проверка стека без железа (симуляция модулей)
+ros2 launch rus_slam_bringup robot.launch.py sim:=true
+
+# Полный запуск: картирование полигона (запись карты, телеуправление)
+ros2 launch rus_slam_bringup full.launch.py slam:=true
+
+# Полный запуск: навигация по готовой карте + миссия доставки
+ros2 launch rus_slam_bringup full.launch.py slam:=false map:=~/maps/ntc.yaml
+
+# Хоминг модулей (поиск нулевого азимута) перед первой поездкой
+ros2 service call /home_modules rus_slam_interfaces/srv/HomeModules {}
+```
+
+### 4. Тестирование движения (телеуправление через гейт безопасности)
+```bash
+# Команды подаются на /cmd_vel_nav — узел безопасности проверяет здоровье
+# модулей и АКБ и транслирует их в /cmd_vel
+
 # Движение вперед со скоростью 0.8 м/с
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.8, y: 0.0, z: 0.0}, angular: {z: 0.0}}"
+ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.8, y: 0.0, z: 0.0}, angular: {z: 0.0}}"
 
 # Крабовый ход: диагональное движение под 45 градусов
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.5, y: 0.5, z: 0.0}, angular: {z: 0.0}}"
+ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.5, y: 0.5, z: 0.0}, angular: {z: 0.0}}"
 
 # Разворот на месте с нулевым радиусом (вращение вокруг центра)
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {z: 0.8}}"
+ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {z: 0.8}}"
 ```
+
+Полное описание узлов, топиков и режимов — в
+[`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md).
 
 ---
 

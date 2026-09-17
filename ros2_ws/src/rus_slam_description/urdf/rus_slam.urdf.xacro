@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<!--
+  URDF-модель робота-курьера НТЦ АО «АВТОВАЗ».
+  Шасси 4WIS/4WID: 4 независимых поворотно-тяговых модуля.
+  Система координат: base_link — в центре рамы на высоте осей колес.
+-->
+<robot name="rus_slam" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Габариты и массы -->
+  <xacro:property name="body_length" value="0.75"/>
+  <xacro:property name="body_width"  value="0.60"/>
+  <xacro:property name="body_height" value="0.25"/>
+  <xacro:property name="wheelbase"   value="0.55"/>
+  <xacro:property name="track"       value="0.46"/>
+  <xacro:property name="wheel_radius" value="0.127"/>
+  <xacro:property name="wheel_width"  value="0.05"/>
+
+  <!-- ============================== корпус ============================== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+      <material name="frame_grey">
+        <color rgba="0.35 0.35 0.38 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="65.0"/>
+      <inertia ixx="2.6" ixy="0" ixz="0" iyy="3.2" iyz="0" izz="4.6"/>
+    </inertial>
+  </link>
+
+  <link name="base_footprint"/>
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+    <origin xyz="0 0 ${-wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== поворотно-тяговой модуль ===================== -->
+  <!-- Макрос: рулевая рама (степень свободы вокруг Z) + колесо (вокруг Y) -->
+  <xacro:macro name="swerve_module" params="prefix x y">
+    <link name="module_${prefix}_steer">
+      <visual>
+        <geometry>
+          <cylinder radius="0.045" length="0.12"/>
+        </geometry>
+        <material name="pod_dark">
+          <color rgba="0.15 0.15 0.17 1.0"/>
+        </material>
+      </visual>
+      <inertial>
+        <mass value="3.5"/>
+        <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.01"/>
+      </inertial>
+    </link>
+
+    <joint name="steer_${prefix}" type="continuous">
+      <parent link="base_link"/>
+      <child link="module_${prefix}_steer"/>
+      <origin xyz="${x} ${y} 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="wheel_${prefix}">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="tire_red">
+          <color rgba="0.75 0.12 0.10 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="3.0"/>
+        <inertia ixx="0.012" ixy="0" ixz="0" iyy="0.024" iyz="0" izz="0.012"/>
+      </inertial>
+    </link>
+
+    <joint name="wheel_${prefix}" type="continuous">
+      <parent link="module_${prefix}_steer"/>
+      <child link="wheel_${prefix}"/>
+      <origin xyz="0 0 ${-0.03}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:swerve_module prefix="fl" x="${ wheelbase/2}" y="${ track/2}"/>
+  <xacro:swerve_module prefix="fr" x="${ wheelbase/2}" y="${-track/2}"/>
+  <xacro:swerve_module prefix="rl" x="${-wheelbase/2}" y="${ track/2}"/>
+  <xacro:swerve_module prefix="rr" x="${-wheelbase/2}" y="${-track/2}"/>
+
+  <!-- ============================== сенсоры ============================= -->
+  <!-- Лидар ЛДС-01: на верхней палубе, ближе к носу -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.035" length="0.045"/>
+      </geometry>
+      <material name="lidar_blue">
+        <color rgba="0.1 0.3 0.8 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0.15"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.25 0 0.32" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Камера машинного зрения -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.03 0.09 0.03"/>
+      </geometry>
+      <material name="cam_black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0.08"/>
+      <inertia ixx="0.00005" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005"/>
+    </inertial>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.36 0 0.18" rpy="0 0 0"/>
+  </joint>
+
+</robot>
