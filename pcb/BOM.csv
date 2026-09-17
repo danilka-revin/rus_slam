@@ -1,0 +1,31 @@
+Item,Designator,Quantity,Value,Package/Footprint,Description,Manufacturer Part Number,LCSC Part #
+1,"Q1,Q2,Q3,Q4,Q5,Q6",6,"IRFB4110PBF",TO-220-3,"N-MOSFET 100V 180A 3.7mOhm",Infineon / IRFB4110PBF,C112959
+2,"U1",1,"FD6288Q",TSSOP-20 / QFN-24,"3-Phase BLDC Gate Driver 250V",Fortior Tech / FD6288Q,C265215
+3,"U2",1,"LM358DT / INA180A1",SOIC-8,"Current Sense Operational Amplifier Gain=20",TI / INA180A1IDBVR,C206240
+4,"U3",1,"Arduino Mega Pro Embed",DIP-48 / 2x24 Pin Header 2.54mm,"Microcontroller Board ATmega2560 16MHz",RobotDyn / Arduino Mega Pro Embed,C-MEGA-PRO
+5,"U4",1,"XL7005A / LM2596HV",TO-263-5 / SOIC-8,"DC-DC Step-Down Buck 80V to 12V 1.5A",XLSEMI / XL7005A,C73347
+6,"U5",1,"AMS1117-5.0",SOT-223,"LDO Linear Regulator 12V to 5V 1A",Advanced Monolithic / AMS1117-5.0,C6186
+7,"R_SHUNT",1,"0.005 Ohm (5mR)",2512 (6432 Metric),"Current Sense Alloy Resistor 3W 1%",Vishay / WSLP25125L000FEA,C141708
+8,"C_IN1,C_IN2,C_IN3",3,"470uF 63V",Radial D12.5x20mm Pitch 5mm,"Aluminum Electrolytic Low-ESR Bulk Capacitor",Rubycon / 63YXF470MEFC12.5X20,C334512
+9,"C_BST1,C_BST2,C_BST3",3,"1.0uF 50V",0805,"Ceramic Capacitor X7R 10% Bootstrap",Murata / GRM21BR71H105KA12L,C15849
+10,"D_BST1,D_BST2,D_BST3",3,"ES1J",SMA (DO-214AC),"Ultrafast Recovery Diode 600V 1A 35ns",MDD / ES1J,C111306
+11,"D_TVS",1,"SMCJ48A",SMC (DO-214AB),"Transient Voltage Suppressor 48V 1500W Unidirectional",Littelfuse / SMCJ48A,C80806
+12,"R_G1,R_G2,R_G3,R_G4,R_G5,R_G6",6,"10 Ohm",0805,"Thick Film Resistor 1% Gate Drive",Yageo / RC0805FR-0710RL,C17414
+13,"D_G1,D_G2,D_G3,D_G4,D_G5,D_G6",6,"1N4148W",SOD-123,"Fast Switching Diode 100V 150mA Gate Turn-off",JCET / 1N4148W,C81598
+14,"R_SN1,R_SN2,R_SN3",3,"2.2 Ohm 1W",1206,"Snubber Resistor 5%",Yageo / RC1206JR-072R2L,C17926
+15,"C_SN1,C_SN2,C_SN3",3,"1.0nF 100V",0805,"Snubber Capacitor X7R 10%",Samsung / CL21B102KBANNNC,C1588
+16,"R_PU1,R_PU2,R_PU3,R_PU4,R_PU5,R_PU6,R_PU7",7,"4.7k Ohm",0805,"Pull-up Resistors for Hall & Encoder",Yageo / RC0805FR-074K7L,C25900
+17,"C_FLT1,C_FLT2,C_FLT3,C_FLT4,C_FLT5",5,"100pF 50V",0805,"Noise Filter Capacitors for Hall & Encoder",Murata / GRM2165C1H101JA01D,C1799
+18,"R_VD1",1,"30k Ohm 1%",0805,"Voltage Divider High-Side (Vbat Sense)",Yageo / RC0805FR-0730KL,C25883
+19,"R_VD2",1,"3.3k Ohm 1%",0805,"Voltage Divider Low-Side (Vbat Sense)",Yageo / RC0805FR-073K3L,C25927
+20,"R_LIM1,R_LIM2,R_LIM3",3,"220 Ohm",0805,"Current Limiting for TB6600 Optocouplers",Yageo / RC0805FR-07220RL,C17561
+21,"C_VCC1,C_VCC2,C_VCC3,C_VCC4,C_VCC5",5,"100nF 50V",0805,"Decoupling Capacitors X7R",Murata / GRM21BR71H104KA01L,C49678
+22,"J_BAT",1,"XT60-M / 9.5mm Terminal",2-Pin 9.5mm Barrier / XT60-M,"Main 38.4V LiFePO4 Battery Input",Amass / XT60-M / DEGSON,C69752
+23,"J_MOTOR",1,"3-Pin 9.5mm Terminal",Barrier Terminal 3P Pitch 9.5mm,"BLDC Motor 3-Phase Outputs (U, V, W)",DEGSON / DG25-9.5-03P,C268894
+24,"J_HALL",1,"JST-XH 5P",JST-XH Pitch 2.50mm,"Xiaomi M365 Pro Hall Sensors (5V, GND, HA, HB, HC)",JST / B5B-XH-A,C157929
+25,"J_ENC",1,"JST-XH 4P",JST-XH Pitch 2.50mm,"Xiaomi M365 Pro Quadrature Encoder (5V, GND, EA, EB)",JST / B4B-XH-A,C157928
+26,"J_HOME",1,"JST-XH 3P",JST-XH Pitch 2.50mm,"Zero Azimuth Limit Switch Endstop (5V, GND, SIG)",JST / B3B-XH-A,C157927
+27,"J_HOST",1,"JST-XH 4P / USB-C",JST-XH Pitch 2.50mm,"Host UART Link to Ubuntu Mini-PC (5V, GND, TXD, RXD)",JST / B4B-XH-A,C157928
+28,"J_TB6600",1,"Screw Terminal 6P",Screw Terminal Pitch 5.08mm,"TB6600 Stepper Driver Interface (PUL, DIR, ENA)",DEGSON / DG128-5.08-06P,C8471
+29,"L_BUCK",1,"47uH 3A",Shielded Inductor 12x12mm,"Buck Converter Power Inductor",Sunlord / SWPA1210S470MT,C504246
+30,"F1",1,"Mini Blade Fuse 25A",Automotive Fuse Holder 32V/58V,"Onboard Overcurrent Protection",Littelfuse / 0297025.WXNV,C2883445

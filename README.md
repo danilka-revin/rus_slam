@@ -22,6 +22,7 @@
 | 📑 **Пояснительная записка по регламенту** | Пояснительная записка по критериям задания № 2 (экономика, сравнение с 3 аналогами, методика тестов) | [`docs/EXPLANATORY_NOTE_AVTOVAZ.md`](docs/EXPLANATORY_NOTE_AVTOVAZ.md) |
 | ⚡ **Электрические схемы и подключения** | Таблицы соединений Mega Pro, TB6600, драйвера MOSFET, расчет предохранителей | [`docs/ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md) |
 | 💻 **Прошивка микроконтроллеров** | C++ исходный код для 4 плат Arduino Mega Pro с 6-тактной коммутацией BLDC | [`firmware/module_controller/`](firmware/module_controller/module_controller.ino) |
+| 🎛 **Печатная плата модуля (PCB)** | Полный пакет для разводки платы (BOM, Netlist KiCad/EasyEDA, распиновки, гайд) | [`pcb/`](pcb/README.md) |
 | 🤖 **Узел ROS 2 (Крабовый ход)** | Python нода для кинематики 4WIS/4WID, оптимизации углов колес и связи по UART | [`ros2_ws/src/crab_drive_controller/`](ros2_ws/src/crab_drive_controller/crab_drive_node.py) |
 
 ---

@@ -1,0 +1,28 @@
+Connector,Pin,Signal Name,Type,Voltage,Wire Color / Recommendation,Destination / Description
+J_BAT,1,VBAT_38V,Power Input,30.0V - 43.8V,Красный (AWG 12),Плюс тяговой батареи LiFePO4 12S3P (через предохранитель)
+J_BAT,2,GND_PWR,Power Input,0V,Черный (AWG 12),Минус тяговой батареи LiFePO4 (силовая земля)
+J_MOTOR,1,PHASE_U,Power Output,0 - 43.8V (PWM),Синий (AWG 14),Силовая фаза A/U мотор-колеса Xiaomi M365 Pro
+J_MOTOR,2,PHASE_V,Power Output,0 - 43.8V (PWM),Желтый (AWG 14),Силовая фаза B/V мотор-колеса Xiaomi M365 Pro
+J_MOTOR,3,PHASE_W,Power Output,0 - 43.8V (PWM),Коричневый/Зеленый (AWG 14),Силовая фаза C/W мотор-колеса Xiaomi M365 Pro
+J_HALL,1,VCC_5V,Power Output,5.0V,Красный (AWG 24),Питание датчиков Холла мотор-колеса
+J_HALL,2,GND,Ground,0V,Черный (AWG 24),Общий провод датчиков Холла
+J_HALL,3,HALL_A,Digital Input,0 - 5.0V,Синий (AWG 24),Сигнал датчика Холла фазы A -> Mega Pro Pin D2 (INT0)
+J_HALL,4,HALL_B,Digital Input,0 - 5.0V,Зеленый (AWG 24),Сигнал датчика Холла фазы B -> Mega Pro Pin D3 (INT1)
+J_HALL,5,HALL_C,Digital Input,0 - 5.0V,Желтый (AWG 24),Сигнал датчика Холла фазы C -> Mega Pro Pin D18 (INT5)
+J_ENC,1,VCC_5V,Power Output,5.0V,Красный (AWG 24),Питание квадратурного энкодера мотор-колеса
+J_ENC,2,GND,Ground,0V,Черный (AWG 24),Общий провод энкодера
+J_ENC,3,ENC_A,Digital Input,0 - 5.0V,Белый (AWG 24),Канал A квадратурного энкодера -> Mega Pro Pin D20 (INT3)
+J_ENC,4,ENC_B,Digital Input,0 - 5.0V,Оранжевый/Серый (AWG 24),Канал B квадратурного энкодера -> Mega Pro Pin D21 (INT2)
+J_HOME,1,VCC_5V,Power Output,5.0V,Красный (AWG 24),Питание концевого датчика нулевого азимута
+J_HOME,2,GND,Ground,0V,Черный (AWG 24),Общий провод концевика
+J_HOME,3,HOME_SIG,Digital Input,0 - 5.0V,Синий/Желтый (AWG 24),Сигнал концевика нуля поворота -> Mega Pro Pin D19 (INT4)
+J_HOST,1,VCC_5V,Power / Sense,5.0V,Красный,Питание логики интерфейса USB/UART
+J_HOST,2,GND,Ground,0V,Черный,Сигнальная земля бортового ПК Ubuntu
+J_HOST,3,MCU_TXD,Digital Output,5.0V (TTL),Белый,Передача телеметрии модуля (TX0, D1) -> Прием ПК (RX)
+J_HOST,4,MCU_RXD,Digital Input,5.0V (TTL),Зеленый,Прием команд от бортового ПК (TX) -> Модуль (RX0, D0)
+J_TB6600,1,STEP_PUL+,Digital Output,5.0V,Красный,Импульсы шага NEMA 23 -> Вход PUL+ драйвера TB6600 (D4)
+J_TB6600,2,STEP_PUL-,Ground,0V,Черный,Катод оптрона шага -> Сигнальная земля GND
+J_TB6600,3,STEP_DIR+,Digital Output,5.0V,Зеленый,Направление вращения -> Вход DIR+ драйвера TB6600 (D5)
+J_TB6600,4,STEP_DIR-,Ground,0V,Черный,Катод оптрона направления -> Сигнальная земля GND
+J_TB6600,5,STEP_ENA+,Digital Output,5.0V,Белый,Разрешение работы силового каскада -> Вход ENA+ TB6600 (D6)
+J_TB6600,6,STEP_ENA-,Ground,0V,Черный,Катод оптрона разрешения -> Сигнальная земля GND
