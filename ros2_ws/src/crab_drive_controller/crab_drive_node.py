@@ -34,11 +34,11 @@ class CrabDriveController(Node):
     def __init__(self):
         super().__init__('crab_drive_controller')
 
-        # Геометрические параметры шасси (метры)
-        self.declare_parameter('wheelbase_L', 0.62)   # Продольное расстояние между осями
-        self.declare_parameter('track_W', 0.50)       # Поперечное расстояние между колеями
+        # Геометрические параметры шасси (метры) под габариты 750x600x400 мм
+        self.declare_parameter('wheelbase_L', 0.55)   # Продольное расстояние между поворотными осями
+        self.declare_parameter('track_W', 0.46)       # Поперечное расстояние между колеями
         self.declare_parameter('wheel_radius_R', 0.127) # Радиус мотор-колеса 10 дюймов
-        self.declare_parameter('max_linear_speed', 2.5) # Максимальная скорость, м/с
+        self.declare_parameter('max_linear_speed', 2.0) # Максимальная скорость, м/с
 
         self.L = self.get_parameter('wheelbase_L').value
         self.W = self.get_parameter('track_W').value

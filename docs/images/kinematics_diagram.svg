@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" style="background:#0f172a; font-family:'Segoe UI',Roboto,sans-serif;">
   <defs>
     <marker id="arrowRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -18,14 +19,14 @@
   <g transform="translate(50, 90)">
     <rect width="360" height="470" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
     <text x="180" y="30" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle">Режим 1: Крабовый ход (Crab / Omnidirectional)</text>
-    <text x="180" y="50" fill="#94a3b8" font-size="11" text-anchor="middle">Все колеса поворачиваются синхронно на угол &theta;</text>
+    <text x="180" y="50" fill="#94a3b8" font-size="11" text-anchor="middle">Все колеса поворачиваются синхронно на угол θ</text>
     
     <!-- Chassis Body -->
     <rect x="90" y="90" width="180" height="260" rx="6" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="6,4"/>
     <!-- Center coordinate frame -->
     <circle cx="180" cy="220" r="5" fill="#f59e0b"/>
     <line x1="180" y1="220" x2="230" y2="170" stroke="#f59e0b" stroke-width="3" marker-end="url(#arrowCyan)"/>
-    <text x="240" y="165" fill="#f59e0b" font-size="13" font-weight="bold">V_robot (&theta; = 45°)</text>
+    <text x="240" y="165" fill="#f59e0b" font-size="13" font-weight="bold">V_robot (θ = 45°)</text>
 
     <!-- 4 Wheels oriented at 45 deg -->
     <!-- Wheel FL (90, 90) -->
@@ -54,9 +55,9 @@
     </g>
 
     <!-- Description -->
-    <text x="30" y="390" fill="#e2e8f0" font-size="11">• &delta;_1 = &delta;_2 = &delta;_3 = &delta;_4 = &theta; = arctan2(V_y, V_x)</text>
-    <text x="30" y="410" fill="#e2e8f0" font-size="11">• V_1 = V_2 = V_3 = V_4 = &radic;(V_x&sup2; + V_y&sup2;)</text>
-    <text x="30" y="430" fill="#e2e8f0" font-size="11">• &Omega; = 0 (Движение без изменения курсового угла)</text>
+    <text x="30" y="390" fill="#e2e8f0" font-size="11">• δ_1 = δ_2 = δ_3 = δ_4 = θ = arctan2(V_y, V_x)</text>
+    <text x="30" y="410" fill="#e2e8f0" font-size="11">• V_1 = V_2 = V_3 = V_4 = √(V_x² + V_y²)</text>
+    <text x="30" y="430" fill="#e2e8f0" font-size="11">• Ω = 0 (Движение без изменения курсового угла)</text>
     <text x="30" y="450" fill="#10b981" font-size="11">Идеально для объезда препятствий и точной стыковки!</text>
   </g>
 
@@ -72,7 +73,7 @@
     <!-- Center coordinate frame -->
     <circle cx="180" cy="220" r="6" fill="#ef4444"/>
     <path d="M 160 200 A 30 30 0 0 1 200 200" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrowRed)"/>
-    <text x="180" y="190" fill="#ef4444" font-size="13" font-weight="bold" text-anchor="middle">&Omega; (Вращение)</text>
+    <text x="180" y="190" fill="#ef4444" font-size="13" font-weight="bold" text-anchor="middle">Ω (Вращение)</text>
 
     <!-- 4 Wheels oriented along tangents -->
     <!-- Wheel FL (90, 90): angle tangent = -45 deg -->
@@ -101,8 +102,8 @@
     </g>
 
     <!-- Description -->
-    <text x="30" y="390" fill="#e2e8f0" font-size="11">• &delta;_i = &plusmn; arctan(L / W)</text>
-    <text x="30" y="410" fill="#e2e8f0" font-size="11">• V_i = &Omega; &times; R_wheel (Радиус поворота = 0)</text>
+    <text x="30" y="390" fill="#e2e8f0" font-size="11">• δ_i = ± arctan(L / W)</text>
+    <text x="30" y="410" fill="#e2e8f0" font-size="11">• V_i = Ω × R_wheel (Радиус поворота = 0)</text>
     <text x="30" y="430" fill="#e2e8f0" font-size="11">• Маневрирование в узких коридорах складов НТЦ</text>
     <text x="30" y="450" fill="#38bdf8" font-size="11">Габариты разворота равны диагонали шасси!</text>
   </g>
