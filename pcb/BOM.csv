@@ -1,6 +1,6 @@
 Item,Designator,Quantity,Value,Package/Footprint,Description,Manufacturer Part Number,LCSC Part #
 1,"Q1,Q2,Q3,Q4,Q5,Q6",6,"IRFB4110PBF",TO-220-3,"N-MOSFET 100V 180A 3.7mOhm",Infineon / IRFB4110PBF,C112959
-2,"U1",1,"FD6288Q",TSSOP-20 / QFN-24,"3-Phase BLDC Gate Driver 250V",Fortior Tech / FD6288Q,C265215
+2,"U1",1,"FD6288Q",TSSOP-20 / QFN-24,"3-Phase Gate Driver IC for custom in-house BLDC MOSFET inverter, 250V",Fortior Tech / FD6288Q,C265215
 3,"U2",1,"LM358DT / INA180A1",SOIC-8,"Current Sense Operational Amplifier Gain=20",TI / INA180A1IDBVR,C206240
 4,"U3",1,"Arduino Mega Pro Embed",DIP-48 / 2x24 Pin Header 2.54mm,"Microcontroller Board ATmega2560 16MHz",RobotDyn / Arduino Mega Pro Embed,C-MEGA-PRO
 5,"U4",1,"XL7005A / LM2596HV",TO-263-5 / SOIC-8,"DC-DC Step-Down Buck 80V to 12V 1.5A",XLSEMI / XL7005A,C73347

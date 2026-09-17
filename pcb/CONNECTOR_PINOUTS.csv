@@ -1,9 +1,9 @@
 Connector,Pin,Signal Name,Type,Voltage,Wire Color / Recommendation,Destination / Description
 J_BAT,1,VBAT_38V,Power Input,30.0V - 43.8V,Красный (AWG 12),Плюс тяговой батареи LiFePO4 12S3P (через предохранитель)
 J_BAT,2,GND_PWR,Power Input,0V,Черный (AWG 12),Минус тяговой батареи LiFePO4 (силовая земля)
-J_MOTOR,1,PHASE_U,Power Output,0 - 43.8V (PWM),Синий (AWG 14),Силовая фаза A/U мотор-колеса Xiaomi M365 Pro
-J_MOTOR,2,PHASE_V,Power Output,0 - 43.8V (PWM),Желтый (AWG 14),Силовая фаза B/V мотор-колеса Xiaomi M365 Pro
-J_MOTOR,3,PHASE_W,Power Output,0 - 43.8V (PWM),Коричневый/Зеленый (AWG 14),Силовая фаза C/W мотор-колеса Xiaomi M365 Pro
+J_MOTOR,1,PHASE_U,Power Output,0 - 43.8V (PWM),Синий (AWG 14),Силовая фаза A/U мотор-колеса Xiaomi M365 Pro (от собственного 3-фазного инвертора)
+J_MOTOR,2,PHASE_V,Power Output,0 - 43.8V (PWM),Желтый (AWG 14),Силовая фаза B/V мотор-колеса Xiaomi M365 Pro (от собственного 3-фазного инвертора)
+J_MOTOR,3,PHASE_W,Power Output,0 - 43.8V (PWM),Коричневый/Зеленый (AWG 14),Силовая фаза C/W мотор-колеса Xiaomi M365 Pro (от собственного 3-фазного инвертора)
 J_HALL,1,VCC_5V,Power Output,5.0V,Красный (AWG 24),Питание датчиков Холла мотор-колеса
 J_HALL,2,GND,Ground,0V,Черный (AWG 24),Общий провод датчиков Холла
 J_HALL,3,HALL_A,Digital Input,0 - 5.0V,Синий (AWG 24),Сигнал датчика Холла фазы A -> Mega Pro Pin D2 (INT0)

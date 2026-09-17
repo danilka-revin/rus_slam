@@ -39,7 +39,7 @@
   <text x="810" y="110" fill="#fbbf24" font-size="13" font-weight="bold" text-anchor="middle">Система питания DC-DC</text>
   <text x="720" y="132" fill="#cbd5e1" font-size="11">• 38.4V → 12V (Питание ПК, драйверов)</text>
   <text x="720" y="150" fill="#cbd5e1" font-size="11">• 38.4V → 5V (Питание логики/MCU)</text>
-  <text x="720" y="168" fill="#cbd5e1" font-size="11">• Силовая шина 38.4V на MOSFET инверторы</text>
+  <text x="720" y="168" fill="#cbd5e1" font-size="11">• Силовая шина 38.4V на собств. BLDC-драйверы</text>
 
   <!-- Power Lines -->
   <path d="M 245 137 L 300 137" stroke="#22c55e" stroke-width="2" stroke-dasharray="4,4"/>
@@ -67,7 +67,7 @@
 
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
-    <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
+    <text x="20" y="226" fill="#e2e8f0" font-size="10">• Собств. драйвер BLDC (MOSFET)</text>
     <text x="20" y="242" fill="#e2e8f0" font-size="10">• Xiaomi M365 Pro (260W + Энкодер)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
@@ -90,7 +90,7 @@
 
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
-    <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
+    <text x="20" y="226" fill="#e2e8f0" font-size="10">• Собств. драйвер BLDC (MOSFET)</text>
     <text x="20" y="242" fill="#e2e8f0" font-size="10">• Xiaomi M365 Pro (260W + Энкодер)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
@@ -113,7 +113,7 @@
 
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
-    <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
+    <text x="20" y="226" fill="#e2e8f0" font-size="10">• Собств. драйвер BLDC (MOSFET)</text>
     <text x="20" y="242" fill="#e2e8f0" font-size="10">• Xiaomi M365 Pro (260W + Энкодер)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
@@ -136,7 +136,7 @@
 
     <rect x="8" y="192" width="174" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="95" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
-    <text x="15" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
+    <text x="15" y="226" fill="#e2e8f0" font-size="10">• Собств. драйвер BLDC (MOSFET)</text>
     <text x="15" y="242" fill="#e2e8f0" font-size="10">• Xiaomi M365 Pro (260W + Энкодер)</text>
     <text x="15" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + связь</text>
   </g>
