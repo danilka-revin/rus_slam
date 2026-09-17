@@ -49,7 +49,7 @@
 
 | Вид сверху (Рама 40×40 мм, скосы 45°, ступицы Subaru) | Вид сбоку (Вертикальный стек: шпилька → ступица → вилка) | Перспектива 3/4 (Шасси в сборе на 4 колесах) |
 | :---: | :---: | :---: |
-| ![Вид сверху](images/chassis_top_view.jpg) | ![Вид сбоку](images/chassis_side_view.jpg) | ![Перспектива](images/chassis_perspective.jpg) |
+| ![Вид сверху](images/chassis_top.jpg) | ![Вид сбоку](images/chassis_side.jpg) | ![Перспектива](images/chassis_perspective.jpg) |
 
 ---
 

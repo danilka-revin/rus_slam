@@ -52,11 +52,11 @@
 
 ## 🛠 Фотографии изготовленного шасси (Промежуточный конструктив)
 
-Реальные фотографии изготовленной несущей рамы и ходовой части мобильной платформы на этапе механической сборки:
+Реальные фотографии изготовленной несущей рамы и ходовой части мобильной платформы на этапе механической сборки в мастерской (сварочный полуавтомат Aurora PRO Overman, профиль 40×40 мм со скошенными углами 45°, ступицы Subaru, колеса Xiaomi M365 Pro):
 
 | Вид сверху (Рама 40×40 мм, скосы 45°, ступицы Subaru) | Вид сбоку (Вертикальный стек: шпилька → ступица → вилка) | Перспектива 3/4 (Шасси в сборе на 4 колесах) |
 | :---: | :---: | :---: |
-| <img src="docs/images/chassis_top_view.jpg" width="280"/> | <img src="docs/images/chassis_side_view.jpg" width="280"/> | <img src="docs/images/chassis_perspective.jpg" width="280"/> |
+| <img src="docs/images/chassis_top.jpg" width="280"/> | <img src="docs/images/chassis_side.jpg" width="280"/> | <img src="docs/images/chassis_perspective.jpg" width="280"/> |
 
 ---
 
