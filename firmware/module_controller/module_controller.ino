@@ -47,7 +47,7 @@
 
 // Кинематические константы поворотного привода
 const float STEPS_PER_REV_MOTOR = 1600.0f; // 200 шагов * 1/8 микрошага
-const float GEAR_RATIO          = 7.5f;    // Редукция ременной передачи (120/16)
+const float GEAR_RATIO          = 7.5f;    // Редукция ременной передачи GT2 10мм (шкивы 150/20)
 const float TOTAL_STEPS_PER_360 = STEPS_PER_REV_MOTOR * GEAR_RATIO; // 12000 шагов
 const float STEPS_PER_DEGREE    = TOTAL_STEPS_PER_360 / 360.0f;     // 33.333 шагов/град
 

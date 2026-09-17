@@ -22,7 +22,7 @@
   <rect x="300" y="80" width="350" height="115" rx="10" fill="url(#cardGrad)" stroke="#38bdf8" stroke-width="2" filter="url(#glow)"/>
   <rect x="300" y="80" width="350" height="28" rx="10" fill="#0284c7" opacity="0.25"/>
   <text x="475" y="100" fill="#38bdf8" font-size="14" font-weight="bold" text-anchor="middle">БОРТОВОЙ ВЫЧИСЛИТЕЛЬ (Ubuntu 24.04/26.04 / ROS 2)</text>
-  <text x="320" y="128" fill="#e2e8f0" font-size="12">• Модуль навигации Nav2 &amp; SLAM (LiDAR + Одометрия)</text>
+  <text x="320" y="128" fill="#e2e8f0" font-size="12">• Модуль навигации Nav2 &amp; SLAM (LiDAR LDC 01 + Одометрия)</text>
   <text x="320" y="148" fill="#e2e8f0" font-size="12">• Компьютерное зрение: знаки («Стоп», переход, неровность), светофор</text>
   <text x="320" y="168" fill="#e2e8f0" font-size="12">• Кинематический преобразователь 4WIS/4WID (V_x, V_y, Omega)</text>
 
@@ -67,7 +67,7 @@
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
     <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
-    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (350W)</text>
+    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (260W)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
 
@@ -90,7 +90,7 @@
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
     <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
-    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (350W)</text>
+    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (260W)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
 
@@ -113,7 +113,7 @@
     <rect x="10" y="192" width="185" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="102" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
     <text x="20" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
-    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (350W)</text>
+    <text x="20" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (260W)</text>
     <text x="20" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + обратная связь</text>
   </g>
 
@@ -136,7 +136,7 @@
     <rect x="8" y="192" width="174" height="85" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
     <text x="95" y="209" fill="#d8b4fe" font-size="11" font-weight="bold" text-anchor="middle">Тяговый привод</text>
     <text x="15" y="226" fill="#e2e8f0" font-size="10">• 3-фазный мост на MOSFET</text>
-    <text x="15" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (350W)</text>
+    <text x="15" y="242" fill="#e2e8f0" font-size="10">• Мотор-колесо самоката (260W)</text>
     <text x="15" y="258" fill="#e2e8f0" font-size="10">• Датчики Холла + связь</text>
   </g>
 
