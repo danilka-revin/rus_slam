@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 560" width="920" height="560" style="background:#0f172a; font-family:'Segoe UI',Roboto,sans-serif;">
   <text x="460" y="32" fill="#f8fafc" font-size="19" font-weight="bold" text-anchor="middle">Принципиальная функциональная схема платы модуля управления</text>
-  <text x="460" y="54" fill="#94a3b8" font-size="13" text-anchor="middle">Arduino Mega Pro Embed + Драйвер TB6600 + 3-фазный мостовой MOSFET инвертор</text>
+  <text x="460" y="54" fill="#94a3b8" font-size="13" text-anchor="middle">Arduino Mega Pro Embed + Драйвер TB6600 + собственный 3-фазный MOSFET-инвертор (драйвер BLDC)</text>
 
   <!-- Central Arduino Mega Pro Embed Block -->
   <g transform="translate(30, 80)">
@@ -55,13 +55,13 @@
   <!-- 3-Phase MOSFET Inverter Block -->
   <g transform="translate(350, 300)">
     <rect width="530" height="220" rx="8" fill="#1e293b" stroke="#a855f7" stroke-width="2"/>
-    <text x="265" y="25" fill="#d8b4fe" font-size="13" font-weight="bold" text-anchor="middle">3-ФАЗНЫЙ СИЛОВОЙ ИНВЕРТОР (MOSFET BRIDGE)</text>
+    <text x="265" y="25" fill="#d8b4fe" font-size="13" font-weight="bold" text-anchor="middle">СОБСТВЕННЫЙ ДРАЙВЕР BLDC: 3-ФАЗНЫЙ ИНВЕРТОР (MOSFET BRIDGE)</text>
     
     <!-- 3 Half Bridges -->
     <!-- Phase A -->
     <rect x="20" y="45" width="150" height="125" rx="6" fill="#0f172a" stroke="#475569"/>
     <text x="95" y="65" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Фаза A (U)</text>
-    <text x="30" y="85" fill="#cbd5e1" font-size="9">Драйвер FD6288/IR2101</text>
+    <text x="30" y="85" fill="#cbd5e1" font-size="9">Драйвер затворов FD6288/IR2101</text>
     <text x="30" y="105" fill="#4ade80" font-size="9">High-Side N-MOSFET</text>
     <text x="30" y="125" fill="#4ade80" font-size="9">Low-Side N-MOSFET</text>
     <text x="30" y="150" fill="#e2e8f0" font-size="9" font-weight="bold">Выход U → Мотор</text>
@@ -69,7 +69,7 @@
     <!-- Phase B -->
     <rect x="190" y="45" width="150" height="125" rx="6" fill="#0f172a" stroke="#475569"/>
     <text x="265" y="65" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Фаза B (V)</text>
-    <text x="200" y="85" fill="#cbd5e1" font-size="9">Драйвер FD6288/IR2101</text>
+    <text x="200" y="85" fill="#cbd5e1" font-size="9">Драйвер затворов FD6288/IR2101</text>
     <text x="200" y="105" fill="#4ade80" font-size="9">High-Side N-MOSFET</text>
     <text x="200" y="125" fill="#4ade80" font-size="9">Low-Side N-MOSFET</text>
     <text x="200" y="150" fill="#e2e8f0" font-size="9" font-weight="bold">Выход V → Мотор</text>
@@ -77,14 +77,14 @@
     <!-- Phase C -->
     <rect x="360" y="45" width="150" height="125" rx="6" fill="#0f172a" stroke="#475569"/>
     <text x="435" y="65" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Фаза C (W)</text>
-    <text x="370" y="85" fill="#cbd5e1" font-size="9">Драйвер FD6288/IR2101</text>
+    <text x="370" y="85" fill="#cbd5e1" font-size="9">Драйвер затворов FD6288/IR2101</text>
     <text x="370" y="105" fill="#4ade80" font-size="9">High-Side N-MOSFET</text>
     <text x="370" y="125" fill="#4ade80" font-size="9">Low-Side N-MOSFET</text>
     <text x="370" y="150" fill="#e2e8f0" font-size="9" font-weight="bold">Выход W → Мотор</text>
 
     <!-- Power & Protection footer -->
     <rect x="20" y="180" width="490" height="28" rx="4" fill="#581c87" opacity="0.4"/>
-    <text x="265" y="198" fill="#e9d5ff" font-size="10" font-weight="bold" text-anchor="middle">Питание шины: 38.4V LiFePO4 (до 20A на фазу, защита TVS-диод + шунт токовой защиты)</text>
+    <text x="265" y="198" fill="#e9d5ff" font-size="10" font-weight="bold" text-anchor="middle">Шина: 38.4V LiFePO4, до 20A на фазу, защита TVS + токовый шунт. Собственная разработка</text>
   </g>
 
   <!-- External Connections -->

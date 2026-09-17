@@ -9,7 +9,7 @@
         (company "NTC AVTOVAZ Logistics Robot")
         (rev "v1.0")
         (comment (number "1") (value "4WIS/4WID Crab Drive Pod Module"))
-        (comment (number "2") (value "Arduino Mega Pro + TB6600 + 3-Phase MOSFET Inverter")))))
+        (comment (number "2") (value "Arduino Mega Pro + TB6600 + Custom in-house 3-Phase MOSFET BLDC Driver")))))
   (components
     (comp (ref "Q1") (value "IRFB4110PBF") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical") (fields (field (name "LCSC") "C112959")))
     (comp (ref "Q2") (value "IRFB4110PBF") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical") (fields (field (name "LCSC") "C112959")))
