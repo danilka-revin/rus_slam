@@ -146,3 +146,59 @@ export const IconGrid = (p: P) => (
     <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
   </svg>
 )
+
+export const IconSend = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m3 11 19-8-8 19-2.5-8.5L3 11Z" />
+  </svg>
+)
+
+export const IconPower = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 3v8" />
+    <path d="M6.4 6.4a8 8 0 1 0 11.2 0" />
+  </svg>
+)
+
+export const IconSwap = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M7 4v12M7 4 4 7M7 4l3 3" transform="translate(0 0)" />
+    <path d="M17 20V8M17 20l3-3M17 20l-3-3" />
+  </svg>
+)
+
+export const IconBox = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+    <path d="M3 8l9 5 9-5M12 13v8" />
+  </svg>
+)
+
+export const IconFlow = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="8" y="2" width="8" height="5" rx="1.5" />
+    <rect x="8" y="10.5" width="8" height="5" rx="1.5" />
+    <rect x="8" y="19" width="8" height="3" rx="1.5" />
+    <path d="M12 7v3.5M12 15.5V19" />
+  </svg>
+)
+
+export const IconCheck = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m4 12.5 5 5L20 6.5" />
+  </svg>
+)
+
+export const IconEye = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+    <circle cx="12" cy="12" r="2.6" />
+  </svg>
+)
+
+export const IconTarget = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+)

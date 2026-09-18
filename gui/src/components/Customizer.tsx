@@ -157,6 +157,30 @@ export function Customizer({ open, onClose, settings, patch, onReset }: Props) {
           </div>
 
           <div className="cz-section">
+            <b>Задание (миссия)</b>
+            <Row title={`Действие с отсек: ${settings.actionDur.toFixed(0)} с`} hint="Открытие / закрытие">
+              <input
+                type="range"
+                min={1}
+                max={8}
+                step={1}
+                value={settings.actionDur}
+                onChange={(e) => patch({ actionDur: Number(e.target.value) })}
+              />
+            </Row>
+            <Row title={`Ожидание: ${settings.waitDur.toFixed(0)} с`} hint="После открытия и после закрытия">
+              <input
+                type="range"
+                min={0}
+                max={15}
+                step={1}
+                value={settings.waitDur}
+                onChange={(e) => patch({ waitDur: Number(e.target.value) })}
+              />
+            </Row>
+          </div>
+
+          <div className="cz-section">
             <b>Камера</b>
             <Row title="Качество демо-рендера" hint="Число строк рейкастинга">
               <Seg

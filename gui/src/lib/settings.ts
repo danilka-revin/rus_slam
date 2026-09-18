@@ -20,19 +20,23 @@ export interface Settings {
   cameraUrl: string
   camGrid: boolean
   camHud: boolean
+  /** Длительность действия с отсек (открытие/закрытие), с */
+  actionDur: number
+  /** Ожидание после открытия/закрытия отсека, с */
+  waitDur: number
 }
 
 export const ACCENTS: { name: string; value: string }[] = [
-  { name: 'Лайм (фирменный)', value: '#d5ff45' },
+  { name: 'Циан (фирменный)', value: '#38e0e0' },
+  { name: 'Лайм (ZMK)', value: '#d5ff45' },
   { name: 'Янтарь', value: '#ffc857' },
-  { name: 'Бирюза', value: '#5fd4d4' },
   { name: 'Коралл', value: '#ff8175' },
   { name: 'Фиалка', value: '#b9a7ff' },
 ]
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'light',
-  accent: '#d5ff45',
+  theme: 'dark',
+  accent: '#38e0e0',
   font: 'm',
   mapStyle: 'dark',
   followRobot: true,
@@ -44,6 +48,8 @@ export const DEFAULT_SETTINGS: Settings = {
   cameraUrl: '',
   camGrid: true,
   camHud: true,
+  actionDur: 3,
+  waitDur: 3,
 }
 
 export const CAMERA_COLUMNS: Record<CameraQuality, number> = {
@@ -82,6 +88,8 @@ export function sanitizeSettings(raw: Partial<Settings>): Settings {
     cameraUrl: typeof raw.cameraUrl === 'string' ? raw.cameraUrl.slice(0, 500) : d.cameraUrl,
     camGrid: typeof raw.camGrid === 'boolean' ? raw.camGrid : d.camGrid,
     camHud: typeof raw.camHud === 'boolean' ? raw.camHud : d.camHud,
+    actionDur: isNum(raw.actionDur, 1, 10) ? raw.actionDur : d.actionDur,
+    waitDur: isNum(raw.waitDur, 0, 15) ? raw.waitDur : d.waitDur,
   }
 }
 
@@ -114,6 +122,6 @@ export function resetSettings(): Settings {
 
 export function hexToRgb(hex: string): [number, number, number] {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex)
-  if (!m) return [213, 255, 69]
+  if (!m) return [56, 224, 224]
   return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)]
 }
