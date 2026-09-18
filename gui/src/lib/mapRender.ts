@@ -197,7 +197,7 @@ export function drawTerritory(
     const [ax, ay] = toScreen(pa.x, pa.y, cam, w, h)
     const [bx, by] = toScreen(pb.x, pb.y, cam, w, h)
     ctx.strokeStyle = pal.road
-    ctx.lineWidth = Math.max(2.5, 9 * cam.ppm)
+    ctx.lineWidth = Math.max(2.5, 12 * cam.ppm)
     ctx.beginPath()
     ctx.moveTo(ax, ay)
     ctx.lineTo(bx, by)

@@ -107,7 +107,8 @@ export default function App() {
     bootRef.current = true
     pushLog([
       { msg: 'Система инициализирована — ROS 2 граф (демо)', level: 'ok' },
-      { msg: `Робот ${ROBOT_NAME} на позиции ${pointById('ktp').name}`, level: 'info' },
+      { msg: 'Камера CAM-01: поток активен (1920×1080 @ 30 FPS)', level: 'info' },
+      { msg: `Робот ${ROBOT_NAME} на позиции: ${pointById('ktp').name}. Готов к приёму задач`, level: 'ok' },
     ])
     const t = window.setTimeout(() => sendTaskRef.current(), 2000)
     return () => window.clearTimeout(t)
