@@ -1,0 +1,4 @@
+# Зависимости tools/md2pdf.py (генерация PDF-копий документации)
+reportlab>=4.0
+svglib>=1.5
+Pillow>=9.0

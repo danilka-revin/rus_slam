@@ -28,6 +28,15 @@
 | 🤖 **Пакеты ROS 2** | 8 пакетов: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск | [`ros2_ws/src/`](ros2_ws/src/) |
 | 🖥 **GUI — пульт робота** | Веб-пульт: карта SLAM (pan/zoom), окно камеры, тумблер Карта/Камера, кастомизация (дизайн ZMK Vision) | [`gui/`](gui/README.md) |
 
+Каждый Markdown-документ в `docs/` продублирован в PDF рядом с исходником
+(`docs/*.pdf`). Актуализация копий после правок `.md`:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
+.venv/bin/python tools/md2pdf.py            # пересобрать docs/*.pdf
+.venv/bin/python tools/md2pdf.py --check    # проверить актуальность копий
+```
+
 ---
 
 ## 📸 Галерея основных узлов и компонентов
