@@ -107,7 +107,7 @@
   <xacro:swerve_module prefix="rr" x="${-wheelbase/2}" y="${-track/2}"/>
 
   <!-- ============================== сенсоры ============================= -->
-  <!-- Лидар ЛДС-01: на верхней палубе, ближе к носу -->
+  <!-- Лидар ЛДС-01: на верхней палубе, спереди по центру (x = 0.32 м от center) -->
   <link name="lidar_link">
     <visual>
       <geometry>
@@ -125,7 +125,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="base_link"/>
     <child link="lidar_link"/>
-    <origin xyz="0.25 0 0.32" rpy="0 0 0"/>
+    <origin xyz="0.32 0 0.32" rpy="0 0 0"/>
   </joint>
 
   <!-- Камера машинного зрения -->
