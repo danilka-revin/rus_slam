@@ -57,12 +57,35 @@
 
 ## Запуск
 
+Одним скриптом — на **Ubuntu** и на **Windows** (скрипт сам проверит Node.js
+и поставит зависимости при первом запуске):
+
+```bash
+# Ubuntu / Linux
+./start.sh                 # http://localhost:5173
+./start.sh --prod          # прод-сборка + просмотр (порт 4173)
+./start.sh --port 8080     # другой порт
+```
+
+```bat
+:: Windows (двойной клик или из cmd)
+start.bat                 rem http://localhost:5173
+start.bat --prod          rem прод-сборка + просмотр (порт 4173)
+start.bat --port 8080     rem другой порт
+```
+
+Вручную:
+
 ```bash
 cd gui
 npm install
 npm run dev        # http://localhost:5173 (bind 0.0.0.0)
 npm run build      # typecheck + прод-сборка в dist/
 ```
+
+Полное описание пульта (раскладка, панели, горячие клавиши, кастомизация,
+симулятор, прод-сборка, мост ROS 2) — в [`docs/GUI.md`](../docs/GUI.md)
+([PDF](../docs/GUI.pdf)).
 
 ## Структура
 

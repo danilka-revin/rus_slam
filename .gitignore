@@ -4,6 +4,7 @@ ros2_ws/install/
 ros2_ws/log/
 
 # Python
+.venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
