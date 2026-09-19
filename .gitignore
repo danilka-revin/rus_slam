@@ -3,6 +3,10 @@ ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
 
+# Виртуальное окружение для сборки PDF
+.venv/
+venv/
+
 # Python
 __pycache__/
 *.py[cod]
