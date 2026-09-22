@@ -71,6 +71,7 @@ function emit(type, msg) {
 
 function toast(text) {
   const el = document.getElementById("toast");
+  if (!el) return;
   el.textContent = text;
   el.classList.remove("hidden");
   clearTimeout(toast._t);
@@ -79,7 +80,12 @@ function toast(text) {
 
 function setMission(m) {
   state.mission = m;
-  document.getElementById("mission-badge").textContent = m;
+  const badge = document.getElementById("mission-badge");
+  if (badge) badge.textContent = m;
+  const ml = document.getElementById("mission-label");
+  if (ml) ml.textContent = m;
+  const md = document.getElementById("mission-delta");
+  if (md) md.textContent = `${state.waypoints.length} точек · ${state.progRun ? 'программа' : 'ручной'}`;
   renderFsm();
   log("ok", "FSM → " + m);
 }
@@ -88,9 +94,24 @@ function publishCmd() {
   if (state.estop) {
     state.vx = state.vy = state.wz = 0;
   }
-  document.getElementById("cmd-lin").textContent = `vx ${state.vx.toFixed(2)}`;
-  document.getElementById("cmd-ang").textContent = `wz ${state.wz.toFixed(2)}`;
-  document.getElementById("cmd-lat").textContent = `vy ${state.vy.toFixed(2)}`;
+  const lin = document.getElementById("cmd-lin");
+  if (lin) lin.textContent = `vx ${state.vx.toFixed(2)}`;
+  const ang = document.getElementById("cmd-ang");
+  if (ang) ang.textContent = `wz ${state.wz.toFixed(2)}`;
+  const lat = document.getElementById("cmd-lat");
+  if (lat) lat.textContent = `vy ${state.vy.toFixed(2)}`;
+
+  const hvx = document.getElementById("hud-vx");
+  if (hvx) hvx.textContent = state.spdVx.toFixed(2);
+  const hvy = document.getElementById("hud-vy");
+  if (hvy) hvy.textContent = state.spdVy.toFixed(2);
+  const hwz = document.getElementById("hud-wz");
+  if (hwz) hwz.textContent = state.spdWz.toFixed(2);
+  const hyaw = document.getElementById("hud-yaw");
+  if (hyaw) hyaw.textContent = `${(state.yaw*180/Math.PI).toFixed(0)}°`;
+
+  const crabTag = document.getElementById("crab-tag");
+  if (crabTag) crabTag.textContent = state.crab ? "КРАБ" : "4WIS";
 }
 
 const DRIVE_KEYS = new Set([
@@ -141,8 +162,10 @@ window.addEventListener("keydown", (e) => {
     state.auto = false;
     state.explore = false;
     dragging = false;
-    document.getElementById("btn-auto").textContent = "Старт маршрута";
-    document.getElementById("btn-explore").textContent = "Автоскан";
+    const ba = document.getElementById("btn-auto");
+    if (ba) ba.textContent = "Старт маршрута";
+    const be = document.getElementById("btn-explore");
+    if (be) be.textContent = "Автоскан";
     publishCmd();
     return;
   }
@@ -158,27 +181,43 @@ window.addEventListener("keyup", (e) => {
   publishCmd();
 });
 
-document.getElementById("crab").addEventListener("change", (e) => {
+function safeOn(id, ev, fn){
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(ev, fn);
+}
+
+safeOn("crab","change",(e)=>{
   state.crab = e.target.checked;
-  log("ok", "crab " + (state.crab ? "on" : "off"));
+  log("ok","crab "+(state.crab?"on":"off"));
+  const ct = document.getElementById("crab-tag");
+  if (ct) ct.textContent = state.crab ? "КРАБ" : "4WIS";
 });
-document.getElementById("vmax").addEventListener("input", (e) => {
+safeOn("vmax","input",(e)=>{
   state.vmax = Number(e.target.value);
+  const lab = document.getElementById("vmax-label");
+  if (lab) lab.textContent = state.vmax.toFixed(1)+" м/с";
 });
-document.getElementById("clearance").addEventListener("input", (e) => {
+safeOn("clearance","input",(e)=>{
   state.clearance = Number(e.target.value);
-  document.getElementById("clr-val").textContent = state.clearance.toFixed(2) + " м";
+  const el = document.getElementById("clr-val");
+  if (el) el.textContent = state.clearance.toFixed(2)+" м";
 });
 
-document.getElementById("btn-estop").addEventListener("click", () => {
+safeOn("btn-estop","click",()=>{
   state.estop = !state.estop;
   if (state.estop) { state.auto = false; state.explore = false; }
-  document.getElementById("btn-estop").classList.toggle("on", state.estop);
-  document.getElementById("estop-state").textContent = state.estop ? "ВКЛ" : "ВЫКЛ";
-  document.getElementById("statusline").classList.toggle("danger", state.estop);
-  document.getElementById("mode-label").textContent = state.estop ? "E-STOP · гейт закрыт" : "TELEOP · симуляция";
-  document.getElementById("gate").textContent = state.estop ? "HOLD" : "OK";
-  document.getElementById("link-pulse").className = "pulse" + (state.estop ? " off" : "");
+  const btn = document.getElementById("btn-estop");
+  if (btn) btn.classList.toggle("on", state.estop);
+  const es = document.getElementById("estop-state");
+  if (es) es.textContent = state.estop ? "ВКЛ" : "ВЫКЛ";
+  const sl = document.getElementById("statusline");
+  if (sl) sl.classList.toggle("danger", state.estop);
+  const ml = document.getElementById("mode-label");
+  if (ml) ml.textContent = state.estop ? "E-STOP · гейт закрыт" : "TELEOP · симуляция";
+  const gate = document.getElementById("gate");
+  if (gate) gate.textContent = state.estop ? "HOLD" : "OK";
+  const pulse = document.getElementById("link-pulse");
+  if (pulse) pulse.className = "pulse" + (state.estop ? " off" : "");
   if (state.estop) setMission("FAULT");
   else if (state.mission === "FAULT") setMission("IDLE");
   toast(state.estop ? "Аварийный стоп включён" : "E-stop снят");
@@ -189,143 +228,168 @@ document.getElementById("btn-estop").addEventListener("click", () => {
 function homeModules() {
   state.modules.forEach((m) => { m.steer = 0; m.homed = true; });
   renderModules();
+  const hs = document.getElementById("homing-status");
+  if (hs) hs.textContent = "HOMED";
   toast("Хоминг отправлен на 4 модуля");
   log("ok", "homing command → UART ×4");
 }
-document.getElementById("btn-home").addEventListener("click", homeModules);
-document.getElementById("btn-recenter").addEventListener("click", () => {
+safeOn("btn-home","click",homeModules);
+safeOn("btn-recenter","click",()=>{
   mapView.follow = true;
   mapView.camX = state.x;
   mapView.camY = state.y;
 });
 
-document.getElementById("btn-auto").addEventListener("click", () => {
+safeOn("btn-auto","click",()=>{
   if (state.estop) { toast("Снимите E-stop"); return; }
   if (!state.waypoints.length) { toast("Сначала кликните точки на карте"); return; }
   state.auto = !state.auto;
   if (state.auto) {
     state.wpIndex = 0;
     setMission("NAVIGATE");
-    document.getElementById("mode-label").textContent = "AUTO · маршрут";
-    document.getElementById("btn-auto").textContent = "Стоп авто";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "AUTO · маршрут";
+    const ba = document.getElementById("btn-auto");
+    if (ba) ba.textContent = "Стоп авто";
     toast("Едем по точкам");
   } else {
     state.vx = state.vy = state.wz = 0;
-    document.getElementById("mode-label").textContent = "TELEOP · симуляция";
-    document.getElementById("btn-auto").textContent = "Старт маршрута";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "TELEOP · симуляция";
+    const ba = document.getElementById("btn-auto");
+    if (ba) ba.textContent = "Старт маршрута";
   }
 });
-document.getElementById("btn-clear-route").addEventListener("click", () => {
+safeOn("btn-clear-route","click",()=>{
   state.waypoints = [];
   state.wpIndex = 0;
   state.auto = false;
   state.vx = state.vy = state.wz = 0;
-  document.getElementById("btn-auto").textContent = "Старт маршрута";
+  const ba = document.getElementById("btn-auto");
+  if (ba) ba.textContent = "Старт маршрута";
   toast("Точки сброшены");
 });
 
 const mapCanvas = document.getElementById("map");
 let mapDrag = null;
-mapCanvas.style.cursor = "grab";
-mapCanvas.addEventListener("pointerdown", (e) => {
-  if (e.button !== 0) return;
-  mapDrag = { x: e.clientX, y: e.clientY, camX: mapView.camX, camY: mapView.camY, moved: false };
-  mapCanvas.style.cursor = "grabbing";
-  try { mapCanvas.setPointerCapture(e.pointerId); } catch (_) {}
-});
-mapCanvas.addEventListener("pointermove", (e) => {
-  if (!mapDrag) return;
-  const dx = e.clientX - mapDrag.x, dy = e.clientY - mapDrag.y;
-  if (Math.hypot(dx, dy) < 8) return;
-  mapDrag.moved = true;
-  mapView.follow = false;
-  const r = mapCanvas.getBoundingClientRect();
-  mapView.camX = mapDrag.camX - (dx * mapCanvas.width / r.width) / mapView.scale;
-  mapView.camY = mapDrag.camY + (dy * mapCanvas.height / r.height) / mapView.scale;
-});
-mapCanvas.addEventListener("pointerup", (e) => {
-  const drag = mapDrag && mapDrag.moved;
-  mapDrag = null;
+if (mapCanvas){
   mapCanvas.style.cursor = "grab";
-  if (drag || e.button !== 0) return;
-  const p = screenToWorld(e);
-  const s = snapToDriveable(p.x, p.y) || p;
-  if (state.placeMode) {
-    if (state.placeMode === "start") {
-      state.x = s.x; state.y = s.y;
-      state.bubble = "старт";
-      emit("ok", "старт: " + s.x.toFixed(1) + ", " + s.y.toFixed(1));
-    } else {
-      const st = stationOf(state.placeMode);
-      if (st) { st.x = s.x; st.y = s.y; }
-      seedStationPads();
-      emit("ok", (state.placeMode === "load" ? "А" : state.placeMode === "unload" ? "Б" : "база") + " поставлена");
+  mapCanvas.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    mapDrag = { x: e.clientX, y: e.clientY, camX: mapView.camX, camY: mapView.camY, moved: false };
+    mapCanvas.style.cursor = "grabbing";
+    try { mapCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  mapCanvas.addEventListener("pointermove", (e) => {
+    if (!mapDrag) return;
+    const dx = e.clientX - mapDrag.x, dy = e.clientY - mapDrag.y;
+    if (Math.hypot(dx, dy) < 8) return;
+    mapDrag.moved = true;
+    mapView.follow = false;
+    const r = mapCanvas.getBoundingClientRect();
+    mapView.camX = mapDrag.camX - (dx * mapCanvas.width / r.width) / mapView.scale;
+    mapView.camY = mapDrag.camY + (dy * mapCanvas.height / r.height) / mapView.scale;
+  });
+  mapCanvas.addEventListener("pointerup", (e) => {
+    const drag = mapDrag && mapDrag.moved;
+    mapDrag = null;
+    mapCanvas.style.cursor = "grab";
+    if (drag || e.button !== 0) return;
+    const p = screenToWorld(e);
+    const s = snapToDriveable(p.x, p.y) || p;
+    if (state.placeMode) {
+      if (state.placeMode === "start") {
+        state.x = s.x; state.y = s.y;
+        state.bubble = "старт";
+        emit("ok", "старт: " + s.x.toFixed(1) + ", " + s.y.toFixed(1));
+      } else {
+        const st = stationOf(state.placeMode);
+        if (st) { st.x = s.x; st.y = s.y; }
+        seedStationPads();
+        emit("ok", (state.placeMode === "load" ? "А" : state.placeMode === "unload" ? "Б" : "база") + " поставлена");
+      }
+      state.placeMode = null;
+      toast("Точка на карте");
+      return;
     }
-    state.placeMode = null;
-    toast("Точка на карте");
-    return;
-  }
-  if (!s || occupied(s.x, s.y)) { toast("Сюда нельзя — только проезд"); return; }
-  state.waypoints.push(s);
-});
-mapCanvas.addEventListener("wheel", (e) => {
-  e.preventDefault();
-  mapView.scale = Math.max(8, Math.min(50, mapView.scale * (e.deltaY > 0 ? 0.9 : 1.12)));
-}, { passive: false });
-mapCanvas.addEventListener("contextmenu", (e) => {
-  e.preventDefault();
-  state.waypoints.pop();
-});
+    if (!s || occupied(s.x, s.y)) { toast("Сюда нельзя — только проезд"); return; }
+    state.waypoints.push(s);
+  });
+  mapCanvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    mapView.scale = Math.max(8, Math.min(50, mapView.scale * (e.deltaY > 0 ? 0.9 : 1.12)));
+  }, { passive: false });
+  mapCanvas.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    state.waypoints.pop();
+  });
+}
 
-document.getElementById("btn-start-mission").addEventListener("click", () => {
+safeOn("btn-start-mission","click",()=>{
   if (state.estop) { toast("Снимите E-stop"); return; }
   setMission("NAVIGATE");
   toast("Nav2: цель доставки");
 });
-document.getElementById("btn-pause-mission").addEventListener("click", () => setMission("YIELD_SIGN"));
-document.getElementById("btn-abort").addEventListener("click", () => setMission("IDLE"));
+safeOn("btn-pause-mission","click",()=>setMission("YIELD_SIGN"));
+safeOn("btn-abort","click",()=>setMission("IDLE"));
 
 document.querySelectorAll("nav button").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     const v = btn.dataset.view;
-    document.querySelectorAll(".view").forEach((s) => s.classList.add("hidden"));
-    document.getElementById("view-" + v).classList.remove("hidden");
-    const titles = {
-      dash: ["Пульт управления", "Автономный курьер · крабовый ход · ROS 2"],
-      drive: ["Ходовая 4WIS/4WID", "Свёрв-модули · UART · CRC16/Modbus"],
-      mission: ["Миссия доставки", "FSM · знаки · светофор · Nav2"],
-      sensors: ["Сенсоры", "ЛДС-01 · камера · детекции"],
-      safety: ["Безопасность", "гейт /cmd_vel · вотчдог · АКБ"],
-      logs: ["Журнал", "протокол модулей и Nav2"],
-    };
-    document.getElementById("page-title").textContent = titles[v][0];
-    document.getElementById("page-sub").textContent = titles[v][1];
+    const viewEl = document.getElementById("view-" + v);
+    if (viewEl) {
+      document.querySelectorAll(".view").forEach((s) => s.classList.add("hidden"));
+      viewEl.classList.remove("hidden");
+    }
   });
 });
 
 function renderModules() {
-  const html = state.modules.map((m) => `
-    <div class="mod">
-      <b>${m.id}</b>
-      руль ${m.steer.toFixed(0)}° · ${m.rpm.toFixed(0)} об/мин
-      <div class="bar"><i style="width:${Math.min(100, Math.abs(m.rpm)/8)}%"></i></div>
-      <span>${m.temp.toFixed(0)}°C · ${m.homed ? "homed" : "seek"}</span>
-    </div>`).join("");
-  document.getElementById("modules").innerHTML = html;
-  document.getElementById("mod-cards").innerHTML = `
-    <div class="modules" style="grid-template-columns:repeat(4,1fr);padding:0">${html}</div>
-    <p class="hint">Кадр команды 10 Б + телеметрия 16 Б, CRC16/Modbus, 20 Гц.</p>`;
+  const container = document.getElementById("modules");
+  if (!container) return;
+  const html = state.modules.map((m) => {
+    const steerDeg = m.steer.toFixed(1);
+    const rpm = m.rpm.toFixed(0);
+    const temp = m.temp.toFixed(0);
+    const rpmPct = Math.min(100, Math.abs(m.rpm)/8);
+    const tempPct = Math.min(100, (m.temp-20)/60*100);
+    const steerNorm = ((m.steer+90)/180*100);
+    return `
+    <div class="mod-card">
+      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="mod-homed">${m.homed ? "HOMED" : "SEEK"}</span></div>
+      <div class="mod-steer"><b>${steerDeg}</b><small>° поворот</small></div>
+      <div class="mod-bars">
+        <div class="mod-bar"><span>STEER</span><div class="mod-bar-track"><i style="width:${steerNorm}%"></i></div></div>
+        <div class="mod-bar"><span>RPM</span><div class="mod-bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><span style="width:auto">${rpm}</span></div>
+        <div class="mod-bar"><span>TEMP</span><div class="mod-bar-track"><i class="temp" style="width:${tempPct}%"></i></div><span style="width:auto">${temp}°</span></div>
+      </div>
+      <div class="mod-meta"><span>${m.id} · BLDC 260W</span><span>NEMA23 1:7.5</span></div>
+    </div>`;
+  }).join("");
+  container.innerHTML = html;
+
+  const modCards = document.getElementById("mod-cards");
+  if (modCards) {
+    modCards.innerHTML = `
+    <div class="modules" style="grid-template-columns:repeat(4,1fr);padding:0;display:grid;gap:8px">${html}</div>
+    <p class="hint" style="color:#6d7973;font-size:11px;margin-top:10px">Кадр команды 10 Б + телеметрия 16 Б, CRC16/Modbus, 20 Гц. Угол поворота в градусах от -90 до +90, нормализованный для крабового хода.</p>`;
+  }
 }
 
 function renderFsm() {
-  document.getElementById("fsm").innerHTML = FSM.map((s) =>
-    `<span class="${s === state.mission ? "on" : ""}">${s}</span>`).join("");
+  const fsmEl = document.getElementById("fsm");
+  if (fsmEl) {
+    fsmEl.innerHTML = FSM.map((s) =>
+      `<span class="${s === state.mission ? "on" : ""}">${s}</span>`).join("");
+  }
 }
 
 function renderDets() {
-  document.getElementById("dets").innerHTML =
+  const detsEl = document.getElementById("dets");
+  if (!detsEl) return;
+  detsEl.innerHTML =
     `<div class="tr th" style="display:grid;grid-template-columns:1.4fr .6fr .6fr;padding:8px 16px;font-size:8px;color:#8e9994;text-transform:uppercase">Класс · conf · источник</div>` +
     state.detections.map((d) =>
       `<div style="display:grid;grid-template-columns:1.4fr .6fr .6fr;padding:10px 16px;border-top:1px solid #edf0ee">
@@ -342,24 +406,27 @@ function renderLogs() {
 
 function drawStick() {
   const c = document.getElementById("stick");
+  if (!c) return;
   const ctx = c.getContext("2d");
   const w = c.width, h = c.height, cx = w/2, cy = h/2;
   ctx.clearRect(0,0,w,h);
   const dark = document.body.classList.contains("dark");
-  ctx.fillStyle = dark ? "#101b17" : "#f5f7f6";
-  ctx.beginPath(); ctx.arc(cx,cy,96,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle = dark ? "#2a3a32" : "#dfe5e2"; ctx.lineWidth = 2; ctx.stroke();
-  ctx.strokeStyle = dark ? "#203029" : "#edf0ee";
-  ctx.beginPath(); ctx.moveTo(cx-80,cy); ctx.lineTo(cx+80,cy); ctx.moveTo(cx,cy-80); ctx.lineTo(cx,cy+80); ctx.stroke();
-  const nx = cx + ((state.crab ? state.vy : -state.wz * 0.7) / state.vmax) * 70;
-  const ny = cy - (state.vx / state.vmax) * 70;
+  const bg = dark ? "#101b17" : "#f5f7f6";
+  const border = dark ? "#2a3a32" : "#dfe5e2";
+  const grid = dark ? "#203029" : "#edf0ee";
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.arc(cx,cy,Math.min(w,h)/2-4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = border; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx- (w/2-10),cy); ctx.lineTo(cx+(w/2-10),cy); ctx.moveTo(cx,cy-(h/2-10)); ctx.lineTo(cx,cy+(h/2-10)); ctx.stroke();
+  const nx = cx + ((state.crab ? state.vy : -state.wz * 0.7) / state.vmax) * (w*0.35);
+  const ny = cy - (state.vx / state.vmax) * (h*0.35);
   ctx.fillStyle = "#16241e";
-  ctx.beginPath(); ctx.arc(nx, ny, 16, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(nx, ny, 12, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = "#d5ff45";
-  ctx.beginPath(); ctx.arc(nx, ny, 6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(nx, ny, 5, 0, Math.PI*2); ctx.fill();
 }
-
-
 
 const CHASSIS = [
   { id: "FL", x: 0.34, y: 0.22 },
@@ -504,28 +571,7 @@ function lookAhead(path) {
   }
   return best || path[Math.min(path.length - 1, 4)];
 }
-function localAvoid(desiredYaw) {
-  let left = 9, right = 9, fwd = 9, rear = 9;
-  for (const p of state.scan) {
-    const rel = angDiff(p.a, state.yaw);
-    if (Math.abs(rel) < 0.5) fwd = Math.min(fwd, p.r);
-    else if (rel > 0 && rel < 1.4) left = Math.min(left, p.r);
-    else if (rel < 0 && rel > -1.4) right = Math.min(right, p.r);
-    else if (Math.abs(rel) > 2.4) rear = Math.min(rear, p.r);
-  }
-  const clear = Math.min(1.1, (state.clearance || 0.7) * 0.85);
-  if (fwd < 0.7) {
-    return { yaw: state.yaw + (left > right ? 1.2 : -1.2), slow: -0.2 };
-  }
-  if (left < clear * 0.7) return { yaw: desiredYaw - 0.4, slow: 0.6 };
-  if (right < clear * 0.7) return { yaw: desiredYaw + 0.4, slow: 0.6 };
-  return { yaw: desiredYaw, slow: fwd < 1.4 ? 0.55 : 1 };
-}
-
-function cellClearance(ix, iy) {
-  return distM(ix, iy);
-}
-
+function cellClearance(ix, iy) { return distM(ix, iy); }
 function snapToDriveable(x, y) {
   const minClear = Math.max(0.55, state.clearance || 0.7);
   const ok = (px, py) => {
@@ -556,7 +602,6 @@ function snapToDriveable(x, y) {
     if (best && rad >= 6) break;
   }
   if (best) return best;
-  /* запасной: просто дальше от OCC, даже если чуть ближе minClear */
   let fb = null, fbW = -1;
   for (let rad = 1; rad <= 40; rad++) {
     for (let a = 0; a < 16; a++) {
@@ -599,11 +644,7 @@ function pickFrontier() {
   if (!best) return null;
   return snapToDriveable(best.x, best.y) || best;
 }
-
-function mapCoverage() {
-  return explored / grid.length;
-}
-
+function mapCoverage() { return explored / grid.length; }
 function lidarSectors() {
   let fwd = 99, left = 99, right = 99, rear = 99;
   for (const p of state.scan) {
@@ -615,10 +656,7 @@ function lidarSectors() {
   }
   return { fwd, left, right, rear };
 }
-
-function stationOf(kind) {
-  return (WORLD.stations || []).find((s) => s.kind === kind);
-}
+function stationOf(kind) { return (WORLD.stations || []).find((s) => s.kind === kind); }
 function nearStation(kind, r = 1.8) {
   const st = stationOf(kind);
   return st && Math.hypot(st.x - state.x, st.y - state.y) < r;
@@ -702,23 +740,23 @@ function renderProg() {
   const ol = document.getElementById("prog-list");
   if (!ol) return;
   const info = {
-    goA: { t: "Ехать на площадку А", d: "Подъезжает к точке загрузки на карте" },
-    goB: { t: "Ехать на площадку Б", d: "Везёт туда, куда нужно сдать груз" },
+    goA: { t: "Ехать на площадку А", d: "Подъезжает к точке загрузки" },
+    goB: { t: "Ехать на площадку Б", d: "Везёт туда, куда нужно сдать" },
     load: { t: "Взять груз", d: "Стоит на А, пока не нажмёте «груз взят»" },
     unload: { t: "Сдать груз", d: "Стоит на Б, пока не нажмёте «груз сдан»" },
-    goP: { t: "Ехать по точкам P", d: "Маршрут, который вы кликали на карте" },
-    wait: { t: "Пауза 2 секунды", d: "Стоит на месте, затем следующий шаг" },
-    dock: { t: "На базу", d: "Возвращается на зарядную площадку" },
-    charge: { t: "Зарядиться", d: "Только на базе, до процента на ползунке" },
-    loop: { t: "Повторить с начала", d: "Снова шаг 1 — бесконечный рейс" },
+    goP: { t: "Ехать по точкам P", d: "Маршрут, который вы кликали" },
+    wait: { t: "Пауза 2 сек", d: "Стоит на месте" },
+    dock: { t: "На базу", d: "Возвращается на зарядку" },
+    charge: { t: "Зарядиться", d: "Только на базе, до %" },
+    loop: { t: "Повторить с начала", d: "Бесконечный рейс" },
   };
   if (!state.program.length) {
-    ol.innerHTML = `<li class="empty">Очередь пустая. Нажмите «Пуск» — робот поедет по шагам. Можно сначала добавить шаги кнопками выше.</li>`;
+    ol.innerHTML = `<li class="empty">Очередь пустая. Добавьте шаги сверху и нажмите Пуск.</li>`;
   } else {
     ol.innerHTML = state.program.map((b, i) => {
       const inf = info[b] || { t: b, d: "" };
       const cls = state.progRun && i === state.progI ? "on" : (state.progRun && i < state.progI ? "done" : "");
-      return `<li class="${cls}"><span class="n">${i + 1}</span><span><span class="t">${inf.t}</span><span class="d">${inf.d}</span></span><button type="button" data-del="${i}" title="убрать шаг">×</button></li>`;
+      return `<li class="${cls}"><span class="n">${i + 1}</span><span><span class="t">${inf.t}</span><span class="d">${inf.d}</span></span><button type="button" data-del="${i}" title="убрать">×</button></li>`;
     }).join("");
   }
   ol.querySelectorAll("[data-del]").forEach((btn) => {
@@ -814,7 +852,7 @@ function runProgram() {
     state.progI = 0;
     renderProg();
   }
-  return b === "wait" || b === "goA" || b === "goB" || b === "goP" || b === "dock";
+  return true;
 }
 
 function followRoute() {
@@ -917,12 +955,13 @@ function followRoute() {
           state.explore = false;
           state.auto = false;
           state.vx = state.vy = state.wz = 0;
-          document.getElementById("mode-label").textContent = "TELEOP · карта собрана";
-          document.getElementById("btn-explore").textContent = "Автоскан";
+          const ml = document.getElementById("mode-label");
+          if (ml) ml.textContent = "TELEOP · карта собрана";
+          const be = document.getElementById("btn-explore");
+          if (be) be.textContent = "Автоскан";
           toast("Карта просмотрена (" + (cov * 100).toFixed(0) + "%)");
           return;
         }
-        /* едем вдоль проезда, не крутимся на точке */
         const s2 = lidarSectors();
         state.vy = 0;
         if (s2.fwd > 1.4) { state.vx = 0.9; state.wz = (s2.left - s2.right) * 0.5; }
@@ -947,8 +986,10 @@ function followRoute() {
     state.auto = false;
     state.vx = state.vy = state.wz = 0;
     setMission("IDLE");
-    document.getElementById("mode-label").textContent = "TELEOP · симуляция";
-    document.getElementById("btn-auto").textContent = "Старт маршрута";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "TELEOP · симуляция";
+    const ba = document.getElementById("btn-auto");
+    if (ba) ba.textContent = "Старт маршрута";
     toast("Маршрут пройден");
     return;
   }
@@ -1141,14 +1182,71 @@ function sim(dt) {
     state.scan.push({ a, r: raycast(state.x, state.y, a, LIDAR_MAX) });
   }
   integrateScan();
-  document.getElementById("bat-v").textContent = state.bat.toFixed(1);
-  document.getElementById("bat-delta").textContent = `SOC ${state.soc.toFixed(0)}% · ток ${state.current.toFixed(1)} А`;
-  document.getElementById("odom-xy").textContent = Math.hypot(state.x, state.y).toFixed(2);
-  document.getElementById("odom-delta").textContent = `x ${state.x.toFixed(2)} · y ${state.y.toFixed(2)} · yaw ${(state.yaw*180/Math.PI).toFixed(0)}°`;
-  document.getElementById("spd").textContent = (spd * 3.6).toFixed(1);
-  document.getElementById("spd-delta").textContent = `${spd.toFixed(2)} м/с · разгон · max 18 км/ч`;
-  document.getElementById("gate-delta").textContent = `e-stop ${state.estop ? "вкл" : "выкл"} · вотчдог ${state.watchdogMs.toFixed(0)} мс`;
-  document.getElementById("wd").textContent = state.watchdogMs.toFixed(0) + " мс";
+
+  // --- BATTERY UI ---
+  const soc = Math.max(0, Math.min(100, state.soc));
+  const pctEl = document.getElementById("bat-percent");
+  if (pctEl) pctEl.textContent = soc.toFixed(0)+"%";
+  const vEl = document.getElementById("bat-v");
+  if (vEl) vEl.textContent = state.bat.toFixed(1)+" В";
+  const socEl = document.getElementById("bat-soc");
+  if (socEl) socEl.textContent = soc.toFixed(0)+"%";
+  const curEl = document.getElementById("bat-current");
+  if (curEl) curEl.textContent = state.current.toFixed(1)+" А";
+  const tgtEl = document.getElementById("bat-target");
+  if (tgtEl) tgtEl.textContent = (state.chargeTo||80)+"%";
+  const bar = document.getElementById("bat-bar");
+  if (bar) bar.style.width = soc.toFixed(0)+"%";
+  const circle = document.getElementById("bat-circle");
+  if (circle) {
+    const circ = 2*Math.PI*40;
+    const offset = circ - (soc/100)*circ;
+    circle.style.strokeDasharray = circ;
+    circle.style.strokeDashoffset = offset;
+    circle.classList.toggle("low", soc<20);
+    circle.classList.toggle("charging", !!state.charging);
+  }
+  const chInd = document.getElementById("charge-indicator");
+  if (chInd) {
+    chInd.classList.toggle("on", !!state.charging);
+    const ct = document.getElementById("charge-text");
+    if (ct) ct.textContent = state.charging ? `ЗАРЯДКА ${soc.toFixed(0)}%` : "ЗАРЯДКА";
+  }
+  const bStat = document.getElementById("bat-status");
+  if (bStat) bStat.textContent = state.charging ? `зарядка до ${state.chargeTo}% · ${state.bat.toFixed(1)}В` : `разряд · ${state.bat.toFixed(1)}В · 18.6 А·ч`;
+  const bDelta = document.getElementById("bat-delta");
+  if (bDelta) bDelta.textContent = `ток ${state.current.toFixed(1)} А · SOC ${soc.toFixed(0)}%`;
+  const oldDelta = document.getElementById("bat-delta");
+  // top metrics
+  const odom = document.getElementById("odom-xy");
+  if (odom) odom.textContent = Math.hypot(state.x, state.y).toFixed(2)+" м";
+  const odomD = document.getElementById("odom-delta");
+  if (odomD) odomD.textContent = `x ${state.x.toFixed(2)} · y ${state.y.toFixed(2)} · yaw ${(state.yaw*180/Math.PI).toFixed(0)}°`;
+  const spdEl = document.getElementById("spd");
+  if (spdEl) spdEl.textContent = (spd * 3.6).toFixed(1)+" км/ч";
+  const spdD = document.getElementById("spd-delta");
+  if (spdD) spdD.textContent = `${spd.toFixed(2)} м/с · max 18 км/ч`;
+  const gateD = document.getElementById("gate-delta");
+  if (gateD) gateD.textContent = `e-stop ${state.estop ? "вкл" : "выкл"} · вотчдог ${state.watchdogMs.toFixed(0)} мс`;
+  const wd = document.getElementById("wd");
+  if (wd) wd.textContent = state.watchdogMs.toFixed(0) + " мс";
+  const gate = document.getElementById("gate");
+  if (gate) gate.textContent = state.estop ? "HOLD" : "OK";
+  const cov = document.getElementById("map-coverage");
+  if (cov) cov.textContent = `исследовано ${(mapCoverage()*100).toFixed(1)}%`;
+  const camYawF = document.getElementById("cam-yaw-f");
+  if (camYawF) camYawF.textContent = (state.yaw*180/Math.PI).toFixed(0)+"°";
+  const sectors = lidarSectors();
+  const detF = document.getElementById("det-front");
+  if (detF) {
+    if (sectors.fwd < 1.0) detF.textContent = `препятствие ${sectors.fwd.toFixed(2)}м`;
+    else detF.textContent = state.bubble || "нет";
+  }
+  const distR = document.getElementById("cam-dist-r");
+  if (distR) distR.textContent = sectors.rear < 9 ? sectors.rear.toFixed(2)+" м" : "свободно";
+  const camStatR = document.getElementById("cam-status-r");
+  if (camStatR) camStatR.textContent = sectors.rear < 0.8 ? "СТОП" : "OK";
+
   renderModules();
 }
 
@@ -1173,6 +1271,7 @@ function loop(now) {
 
 const stick = document.getElementById("stick");
 function stickFromEvent(ev) {
+  if (!stick) return;
   const r = stick.getBoundingClientRect();
   const x = (ev.clientX - r.left) / r.width * 2 - 1;
   const y = (ev.clientY - r.top) / r.height * 2 - 1;
@@ -1181,9 +1280,11 @@ function stickFromEvent(ev) {
   if (!state.crab) state.wz = Math.max(-1, Math.min(1, -x)) * state.vmax * 1.1;
 }
 let dragging = false;
-stick.addEventListener("pointerdown", (e) => { dragging = true; stick.setPointerCapture(e.pointerId); stickFromEvent(e); });
-stick.addEventListener("pointermove", (e) => { if (dragging) stickFromEvent(e); });
-stick.addEventListener("pointerup", () => { dragging = false; state.vx = state.vy = state.wz = 0; });
+if (stick){
+  stick.addEventListener("pointerdown", (e) => { dragging = true; stick.setPointerCapture(e.pointerId); stickFromEvent(e); });
+  stick.addEventListener("pointermove", (e) => { if (dragging) stickFromEvent(e); });
+  stick.addEventListener("pointerup", () => { dragging = false; state.vx = state.vy = state.wz = 0; });
+}
 
 const ROUTES_KEY = "rus_slam_route_groups";
 function loadGroups() {
@@ -1215,7 +1316,7 @@ if (saveBtn) {
     saveGroups(list);
     toast("Сохранено: " + name);
   });
-  document.getElementById("btn-load-route").addEventListener("click", () => {
+  safeOn("btn-load-route","click",()=>{
     const list = loadGroups();
     const i = Number(document.getElementById("route-list").value);
     if (!list[i]) { toast("Выберите группу"); return; }
@@ -1224,7 +1325,7 @@ if (saveBtn) {
     state.auto = false;
     toast("Загружено: " + list[i].name);
   });
-  document.getElementById("btn-del-route").addEventListener("click", () => {
+  safeOn("btn-del-route","click",()=>{
     const list = loadGroups();
     const i = Number(document.getElementById("route-list").value);
     if (!list[i]) return;
@@ -1236,7 +1337,7 @@ if (saveBtn) {
   fillRouteSelect();
 }
 
-document.getElementById("btn-explore").addEventListener("click", () => {
+safeOn("btn-explore","click",()=>{
   if (state.estop) { toast("Снимите E-stop"); return; }
   state.explore = !state.explore;
   if (state.explore) {
@@ -1246,14 +1347,18 @@ document.getElementById("btn-explore").addEventListener("click", () => {
     state.waypoints = f ? [f] : [];
     state.navPath = [];
     setMission("NAVIGATE");
-    document.getElementById("mode-label").textContent = "AUTO · сканирование до полной карты";
-    document.getElementById("btn-explore").textContent = "Стоп скана";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "AUTO · сканирование до полной карты";
+    const be = document.getElementById("btn-explore");
+    if (be) be.textContent = "Стоп скана";
     toast("Едем, пока не откроем всю карту");
   } else {
     state.auto = false;
     state.vx = state.vy = state.wz = 0;
-    document.getElementById("mode-label").textContent = "TELEOP · симуляция";
-    document.getElementById("btn-explore").textContent = "Автоскан";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "TELEOP · симуляция";
+    const be = document.getElementById("btn-explore");
+    if (be) be.textContent = "Автоскан";
   }
 });
 
@@ -1277,48 +1382,52 @@ function goDock() {
   state.navPath = [];
   state.auto = true;
   setMission("RETURN");
-  document.getElementById("mode-label").textContent = "AUTO · на базу";
-  document.getElementById("btn-explore").textContent = "Автоскан";
+  const ml = document.getElementById("mode-label");
+  if (ml) ml.textContent = "AUTO · на базу";
+  const be = document.getElementById("btn-explore");
+  if (be) be.textContent = "Автоскан";
   emit("nav", "еду на базу");
 }
 
-const elPause = document.getElementById("btn-pause");
-if (elPause) elPause.addEventListener("click", () => {
+safeOn("btn-pause","click",()=>{
+  const elPause = document.getElementById("btn-pause");
   state.pause = !state.pause;
-  elPause.classList.toggle("on", state.pause);
-  elPause.textContent = state.pause ? "Продолжить" : "Пауза";
+  if (elPause) {
+    elPause.classList.toggle("on", state.pause);
+    elPause.textContent = state.pause ? "Продолжить" : "Пауза";
+  }
   state.vx = state.vy = state.wz = 0;
   emit(state.pause ? "warn" : "ok", state.pause ? "пауза" : "продолжили");
 });
-const elSkip = document.getElementById("btn-skip");
-if (elSkip) elSkip.addEventListener("click", () => {
+safeOn("btn-skip","click",()=>{
   state.wpIndex++;
   state.navPath = [];
   emit("warn", "пропуск точки");
 });
-const elDock = document.getElementById("btn-dock");
-if (elDock) elDock.addEventListener("click", goDock);
-const elLoop = document.getElementById("btn-loop");
-if (elLoop) elLoop.addEventListener("click", () => {
+safeOn("btn-dock","click",goDock);
+safeOn("btn-loop","click",()=>{
+  const elLoop = document.getElementById("btn-loop");
   state.loop = !state.loop;
-  elLoop.classList.toggle("on", state.loop);
+  if (elLoop) elLoop.classList.toggle("on", state.loop);
   emit("ok", state.loop ? "цикл вкл — едем по кругу" : "цикл выкл");
   if (state.loop && state.waypoints.length) {
     state.auto = true;
     state.pause = false;
     if (state.wpIndex >= state.waypoints.length) state.wpIndex = 0;
-    document.getElementById("btn-auto").textContent = "Стоп авто";
-    document.getElementById("mode-label").textContent = "AUTO · цикл";
+    const ba = document.getElementById("btn-auto");
+    if (ba) ba.textContent = "Стоп авто";
+    const ml = document.getElementById("mode-label");
+    if (ml) ml.textContent = "AUTO · цикл";
     setMission("NAVIGATE");
   }
 });
-document.getElementById("btn-reverse")?.addEventListener("click", () => {
+safeOn("btn-reverse","click",()=>{
   state.waypoints.reverse();
   state.wpIndex = 0;
   state.navPath = [];
   emit("ok", "точки в обратном порядке");
 });
-document.getElementById("btn-from-trail")?.addEventListener("click", () => {
+safeOn("btn-from-trail","click",()=>{
   const t = state.trail || [];
   if (t.length < 4) { toast("Сначала поездите — след пустой"); return; }
   const pts = [];
@@ -1328,22 +1437,23 @@ document.getElementById("btn-from-trail")?.addEventListener("click", () => {
   emit("ok", "маршрут из следа: " + pts.length + " точек");
   toast("Точки со следа");
 });
-document.getElementById("btn-lights")?.addEventListener("click", () => {
+safeOn("btn-lights","click",()=>{
   state.lights = !state.lights;
   emit("ok", state.lights ? "фары вкл" : "фары выкл");
 });
-const elShot = document.getElementById("btn-shot");
-if (elShot) elShot.addEventListener("click", () => {
+safeOn("btn-shot","click",()=>{
   const a = document.createElement("a");
   a.download = "rus_slam_map.png";
-  a.href = document.getElementById("map").toDataURL("image/png");
+  const mc = document.getElementById("map");
+  if (!mc) return;
+  a.href = mc.toDataURL("image/png");
   a.click();
   emit("ok", "снимок карты");
 });
-const elPay = document.getElementById("payload");
-if (elPay) elPay.addEventListener("input", (e) => {
+safeOn("payload","input",(e)=>{
   state.payload = Number(e.target.value);
-  document.getElementById("pay-val").textContent = state.payload + " кг";
+  const pv = document.getElementById("pay-val");
+  if (pv) pv.textContent = state.payload + " кг";
 });
 const elChg = document.getElementById("chg-target");
 function syncChargeTarget() {
@@ -1351,24 +1461,24 @@ function syncChargeTarget() {
   state.chargeTo = v;
   const lab = document.getElementById("chg-val");
   if (lab) lab.textContent = v + "%";
+  const tgt = document.getElementById("bat-target");
+  if (tgt) tgt.textContent = v+"%";
 }
 if (elChg) {
   elChg.addEventListener("input", syncChargeTarget);
   elChg.addEventListener("change", syncChargeTarget);
   syncChargeTarget();
 }
-document.getElementById("btn-charge")?.addEventListener("click", () => {
+safeOn("btn-charge","click",()=>{
   if (state.estop) { toast("Снимите E-stop"); return; }
   syncChargeTarget();
   goCharge();
   toast("Еду на базу, заряд до " + state.chargeTo + "%");
 });
-const elBeac = document.getElementById("beacon");
-if (elBeac) elBeac.addEventListener("change", (e) => { state.beacon = e.target.checked; });
-const elCargo = document.getElementById("cargo");
-if (elCargo) elCargo.addEventListener("change", (e) => { state.cargoLock = e.target.checked; });
-const elHorn = document.getElementById("btn-horn");
-if (elHorn) elHorn.addEventListener("click", () => { toast("Бип 85 дБ"); emit("warn", "зуммер"); });
+safeOn("beacon","change",(e)=>{ state.beacon = e.target.checked; });
+safeOn("cargo","change",(e)=>{ state.cargoLock = e.target.checked; });
+safeOn("btn-horn","click",()=>{ toast("Бип 85 дБ"); emit("warn", "зуммер"); });
+safeOn("btn-clear-logs","click",()=>{ state.logs=[]; renderLogs(); });
 
 document.querySelectorAll(".prog-add [data-blk]").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -1376,7 +1486,7 @@ document.querySelectorAll(".prog-add [data-blk]").forEach((btn) => {
     renderProg();
   });
 });
-document.getElementById("btn-prog-run")?.addEventListener("click", () => {
+safeOn("btn-prog-run","click",()=>{
   if (!state.program.length) {
     state.program = ["goA", "load", "goB", "unload", "dock"];
   }
@@ -1384,47 +1494,47 @@ document.getElementById("btn-prog-run")?.addEventListener("click", () => {
   state.progRun = true;
   state.pause = false;
   setMission("NAVIGATE");
-  document.getElementById("mode-label").textContent = "AUTO · программа А→Б";
+  const ml = document.getElementById("mode-label");
+  if (ml) ml.textContent = "AUTO · программа А→Б";
   emit("nav", "старт программы");
   renderProg();
 });
-document.getElementById("btn-prog-stop")?.addEventListener("click", () => {
+safeOn("btn-prog-stop","click",()=>{
   state.progRun = false;
   state.auto = false;
   state.vx = state.vy = state.wz = 0;
   emit("warn", "программа стоп");
 });
-document.getElementById("btn-prog-clear")?.addEventListener("click", () => {
+safeOn("btn-prog-clear","click",()=>{
   state.program = [];
   state.progRun = false;
   renderProg();
 });
-document.getElementById("btn-load-act")?.addEventListener("click", confirmLoad);
-document.getElementById("btn-unload-act")?.addEventListener("click", confirmUnload);
-document.getElementById("place-A")?.addEventListener("click", () => { state.placeMode = "load"; toast("Клик по карте → А"); });
-document.getElementById("place-B")?.addEventListener("click", () => { state.placeMode = "unload"; toast("Клик по карте → Б"); });
-document.getElementById("place-D")?.addEventListener("click", () => { state.placeMode = "dock"; toast("Клик по карте → база"); });
-document.getElementById("place-S")?.addEventListener("click", () => { state.placeMode = "start"; toast("Клик по карте → старт"); });
+safeOn("btn-load-act","click",confirmLoad);
+safeOn("btn-unload-act","click",confirmUnload);
+safeOn("place-A","click",()=>{ state.placeMode = "load"; toast("Клик по карте → А"); });
+safeOn("place-B","click",()=>{ state.placeMode = "unload"; toast("Клик по карте → Б"); });
+safeOn("place-D","click",()=>{ state.placeMode = "dock"; toast("Клик по карте → база"); });
+safeOn("place-S","click",()=>{ state.placeMode = "start"; toast("Клик по карте → старт"); });
 renderProg();
 
 function applyTheme(dark) {
   document.body.classList.toggle("dark", !!dark);
   try { localStorage.setItem("rus_slam_theme", dark ? "dark" : "light"); } catch (_) {}
   const b = document.getElementById("btn-theme");
-  if (b) b.textContent = dark ? "Светлая" : "Тёмная";
+  if (b) b.textContent = dark ? "☀" : "◐";
 }
 try { applyTheme(localStorage.getItem("rus_slam_theme") !== "light"); } catch (_) { applyTheme(true); }
-document.getElementById("btn-theme")?.addEventListener("click", () => {
+safeOn("btn-theme","click",()=>{
   applyTheme(!document.body.classList.contains("dark"));
 });
-document.getElementById("btn-refresh")?.addEventListener("click", () => location.reload());
+safeOn("btn-refresh","click",()=>location.reload());
 
 renderModules();
 renderFsm();
 renderDets();
-log("ok", "пульт RUS SLAM онлайн");
-log("warn", "CAM-01 нет сигнала — perception выключен");
-log("ok", "знаки СТОП/переход/светофор · маяк · груз до 250 кг");
+log("ok", "пульт RUS SLAM онлайн · ZMK дизайн");
+log("warn", "CAM-F / CAM-R симуляция");
+log("ok", "4WIS · LiDAR LDC01 · батарея LiFePO4 12S3P · 250 кг");
 seedStationPads();
 requestAnimationFrame(loop);
-
