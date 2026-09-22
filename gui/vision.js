@@ -157,11 +157,11 @@ function roundRect(ctx, x, y, w, h, r) {
 function drawCamView(canvasId, yawOff, title, isRear) {
   const c = document.getElementById(canvasId);
   if (!c) return;
-  // ensure canvas internal size matches display size for crisp rendering
   const rect = c.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return;
   const dpr = Math.min(2, window.devicePixelRatio||1);
-  const wantW = Math.max(320, Math.floor(rect.width * dpr));
-  const wantH = Math.max(180, Math.floor(rect.height * dpr));
+  const wantW = Math.floor(rect.width * dpr);
+  const wantH = Math.floor(rect.height * dpr);
   if (c.width !== wantW || c.height !== wantH) {
     c.width = wantW; c.height = wantH;
   }
@@ -265,17 +265,17 @@ function drawMap() {
   const ctx = c.getContext("2d");
   const rect = (container || c).getBoundingClientRect();
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const cssW = Math.max(480, Math.floor(rect.width));
-  const cssH = Math.max(400, Math.floor(rect.height));
+  // use container size but clamp to avoid infinite growth
+  const cssW = Math.floor(rect.width);
+  const cssH = Math.floor(rect.height);
+  if (cssW < 10 || cssH < 10) return;
   const dw = Math.floor(cssW * dpr);
   const dh = Math.floor(cssH * dpr);
+  // only resize internal buffer, never touch style (CSS controls layout)
   if (c.width !== dw || c.height !== dh) {
     c.width = dw;
     c.height = dh;
-    c.style.width = cssW + "px";
-    c.style.height = cssH + "px";
   }
-  // reset transform to handle DPR
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const w = cssW, h = cssH;
 
@@ -663,9 +663,10 @@ function drawChassisPanel() {
   const c = document.getElementById("chassis");
   if (!c) return;
   const rect = c.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return;
   const dpr = Math.min(2, window.devicePixelRatio||1);
-  const wantW = Math.floor(rect.width * dpr) || 280;
-  const wantH = Math.floor(rect.height * dpr) || 280;
+  const wantW = Math.floor(rect.width * dpr);
+  const wantH = Math.floor(rect.height * dpr);
   if (c.width !== wantW || c.height !== wantH) { c.width = wantW; c.height = wantH; }
   const ctx = c.getContext("2d");
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -708,9 +709,10 @@ function drawLidar() {
   const c = document.getElementById("lidar");
   if (!c) return;
   const rect = c.getBoundingClientRect();
+  if (rect.width < 10 || rect.height < 10) return;
   const dpr = Math.min(2, window.devicePixelRatio||1);
-  const wantW = Math.floor(rect.width * dpr) || 360;
-  const wantH = Math.floor(rect.height * dpr) || 220;
+  const wantW = Math.floor(rect.width * dpr);
+  const wantH = Math.floor(rect.height * dpr);
   if (c.width !== wantW || c.height !== wantH) { c.width = wantW; c.height = wantH; }
   const ctx = c.getContext("2d");
   ctx.setTransform(dpr,0,0,dpr,0,0);
