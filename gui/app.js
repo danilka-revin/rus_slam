@@ -373,16 +373,20 @@ function renderModules() {
     </div>`;
   };
   const slots = {FL:'mod-FL-slot', FR:'mod-FR-slot', RL:'mod-RL-slot', RR:'mod-RR-slot'};
+  let filled = 0;
   for (const m of state.modules){
     const slotId = slots[m.id];
     const el = slotId ? document.getElementById(slotId) : null;
-    if (el) el.innerHTML = mk(m);
+    if (el){ el.innerHTML = mk(m); filled++; }
   }
   const container = document.getElementById("modules");
-  if (container && !document.getElementById("mod-FL-slot")){
+  if (container && filled===0){
     container.innerHTML = state.modules.map(m=>mk(m)).join("");
   }
 }
+document.addEventListener('DOMContentLoaded', ()=>{ try{renderModules();}catch(e){} });
+setTimeout(()=>{ try{renderModules();}catch(e){} }, 150);
+setTimeout(()=>{ try{renderModules();}catch(e){} }, 600);
 
 function renderFsm() {
   const fsmEl = document.getElementById("fsm");
