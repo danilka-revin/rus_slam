@@ -4,64 +4,40 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>4WIS SLAM</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles.css?v=2.3"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css?v=2.4"/>
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
-    <div class="brand"><div class="logo">RS</div><div class="brand-info"><b>RUS SLAM</b><span>4WIS / 4WID</span></div></div>
-    <nav class="nav"><button class="active"><span>●</span>Статус</button></nav>
-  </aside>
+  <aside class="sidebar"><div class="brand"><div class="logo">RS</div><b>RUS SLAM</b></div><nav class="nav"><button class="active">● Статус</button></nav></aside>
   <main class="main">
-    <header class="topbar">
-      <h1>4WIS/4WID · LiDAR SLAM</h1>
-      <div class="top-meta"><span id="mode-label">TELEOP</span><span id="mission-label">IDLE</span><span id="bat-chip">68%</span><button id="btn-estop" class="estop">E-STOP</button></div>
-    </header>
-    <div class="dashboard">
-      <div class="left-col">
-        <div class="card chassis-card">
-          <div class="chassis-grid">
-            <div class="cg-cell"><div class="mod-wrap" id="mod-FL-slot"></div></div>
-            <div class="cg-cell"></div>
-            <div class="cg-cell"><div class="mod-wrap" id="mod-FR-slot"></div></div>
-            <div class="cg-cell"></div>
-            <div class="cg-cell center"><canvas id="chassis" width="260" height="260"></canvas></div>
-            <div class="cg-cell"></div>
-            <div class="cg-cell"><div class="mod-wrap" id="mod-RL-slot"></div></div>
-            <div class="cg-cell"></div>
-            <div class="cg-cell"><div class="mod-wrap" id="mod-RR-slot"></div></div>
-          </div>
-        </div>
+    <header class="topbar"><h1>4WIS/4WID · LiDAR SLAM</h1><div class="top-meta"><span id="mode-label">TELEOP</span><span id="bat-chip">68%</span><button id="btn-estop" class="estop">E-STOP</button></div></header>
+    <div class="content">
+      <div class="top-grid">
+        <div class="card mod-card" id="card-FL"></div>
+        <div class="card chassis-card"><canvas id="chassis" width="320" height="320"></canvas></div>
+        <div class="card mod-card" id="card-FR"></div>
+        <div class="card mod-card" id="card-RL"></div>
         <div class="card bat-card">
-          <div class="bat-row">
-            <div class="bat-circle"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" class="bg"/><circle cx="50" cy="50" r="40" class="fg" id="bat-circle"/><circle cx="50" cy="50" r="32" class="inner"/></svg><div class="bat-center"><b id="bat-percent">68%</b><small id="bat-v">51.1 В</small><i id="bat-charging-icon">⚡</i></div></div>
-            <div class="bat-data">
-              <div class="bd"><span>SOC</span><b id="bat-soc">68%</b></div>
-              <div class="bd"><span>Ток</span><b id="bat-current">2.2 А</b></div>
-              <div class="bd"><span>U</span><b id="bat-volt-detail">51.1 В</b></div>
-              <div class="bd"><span>Цель</span><b id="bat-target">80%</b></div>
-            </div>
-          </div>
+          <div class="bat-circle"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" class="bg"/><circle cx="50" cy="50" r="40" class="fg" id="bat-circle"/><circle cx="50" cy="50" r="32" class="inner"/></svg><div class="bat-center"><b id="bat-percent">68%</b><small id="bat-v">51.2 В</small><i id="bat-charging-icon">⚡</i></div></div>
+          <div class="bat-line"><span id="bat-soc">68%</span><span id="bat-current">2.2A</span><span id="bat-volt-detail">51.2V</span></div>
           <div class="bat-bar"><div class="track"><i id="bat-bar"></i></div></div>
         </div>
+        <div class="card mod-card" id="card-RR"></div>
       </div>
-      <div class="map-panel panel">
-        <div class="map-wrap" id="map-container"><canvas id="map"></canvas><div class="map-hud"><span id="hud-coverage2">0%</span></div></div>
-      </div>
-      <div class="cams">
-        <div class="panel cam"><div class="cam-head"><span>CAM-F</span></div><canvas id="cam" width="640" height="360"></canvas></div>
-        <div class="panel cam"><div class="cam-head"><span>CAM-R</span></div><canvas id="cam-rear" width="640" height="360"></canvas></div>
+      <div class="bottom-grid">
+        <div class="panel map-panel"><div class="map-wrap" id="map-container"><canvas id="map"></canvas></div></div>
+        <div class="cams">
+          <div class="panel cam"><canvas id="cam" width="640" height="360"></canvas></div>
+          <div class="panel cam"><canvas id="cam-rear" width="640" height="360"></canvas></div>
+        </div>
       </div>
     </div>
   </main>
 </div>
 <div id="toast" class="toast hidden"></div>
-<div style="display:none">
-  <span id="crab-tag"></span><span id="charge-indicator"></span><span id="charge-text"></span><span id="homing-status"></span><span id="bat-status"></span><span id="bat-delta"></span><span id="bat-remain"></span>
-  <span id="leg-x"></span><span id="leg-y"></span><span id="leg-yaw"></span><span id="leg-v"></span><span id="hud-vx"></span><span id="hud-vy"></span><span id="hud-wz"></span><span id="hud-mode"></span><span id="cmd-lin"></span><span id="cmd-lat"></span><span id="cmd-ang"></span><span id="crab-hint"></span><canvas id="stick"></canvas><canvas id="lidar"></canvas><span id="odom-xy"></span><span id="odom-delta"></span><span id="spd"></span><span id="spd-delta"></span><span id="gate"></span><span id="gate-delta"></span><span id="mission-delta"></span><span id="cargo-state"></span><span id="payload-metric"></span><span id="pay-detail"></span><span id="map-coverage"></span><span id="hud-coverage"></span><span id="hud-wp"></span><span id="cam-yaw-f"></span><span id="log-count"></span><div id="logs"></div><div id="events"></div><input id="vmax"/><input id="clearance"/><input id="payload"/><input id="chg-target"/><span id="vmax-label"></span><span id="clr-val"></span><span id="pay-val"></span><span id="chg-val"></span><span id="det-front"></span><span id="cam-dist-f"></span><span id="cam-dist-r"></span><span id="cam-status-r"></span><span id="cam-speed-r"></span><span id="cam-hud"></span><span id="map-coords"></span>
-</div>
-<script src="vision.js?v=2.3"></script>
-<script src="app.js?v=2.3"></script>
+<div style="display:none"><span id="crab-tag"></span><span id="charge-indicator"></span><span id="charge-text"></span><span id="homing-status"></span><span id="bat-status"></span><span id="bat-delta"></span><span id="bat-remain"></span><span id="bat-target"></span><span id="leg-x"></span><span id="leg-y"></span><span id="leg-yaw"></span><span id="leg-v"></span><span id="hud-vx"></span><span id="hud-vy"></span><span id="hud-wz"></span><span id="hud-mode"></span><span id="cmd-lin"></span><span id="cmd-lat"></span><span id="cmd-ang"></span><span id="crab-hint"></span><canvas id="stick"></canvas><canvas id="lidar"></canvas><span id="odom-xy"></span><span id="odom-delta"></span><span id="spd"></span><span id="spd-delta"></span><span id="gate"></span><span id="gate-delta"></span><span id="mission-delta"></span><span id="cargo-state"></span><span id="payload-metric"></span><span id="pay-detail"></span><span id="map-coverage"></span><span id="hud-coverage"></span><span id="hud-wp"></span><span id="cam-yaw-f"></span><span id="log-count"></span><div id="logs"></div><div id="events"></div><input id="vmax"/><input id="clearance"/><input id="payload"/><input id="chg-target"/><span id="vmax-label"></span><span id="clr-val"></span><span id="pay-val"></span><span id="chg-val"></span><span id="det-front"></span><span id="cam-dist-f"></span><span id="cam-dist-r"></span><span id="cam-status-r"></span><span id="cam-speed-r"></span><span id="cam-hud"></span><span id="map-coords"></span><span id="hud-coverage2"></span><span id="mission-label"></span></div>
+<script src="vision.js?v=2.4"></script>
+<script src="app.js?v=2.4"></script>
 </body>
 </html>

@@ -372,15 +372,17 @@ function renderModules() {
       </div>
     </div>`;
   };
-  const slots = {FL:'mod-FL-slot', FR:'mod-FR-slot', RL:'mod-RL-slot', RR:'mod-RR-slot'};
-  let filled = 0;
+  const slots = {FL:'card-FL', FR:'card-FR', RL:'card-RL', RR:'card-RR'};
+  // also support old ids
+  const oldSlots = {FL:'mod-FL-slot', FR:'mod-FR-slot', RL:'mod-RL-slot', RR:'mod-RR-slot'};
   for (const m of state.modules){
-    const slotId = slots[m.id];
-    const el = slotId ? document.getElementById(slotId) : null;
-    if (el){ el.innerHTML = mk(m); filled++; }
+    const id = slots[m.id] || oldSlots[m.id];
+    const el = id ? document.getElementById(id) : null;
+    if (el) el.innerHTML = mk(m);
   }
+  // fallback for generic container
   const container = document.getElementById("modules");
-  if (container && filled===0){
+  if (container && container.children.length===0){
     container.innerHTML = state.modules.map(m=>mk(m)).join("");
   }
 }
