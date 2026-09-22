@@ -18,10 +18,10 @@
         <div class="card chassis-card"><canvas id="chassis" width="320" height="320"></canvas></div>
         <div class="card mod-card" id="card-FR"></div>
         <div class="card mod-card" id="card-RL"></div>
-        <div class="card bat-card">
+        <div class="card bat-card" id="bat-card">
           <div class="bat-circle"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" class="bg"/><circle cx="50" cy="50" r="40" class="fg" id="bat-circle"/><circle cx="50" cy="50" r="32" class="inner"/></svg><div class="bat-center"><b id="bat-percent">68%</b><small id="bat-v">51.2 В</small><i id="bat-charging-icon">⚡</i></div></div>
-          <div class="bat-line"><span id="bat-soc">68%</span><span id="bat-current">2.2A</span><span id="bat-volt-detail">51.2V</span></div>
-          <div class="bat-bar"><div class="track"><i id="bat-bar"></i></div></div>
+          <div class="bat-info"><div class="bat-line"><span id="bat-soc">68%</span><span id="bat-current">2.2A</span><span id="bat-volt-detail">51.2V</span><span class="bat-charging-badge hidden" id="bat-charging-badge">⚡ ЗАРЯЖАЕТСЯ</span></div><div class="bat-status-line"><span id="bat-status-text">LiFePO4 · разряд</span><span id="bat-remain">2.1 ч</span></div></div>
+          <div class="bat-bar"><div class="track"><i id="bat-bar"></i><i class="charging-stripe hidden" id="bat-charging-stripe"></i></div></div>
         </div>
         <div class="card mod-card" id="card-RR"></div>
       </div>

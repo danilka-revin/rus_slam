@@ -1210,6 +1210,14 @@ function sim(dt) {
   }
   const chIcon = document.getElementById("bat-charging-icon");
   if (chIcon) chIcon.classList.toggle("on", !!state.charging);
+  const chBadge = document.getElementById("bat-charging-badge");
+  if (chBadge) chBadge.classList.toggle("hidden", !state.charging);
+  const chStripe = document.getElementById("bat-charging-stripe");
+  if (chStripe) chStripe.classList.toggle("hidden", !state.charging);
+  const batCard = document.getElementById("bat-card");
+  if (batCard) batCard.classList.toggle("charging", !!state.charging);
+  const batStatusText = document.getElementById("bat-status-text");
+  if (batStatusText) batStatusText.textContent = state.charging ? `⚡ ЗАРЯДКА до ${state.chargeTo}% · ${state.bat.toFixed(1)}В` : `LiFePO4 · разряд · ${state.bat.toFixed(1)}В`;
   const chInd = document.getElementById("charge-indicator");
   if (chInd) {
     chInd.classList.toggle("on", !!state.charging);
@@ -1221,7 +1229,7 @@ function sim(dt) {
   const bDelta = document.getElementById("bat-delta");
   if (bDelta) bDelta.textContent = state.charging ? `заряд ${soc.toFixed(0)}%` : `ток ${state.current.toFixed(1)} А`;
   const batChip = document.getElementById("bat-chip");
-  if (batChip) batChip.textContent = `● АКБ ${soc.toFixed(0)}% ${state.charging?'⚡':''}`;
+  if (batChip) batChip.textContent = `● АКБ ${soc.toFixed(0)}% ${state.charging?'⚡ ЗАРЯДКА':''}`;
 
   // top metrics & HUD
   const odom = document.getElementById("odom-xy");
