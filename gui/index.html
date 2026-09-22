@@ -3,41 +3,35 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>RUS SLAM — Пульт управления 4WIS</title>
+<title>RUS SLAM — 4WIS HMI</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
 <div class="app">
+  <!-- Левая панель — дизайн ZMK -->
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">RS</div>
       <div class="brand-info"><b>RUS SLAM</b><span>4WIS / 4WID · 250 кг · LiFePO4</span></div>
-      <div class="ver">v1.2<br>HMI</div>
+      <div class="ver">v2.0<br>ZMK</div>
     </div>
 
+    <!-- Модель робота -->
     <div class="card">
-      <div class="card-head"><h4>Шасси 4WIS · модель</h4><span class="badge" id="crab-tag">4WIS</span></div>
+      <div class="card-head"><h4>Шасси 4WIS · модель робота</h4><span class="badge" id="crab-tag">4WIS</span></div>
       <div class="chassis-box"><canvas id="chassis" width="280" height="280"></canvas></div>
-      <div class="grid4">
-        <div class="kv"><span>X</span><b id="leg-x">0.00</b></div>
-        <div class="kv"><span>Y</span><b id="leg-y">0.00</b></div>
-        <div class="kv"><span>YAW</span><b id="leg-yaw">0°</b></div>
-        <div class="kv"><span>V</span><b id="leg-v">0.00</b></div>
-      </div>
-      <div class="grid4">
-        <div class="kv"><span>VX</span><b id="hud-vx">0.00</b></div>
-        <div class="kv"><span>VY</span><b id="hud-vy">0.00</b></div>
-        <div class="kv"><span>WZ</span><b id="hud-wz">0.00</b></div>
-        <div class="kv"><span>MODE</span><b id="hud-mode">TELEOP</b></div>
-      </div>
-      <div class="stick-row"><canvas id="stick" width="80" height="80"></canvas><div><div class="cmds"><span id="cmd-lin">vx 0.00</span><span id="cmd-lat">vy 0.00</span><span id="cmd-ang">wz 0.00</span></div><small id="crab-hint">WASD + Q/E краб · Space стоп</small></div></div>
+      <div class="chassis-hint">Вид сверху · краб / 4WIS · LiDAR в центре</div>
     </div>
 
+    <!-- Батарея + зарядка -->
     <div class="card bat-card">
       <div class="card-head"><h4>АКБ LiFePO4 12S3P · 714 Вт·ч</h4><div class="charge-badge" id="charge-indicator"><span>⚡</span><b id="charge-text">ЗАРЯДКА</b></div></div>
       <div class="bat-main">
-        <div class="bat-circle"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" class="bg"/><circle cx="50" cy="50" r="40" class="fg" id="bat-circle"/><circle cx="50" cy="50" r="32" class="inner"/></svg><div class="bat-center"><b id="bat-percent">78%</b><small id="bat-v">51.2 В</small><i id="bat-charging-icon">⚡</i></div></div>
+        <div class="bat-circle">
+          <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" class="bg"/><circle cx="50" cy="50" r="40" class="fg" id="bat-circle"/><circle cx="50" cy="50" r="32" class="inner"/></svg>
+          <div class="bat-center"><b id="bat-percent">78%</b><small id="bat-v">51.2 В</small><i id="bat-charging-icon">⚡</i></div>
+        </div>
         <div class="bat-stats">
           <div><span>SOC</span><b id="bat-soc">78%</b></div>
           <div><span>Ток</span><b id="bat-current">4.1 А</b></div>
@@ -47,103 +41,72 @@
           <div><span>BMS</span><b>OK</b></div>
         </div>
       </div>
-      <div class="bat-bar"><div class="track"><i id="bat-bar"></i></div></div>
-      <div class="bat-foot"><span id="bat-status">разряд · BMS OK</span><span id="bat-delta">ток 4.1А</span></div>
+      <div class="bat-bar"><div class="track"><i id="bat-bar" style="width:78%"></i></div></div>
+      <div class="bat-foot"><span id="bat-status">разряд · BMS OK · 34°C</span><span id="bat-delta">ток 4.1А</span></div>
     </div>
 
+    <!-- Состояние каждого мотора + поворот в градусах -->
     <div class="card">
       <div class="card-head"><h4>Моторы · поворот в градусах</h4><span class="badge subtle" id="homing-status">HOMED</span></div>
       <div id="modules" class="mods"></div>
+      <div class="motors-hint">STEER — угол поворота колеса · RPM · TEMP</div>
     </div>
 
-    <div class="card">
-      <div class="card-head"><h4>Управление</h4></div>
-      <div class="ctrls">
-        <label class="tgl"><input type="checkbox" id="crab"/><span>Крабовый ход</span></label>
-        <label class="tgl"><input type="checkbox" id="beacon" checked/><span>Маяк</span></label>
-        <label class="rng">Скорость <b id="vmax-label">5.0 м/с</b><input type="range" id="vmax" min="1" max="5" step="0.1" value="5"/></label>
-        <label class="rng">Зазор <b id="clr-val">0.70 м</b><input type="range" id="clearance" min="0.4" max="1.4" step="0.05" value="0.7"/></label>
-        <label class="rng">Груз <b id="pay-val">80 кг</b><input type="range" id="payload" min="0" max="250" step="10" value="80"/></label>
-        <label class="rng">Заряд до <b id="chg-val">80%</b><input type="range" id="chg-target" min="40" max="100" step="5" value="80"/></label>
-        <div class="btn-row"><button id="btn-home" class="btn">Хоминг</button><button id="btn-charge" class="btn primary">На базу</button><button id="btn-horn" class="btn">Сигнал</button></div>
-      </div>
-    </div>
-
-    <div class="foot"><span class="pulse" id="link-pulse"></span><span id="link-text">UART×4 20Гц · ROS2</span><small id="link-meta">CRC16 OK · 0 ошибок</small></div>
+    <div class="foot"><span class="pulse"></span><span id="link-text">UART×4 20Гц · ROS2 · ZMK дизайн</span><small>4WIS 4WID LiFePO4 · CRC OK</small></div>
   </aside>
 
+  <!-- Одна вкладка -->
   <main class="main">
     <header class="topbar">
-      <div class="top-left"><h1>Курьер 4WIS/4WID · LiDAR SLAM</h1><small>НТЦ АВТОВАЗ · Задание №2 · 250кг · 18км/ч · ROS2</small></div>
-      <div class="top-center"><div class="statusline" id="statusline"><span class="mode" id="mode-label">TELEOP</span><span class="fsm" id="mission-label">IDLE</span><span id="status-hint">WASD Space H</span></div></div>
-      <div class="top-right"><button id="btn-theme" class="ibtn">◐</button><button id="btn-refresh" class="ibtn">↻</button><button id="btn-estop" class="estop">E-STOP</button></div>
+      <div class="top-left"><h1>Курьер 4WIS/4WID · LiDAR SLAM</h1><small>НТЦ АВТОВАЗ · Задание №2 · 250 кг · 18 км/ч · одна вкладка ZMK</small></div>
+      <div class="top-center"><div class="statusline"><span class="mode" id="mode-label">TELEOP</span><span class="fsm" id="mission-label">IDLE</span><span id="bat-chip">● АКБ 78%</span></div></div>
+      <div class="top-right"><button id="btn-recenter" class="ibtn" title="К роботу">⌖</button><button id="btn-estop" class="estop">E-STOP</button></div>
     </header>
 
-    <div class="metrics">
-      <div class="metric"><span>Одометрия</span><b id="odom-xy">0.00 м</b><small id="odom-delta">x 0 y 0 yaw 0°</small></div>
-      <div class="metric"><span>Скорость</span><b id="spd">0.0 км/ч</b><small id="spd-delta">0.00 м/с</small></div>
-      <div class="metric"><span>Гейт</span><b id="gate">OK</b><small id="gate-delta">e-stop выкл</small></div>
-      <div class="metric"><span>Миссия</span><b id="mission-delta">0 точек</b><small id="cargo-state">отсек пустой</small></div>
-      <div class="metric"><span>Груз</span><b id="payload-metric">80 кг</b><small id="pay-detail">IP65</small></div>
-      <div class="metric"><span>SLAM</span><b id="map-coverage">0%</b><small id="hud-coverage">180 лучей</small></div>
-    </div>
-
     <div class="workspace">
+      <!-- Карта LiDAR построенная роботом -->
       <div class="map-panel panel">
         <div class="panel-head">
-          <div class="ph-title"><h3>Карта LiDAR SLAM построена роботом</h3><small>Перетаскивание · колесо масштаб · клик точка · ПКМ удалить · жёлтые P маршрут A*</small></div>
-          <div class="toolbar">
-            <button id="btn-explore" class="tbtn primary">Автоскан склада</button>
-            <button id="btn-auto" class="tbtn">Старт маршрута</button>
-            <button id="btn-pause" class="tbtn">Пауза</button>
-            <button id="btn-skip" class="tbtn">Пропуск</button>
-            <button id="btn-dock" class="tbtn">На базу</button>
-            <button id="btn-loop" class="tbtn">Цикл</button>
-            <button id="btn-clear-route" class="tbtn">Сброс</button>
-            <button id="btn-recenter" class="tbtn">К роботу</button>
-            <button id="btn-shot" class="tbtn">Снимок</button>
-          </div>
-          <div class="route-bar">
-            <input id="route-name" placeholder="Имя группы точек"/>
-            <button id="btn-save-route" class="tbtn sm">Сохранить группу</button>
-            <select id="route-list"><option>нет групп</option></select>
-            <button id="btn-load-route" class="tbtn sm">Загрузить</button>
-            <button id="btn-del-route" class="tbtn sm">Удалить</button>
-            <span class="hint" title="Группы точек сохраняются в браузере">localStorage</span>
-          </div>
-          <div class="events" id="events"></div>
+          <div class="ph-title"><h3>Карта LiDAR SLAM построена роботом</h3><small>Склад НТЦ · 360° · сетка 1 м · A-загрузка Б-выгрузка База</small></div>
         </div>
         <div class="map-wrap" id="map-container">
           <canvas id="map"></canvas>
-          <div class="map-badge">MAPPING · 20Гц</div>
-          <div class="map-hud"><span id="hud-coverage2">0%</span> · <span id="hud-wp2">0</span> точек · <span id="map-coords">x0 y0</span></div>
-        </div>
-        <div class="prog">
-          <div class="prog-head"><b>Программа А→Б</b><span id="prog-now"></span><div class="spacer"></div><button id="place-A" class="tbtn xs">А</button><button id="place-B" class="tbtn xs">Б</button><button id="place-D" class="tbtn xs">База</button><button id="place-S" class="tbtn xs">Старт</button></div>
-          <div class="prog-btns"><button data-blk="goA" class="tbtn xs">→А</button><button data-blk="load" class="tbtn xs">Взять</button><button data-blk="goB" class="tbtn xs">→Б</button><button data-blk="unload" class="tbtn xs">Сдать</button><button data-blk="goP" class="tbtn xs">По P</button><button data-blk="dock" class="tbtn xs">База</button><button data-blk="charge" class="tbtn xs">Заряд</button><button data-blk="loop" class="tbtn xs">Цикл</button></div>
-          <ol id="prog-list" class="prog-list"></ol>
-          <div class="prog-run"><button id="btn-prog-run" class="tbtn primary sm">Пуск</button><button id="btn-prog-stop" class="tbtn sm">Стоп</button><button id="btn-prog-clear" class="tbtn sm">Очист</button><button id="btn-load-act" class="tbtn sm confirm">Груз взят</button><button id="btn-unload-act" class="tbtn sm confirm">Груз сдан</button></div>
+          <div class="map-badge">MAPPING · 20Гц · LiDAR</div>
+          <div class="map-hud"><span id="hud-coverage2">0%</span> · <span id="map-coords">x0 y0</span></div>
         </div>
       </div>
 
+      <!-- Справа от карты две камеры -->
       <div class="cams">
         <div class="panel cam">
-          <div class="cam-head"><span class="live">CAM-F · ПЕРЕД</span><span id="cam-hud">sim</span></div>
+          <div class="cam-head"><span class="live">CAM-F · ПЕРЕД · 120° FOV</span><span id="cam-hud">sim · маяк вкл</span></div>
           <canvas id="cam" width="640" height="360"></canvas>
-          <div class="cam-foot"><span id="det-front">нет</span><span id="cam-dist-f">—</span><span id="cam-yaw-f">0°</span></div>
+          <div class="cam-foot"><span id="det-front">нет · проезд свободен</span><span id="cam-dist-f">—</span></div>
         </div>
         <div class="panel cam">
-          <div class="cam-head"><span class="live rear">CAM-R · НАЗАД</span></div>
-          <canvas id="cam-rear" width="640" height="240"></canvas>
-          <div class="cam-foot"><span id="cam-dist-r">свободно</span><span id="cam-status-r">OK</span><span id="cam-speed-r">0</span></div>
+          <div class="cam-head"><span class="live rear">CAM-R · НАЗАД · 120° FOV</span><span id="cam-status-r">OK</span></div>
+          <canvas id="cam-rear" width="640" height="360"></canvas>
+          <div class="cam-foot"><span id="cam-dist-r">свободно</span><span id="cam-speed-r">0 км/ч</span></div>
         </div>
-        <div class="panel mini"><div class="mini-head"><h4>LiDAR 360°</h4></div><canvas id="lidar" width="360" height="220"></canvas></div>
-        <div class="panel mini"><div class="mini-head"><h4>Журнал</h4><span id="log-count">0</span><button id="btn-clear-logs" class="tbtn xs">очист</button></div><div id="logs" class="logs"></div></div>
       </div>
     </div>
   </main>
 </div>
 <div id="toast" class="toast hidden"></div>
+<!-- Скрытые элементы для совместимости со старым app.js (не влияют на верстку) -->
+<div style="display:none">
+  <span id="leg-x"></span><span id="leg-y"></span><span id="leg-yaw"></span><span id="leg-v"></span>
+  <span id="hud-vx"></span><span id="hud-vy"></span><span id="hud-wz"></span><span id="hud-mode"></span>
+  <span id="cmd-lin"></span><span id="cmd-lat"></span><span id="cmd-ang"></span>
+  <span id="crab-hint"></span><canvas id="stick"></canvas><canvas id="lidar"></canvas>
+  <span id="odom-xy"></span><span id="odom-delta"></span><span id="spd"></span><span id="spd-delta"></span>
+  <span id="gate"></span><span id="gate-delta"></span><span id="mission-delta"></span>
+  <span id="cargo-state"></span><span id="payload-metric"></span><span id="pay-detail"></span>
+  <span id="map-coverage"></span><span id="hud-coverage"></span><span id="hud-wp"></span>
+  <span id="cam-yaw-f"></span><span id="log-count"></span><div id="logs"></div><div id="events"></div>
+  <input id="vmax"/><input id="clearance"/><input id="payload"/><input id="chg-target"/>
+  <span id="vmax-label"></span><span id="clr-val"></span><span id="pay-val"></span><span id="chg-val"></span>
+</div>
 <script src="vision.js"></script>
 <script src="app.js"></script>
 </body>
