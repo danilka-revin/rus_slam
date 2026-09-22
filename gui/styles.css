@@ -1,4 +1,4 @@
-/* v2.6 specialist - battery smaller, motors higher, robot bigger as per photos */
+/* v2.8 - RL/RR higher to FL/FR, battery flat between motors, revert v2.7 */
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;padding:0;height:100%}
 body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace;font-size:13px;overflow:hidden}
