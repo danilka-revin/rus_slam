@@ -1,4 +1,4 @@
-/* v2.9 as per user screenshot - FL FR top, RL RR below them close, battery full width flat, map = 2 cams */
+/* v2.10 no empty zones - FL+RL stacked compact, chassis same height, no waste */
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;padding:0;height:100%}
 body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace;font-size:13px;overflow:hidden}
@@ -15,10 +15,10 @@ body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace
 .top-meta span{padding:2px 8px;border-radius:999px;background:#1e2e26;border:1px solid var(--bdr)}
 .estop{background:var(--red);color:#fff;border:0;padding:5px 12px;border-radius:7px;font-weight:800}
 .content{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;overflow:hidden}
-.top-grid{display:grid;grid-template-columns:200px 1fr 200px;grid-template-rows:340px 110px 56px;gap:8px;flex-shrink:0;align-items:start}
+.top-grid{display:grid;grid-template-columns:200px 1fr 200px;grid-template-rows:160px 110px 56px;gap:8px;flex-shrink:0;align-items:stretch}
 .card{background:var(--sb2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;min-width:0}
-.chassis-card{grid-column:2;grid-row:1 / span 2;display:grid;place-items:center;padding:8px;background:radial-gradient(60% at 50% 50%, rgba(213,255,69,.06), transparent 70%);height:458px;min-height:458px;max-height:458px}
-#chassis{width:360px;height:360px;max-width:100%;max-height:100%;border-radius:10px;background:#080e0b;border:1px solid var(--bdr);display:block}
+.chassis-card{grid-column:2;grid-row:1 / span 2;display:grid;place-items:center;padding:6px;background:radial-gradient(60% at 50% 50%, rgba(213,255,69,.06), transparent 70%);height:278px;min-height:278px;max-height:278px}
+#chassis{width:260px;height:260px;max-width:100%;max-height:100%;border-radius:10px;background:#080e0b;border:1px solid var(--bdr);display:block}
 .mod-card{padding:6px;display:flex;flex-direction:column;overflow:hidden}
 #card-FL{grid-column:1;grid-row:1;height:160px;min-height:160px;max-height:160px}
 #card-FR{grid-column:3;grid-row:1;height:160px;min-height:160px;max-height:160px}
@@ -26,12 +26,12 @@ body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace
 #card-RR{grid-column:3;grid-row:2;height:110px;min-height:110px;max-height:110px}
 .mod{width:100%;flex:1;display:flex;flex-direction:column;overflow:hidden}
 .mod-id{font-size:11px;font-weight:800}
-.mod-dial{width:56px;height:56px;margin:6px auto;position:relative;flex-shrink:0}
-.mod-dial svg{width:56px;height:56px;transform:rotate(-90deg);display:block}
+.mod-dial{width:52px;height:52px;margin:4px auto;position:relative;flex-shrink:0}
+.mod-dial svg{width:52px;height:52px;transform:rotate(-90deg);display:block}
 .dial-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:5}
 .dial-fg{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round}
 .mod-dial-center{position:absolute;inset:0;display:grid;place-items:center}
-.mod-dial-center b{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.mod-dial-center b{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
 .mod-bars{margin-top:auto;display:flex;flex-direction:column;gap:2px}
 .mod-bar{display:flex;gap:4px;align-items:center;font-size:7px;color:#7a8f86}
 .mod-bar span{width:20px}
@@ -39,23 +39,23 @@ body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace
 .bar-track i{display:block;height:100%;border-radius:99px}
 .bar-track i.rpm{background:var(--blue)} .bar-track i.temp{background:var(--amber)}
 .bat-card{grid-column:1 / -1;grid-row:3;display:flex;align-items:center;justify-content:space-between;padding:4px 12px;height:56px;min-height:56px;max-height:56px;flex-direction:row;gap:10px}
-.bat-circle{position:relative;width:44px;height:44px;flex-shrink:0}
-.bat-circle svg{width:44px;height:44px;transform:rotate(-90deg);display:block}
+.bat-circle{position:relative;width:40px;height:40px;flex-shrink:0}
+.bat-circle svg{width:40px;height:40px;transform:rotate(-90deg);display:block}
 .bat-circle .bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:8}
 .bat-circle .fg{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round}
 .bat-circle .inner{fill:none;stroke:rgba(255,255,255,.05);stroke-width:1;stroke-dasharray:3 3}
 .bat-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.bat-center b{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-.bat-center small{font-size:7px;color:#8aa198}
-.bat-center i{font-size:8px;opacity:0}
+.bat-center b{font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.bat-center small{font-size:6px;color:#8aa198}
+.bat-center i{font-size:7px;opacity:0}
 .bat-center i.on{opacity:1;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .bat-line{display:flex;gap:8px;font-size:8px;font-variant-numeric:tabular-nums;flex:1;justify-content:center}
-.bat-bar{width:200px;flex-shrink:0}
+.bat-bar{width:220px;flex-shrink:0}
 .bat-bar .track{height:6px;background:rgba(0,0,0,.3);border:1px solid var(--bdr);border-radius:99px;overflow:hidden}
 .bat-bar .track i{display:block;height:100%;background:var(--accent);border-radius:99px}
 
-.bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:8px;flex:1;min-height:0;max-height:calc(100vh - 48px - 340px - 110px - 56px - 24px);height:calc(100vh - 48px - 340px - 110px - 56px - 24px);overflow:hidden}
+.bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:8px;flex:1;min-height:0;overflow:hidden}
 .map-panel{display:flex;flex-direction:column;min-height:0;height:100%;max-height:100%;overflow:hidden}
 .map-wrap{position:relative;flex:1;min-height:0;height:100%;max-height:100%;background:#080e0b;display:flex;overflow:hidden;border-radius:12px;border:1px solid var(--bdr)}
 .map-wrap canvas{display:block;width:100%;height:100%;background:#101a16}
