@@ -353,9 +353,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
 });
 
 function renderModules() {
-  const container = document.getElementById("modules");
-  if (!container) return;
-  const html = state.modules.map((m) => {
+  const mk = (m)=>{
     const steerDeg = m.steer || 0;
     const rpm = m.rpm || 0;
     const temp = m.temp || 36;
@@ -364,19 +362,26 @@ function renderModules() {
     const steerNorm = ((steerDeg+90)/180*100);
     const circ = 2*Math.PI*18;
     const steerOffset = circ - (Math.max(0,Math.min(100,steerNorm))/100)*circ;
-    const steerText = (steerDeg>=0?'+':'')+steerDeg.toFixed(1)+'°';
     return `
     <div class="mod">
-      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="badge subtle" style="font-size:7px;padding:2px 5px">${m.homed?'HOMED':'SEEK'}</span></div>
-      <div class="mod-dial"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="18" class="dial-bg"/><circle cx="26" cy="26" r="18" class="dial-fg" stroke-dasharray="${circ}" stroke-dashoffset="${steerOffset}"/></svg><div class="mod-dial-center"><b>${steerDeg.toFixed(0)}°</b><small>STEER</small></div></div>
+      <div class="mod-id">${m.id}</div>
+      <div class="mod-dial"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="18" class="dial-bg"/><circle cx="26" cy="26" r="18" class="dial-fg" stroke-dasharray="${circ}" stroke-dashoffset="${steerOffset}"/></svg><div class="mod-dial-center"><b>${steerDeg.toFixed(0)}°</b></div></div>
       <div class="mod-bars">
-        <div class="mod-bar"><span>RPM</span><div class="bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><b style="font-family:JetBrains Mono,monospace;font-size:9px;min-width:24px;text-align:right">${rpm.toFixed(0)}</b></div>
-        <div class="mod-bar"><span>TEMP</span><div class="bar-track"><i class="temp" style="width:${tempPct}%"></i></div><b style="font-family:JetBrains Mono,monospace;font-size:9px;min-width:24px;text-align:right">${temp.toFixed(0)}°</b></div>
+        <div class="mod-bar"><span>RPM</span><div class="bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><b>${rpm.toFixed(0)}</b></div>
+        <div class="mod-bar"><span>°C</span><div class="bar-track"><i class="temp" style="width:${tempPct}%"></i></div><b>${temp.toFixed(0)}</b></div>
       </div>
-      <div class="mod-meta"><span>${steerText}</span><span>${m.homed?'HOMED':'SEEK'}</span></div>
     </div>`;
-  }).join("");
-  container.innerHTML = html;
+  };
+  const slots = {FL:'mod-FL-slot', FR:'mod-FR-slot', RL:'mod-RL-slot', RR:'mod-RR-slot'};
+  for (const m of state.modules){
+    const slotId = slots[m.id];
+    const el = slotId ? document.getElementById(slotId) : null;
+    if (el) el.innerHTML = mk(m);
+  }
+  const container = document.getElementById("modules");
+  if (container && !document.getElementById("mod-FL-slot")){
+    container.innerHTML = state.modules.map(m=>mk(m)).join("");
+  }
 }
 
 function renderFsm() {
