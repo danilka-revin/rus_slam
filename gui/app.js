@@ -85,7 +85,13 @@ function setMission(m) {
   const ml = document.getElementById("mission-label");
   if (ml) ml.textContent = m;
   const md = document.getElementById("mission-delta");
-  if (md) md.textContent = `${state.waypoints.length} точек · ${state.progRun ? 'программа' : 'ручной'}`;
+  if (md) md.textContent = `${state.waypoints.length} точек · ${state.progRun ? 'программа А→Б' : 'ручной режим'}`;
+  const hm = document.getElementById("hud-mode");
+  if (hm) hm.textContent = m==="FAULT" ? "FAULT" : state.auto ? "AUTO" : "TELEOP";
+  const modeLab = document.getElementById("mode-label");
+  if (modeLab && !state.estop) {
+    modeLab.textContent = state.auto ? `AUTO · ${m}` : `TELEOP · ${m}`;
+  }
   renderFsm();
   log("ok", "FSM → " + m);
 }
@@ -350,32 +356,32 @@ function renderModules() {
   const container = document.getElementById("modules");
   if (!container) return;
   const html = state.modules.map((m) => {
-    const steerDeg = m.steer.toFixed(1);
-    const rpm = m.rpm.toFixed(0);
-    const temp = m.temp.toFixed(0);
-    const rpmPct = Math.min(100, Math.abs(m.rpm)/8);
-    const tempPct = Math.min(100, (m.temp-20)/60*100);
-    const steerNorm = ((m.steer+90)/180*100);
+    const steerDeg = m.steer;
+    const steerAbs = Math.abs(steerDeg);
+    const rpm = m.rpm;
+    const temp = m.temp;
+    const rpmPct = Math.min(100, Math.abs(rpm)/8);
+    const tempPct = Math.min(100, (temp-20)/60*100);
+    const steerNorm = ((steerDeg+90)/180*100);
+    const circ = 2*Math.PI*22;
+    const steerOffset = circ - (steerNorm/100)*circ;
+    const statusClass = temp>65 ? "warn" : temp>75 ? "err" : "ok";
+    const statusDot = temp>70 ? "warn" : "ok";
     return `
     <div class="mod-card">
-      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="mod-homed">${m.homed ? "HOMED" : "SEEK"}</span></div>
-      <div class="mod-steer"><b>${steerDeg}</b><small>° поворот</small></div>
-      <div class="mod-bars">
-        <div class="mod-bar"><span>STEER</span><div class="mod-bar-track"><i style="width:${steerNorm}%"></i></div></div>
-        <div class="mod-bar"><span>RPM</span><div class="mod-bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><span style="width:auto">${rpm}</span></div>
-        <div class="mod-bar"><span>TEMP</span><div class="mod-bar-track"><i class="temp" style="width:${tempPct}%"></i></div><span style="width:auto">${temp}°</span></div>
+      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="mod-status ${statusDot}"></span></div>
+      <div class="mod-dial">
+        <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" class="dial-bg"/><circle cx="26" cy="26" r="22" class="dial-fg" stroke-dasharray="${circ}" stroke-dashoffset="${steerOffset}" /></svg>
+        <div class="mod-dial-center"><b>${steerDeg.toFixed(0)}°</b><small>STEER</small></div>
       </div>
-      <div class="mod-meta"><span>${m.id} · BLDC 260W</span><span>NEMA23 1:7.5</span></div>
+      <div class="mod-bars">
+        <div class="mod-bar"><span>RPM</span><div class="mod-bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><b style="font-size:10px;color:#dbe7e1;font-family:JetBrains Mono">${rpm.toFixed(0)}</b></div>
+        <div class="mod-bar"><span>TEMP</span><div class="mod-bar-track"><i class="temp" style="width:${tempPct}%"></i></div><b style="font-size:10px;color:#dbe7e1;font-family:JetBrains Mono">${temp.toFixed(0)}°</b></div>
+      </div>
+      <div class="mod-meta"><span>${m.id} · ${steerDeg>0?'+':''}${steerDeg.toFixed(1)}° · BLDC</span><span>${m.homed?'HOMED':'SEEK'}</span></div>
     </div>`;
   }).join("");
   container.innerHTML = html;
-
-  const modCards = document.getElementById("mod-cards");
-  if (modCards) {
-    modCards.innerHTML = `
-    <div class="modules" style="grid-template-columns:repeat(4,1fr);padding:0;display:grid;gap:8px">${html}</div>
-    <p class="hint" style="color:#6d7973;font-size:11px;margin-top:10px">Кадр команды 10 Б + телеметрия 16 Б, CRC16/Modbus, 20 Гц. Угол поворота в градусах от -90 до +90, нормализованный для крабового хода.</p>`;
-  }
 }
 
 function renderFsm() {
@@ -1189,12 +1195,19 @@ function sim(dt) {
   if (pctEl) pctEl.textContent = soc.toFixed(0)+"%";
   const vEl = document.getElementById("bat-v");
   if (vEl) vEl.textContent = state.bat.toFixed(1)+" В";
+  const vDet = document.getElementById("bat-volt-detail");
+  if (vDet) vDet.textContent = state.bat.toFixed(1)+" В";
   const socEl = document.getElementById("bat-soc");
   if (socEl) socEl.textContent = soc.toFixed(0)+"%";
   const curEl = document.getElementById("bat-current");
   if (curEl) curEl.textContent = state.current.toFixed(1)+" А";
   const tgtEl = document.getElementById("bat-target");
   if (tgtEl) tgtEl.textContent = (state.chargeTo||80)+"%";
+  const remain = document.getElementById("bat-remain");
+  if (remain) {
+    const hours = soc>5 ? (state.bat*18.6/1000) / Math.max(0.1,state.current) : 0;
+    remain.textContent = state.charging ? `→ ${state.chargeTo}%` : `${hours.toFixed(1)} ч`;
+  }
   const bar = document.getElementById("bat-bar");
   if (bar) bar.style.width = soc.toFixed(0)+"%";
   const circle = document.getElementById("bat-circle");
@@ -1206,46 +1219,80 @@ function sim(dt) {
     circle.classList.toggle("low", soc<20);
     circle.classList.toggle("charging", !!state.charging);
   }
+  const chIcon = document.getElementById("bat-charging-icon");
+  if (chIcon) chIcon.classList.toggle("on", !!state.charging);
   const chInd = document.getElementById("charge-indicator");
   if (chInd) {
     chInd.classList.toggle("on", !!state.charging);
     const ct = document.getElementById("charge-text");
-    if (ct) ct.textContent = state.charging ? `ЗАРЯДКА ${soc.toFixed(0)}%` : "ЗАРЯДКА";
+    if (ct) ct.textContent = state.charging ? `ЗАРЯДКА ${soc.toFixed(0)}% → ${state.chargeTo}%` : "ЗАРЯДКА";
   }
   const bStat = document.getElementById("bat-status");
-  if (bStat) bStat.textContent = state.charging ? `зарядка до ${state.chargeTo}% · ${state.bat.toFixed(1)}В` : `разряд · ${state.bat.toFixed(1)}В · 18.6 А·ч`;
+  if (bStat) bStat.textContent = state.charging ? `зарядка до ${state.chargeTo}% · ${state.bat.toFixed(1)}В · BMS балансировка` : `разряд · ${state.bat.toFixed(1)}В · 18.6 А·ч · BMS OK · 34°C`;
   const bDelta = document.getElementById("bat-delta");
-  if (bDelta) bDelta.textContent = `ток ${state.current.toFixed(1)} А · SOC ${soc.toFixed(0)}%`;
-  const oldDelta = document.getElementById("bat-delta");
-  // top metrics
+  if (bDelta) bDelta.textContent = state.charging ? `заряд ${soc.toFixed(0)}%` : `ток ${state.current.toFixed(1)} А`;
+  const batChip = document.getElementById("bat-chip");
+  if (batChip) batChip.textContent = `● АКБ ${soc.toFixed(0)}% ${state.charging?'⚡':''}`;
+
+  // top metrics & HUD
   const odom = document.getElementById("odom-xy");
   if (odom) odom.textContent = Math.hypot(state.x, state.y).toFixed(2)+" м";
   const odomD = document.getElementById("odom-delta");
   if (odomD) odomD.textContent = `x ${state.x.toFixed(2)} · y ${state.y.toFixed(2)} · yaw ${(state.yaw*180/Math.PI).toFixed(0)}°`;
+  const legX = document.getElementById("leg-x");
+  if (legX) legX.textContent = state.x.toFixed(2)+" м";
+  const legY = document.getElementById("leg-y");
+  if (legY) legY.textContent = state.y.toFixed(2)+" м";
+  const legYaw = document.getElementById("leg-yaw");
+  if (legYaw) legYaw.textContent = (state.yaw*180/Math.PI).toFixed(0)+"°";
+  const legV = document.getElementById("leg-v");
+  if (legV) legV.textContent = spd.toFixed(2)+" м/с";
+  const hudMode = document.getElementById("hud-mode");
+  if (hudMode) hudMode.textContent = state.estop ? "E-STOP" : state.auto ? "AUTO" : "TELEOP";
   const spdEl = document.getElementById("spd");
   if (spdEl) spdEl.textContent = (spd * 3.6).toFixed(1)+" км/ч";
   const spdD = document.getElementById("spd-delta");
   if (spdD) spdD.textContent = `${spd.toFixed(2)} м/с · max 18 км/ч`;
   const gateD = document.getElementById("gate-delta");
   if (gateD) gateD.textContent = `e-stop ${state.estop ? "вкл" : "выкл"} · вотчдог ${state.watchdogMs.toFixed(0)} мс`;
-  const wd = document.getElementById("wd");
-  if (wd) wd.textContent = state.watchdogMs.toFixed(0) + " мс";
   const gate = document.getElementById("gate");
   if (gate) gate.textContent = state.estop ? "HOLD" : "OK";
   const cov = document.getElementById("map-coverage");
-  if (cov) cov.textContent = `исследовано ${(mapCoverage()*100).toFixed(1)}%`;
+  if (cov) cov.textContent = `${(mapCoverage()*100).toFixed(1)}% изучено`;
+  const covBar = document.getElementById("coverage-bar");
+  if (covBar) covBar.style.width = (mapCoverage()*100).toFixed(0)+"%";
+  const hudCov = document.getElementById("hud-coverage");
+  if (hudCov) hudCov.textContent = (mapCoverage()*100).toFixed(1)+"%";
+  const hudWp = document.getElementById("hud-wp");
+  if (hudWp) hudWp.textContent = state.waypoints.length;
+  const mapCoords = document.getElementById("map-coords");
+  if (mapCoords) mapCoords.textContent = `x ${state.x.toFixed(2)} · y ${state.y.toFixed(2)} · yaw ${(state.yaw*180/Math.PI).toFixed(0)}° · масштаб ${mapView.scale.toFixed(0)} px/м · ${state.waypoints.length} точек`;
   const camYawF = document.getElementById("cam-yaw-f");
   if (camYawF) camYawF.textContent = (state.yaw*180/Math.PI).toFixed(0)+"°";
   const sectors = lidarSectors();
   const detF = document.getElementById("det-front");
   if (detF) {
     if (sectors.fwd < 1.0) detF.textContent = `препятствие ${sectors.fwd.toFixed(2)}м`;
-    else detF.textContent = state.bubble || "нет";
+    else detF.textContent = state.bubble || "нет · проезд свободен";
   }
+  const distF = document.getElementById("cam-dist-f");
+  if (distF) distF.textContent = sectors.fwd < 9 ? sectors.fwd.toFixed(2)+" м" : "свободно";
   const distR = document.getElementById("cam-dist-r");
   if (distR) distR.textContent = sectors.rear < 9 ? sectors.rear.toFixed(2)+" м" : "свободно";
   const camStatR = document.getElementById("cam-status-r");
   if (camStatR) camStatR.textContent = sectors.rear < 0.8 ? "СТОП" : "OK";
+  const camSpeedR = document.getElementById("cam-speed-r");
+  if (camSpeedR) camSpeedR.textContent = (spd*3.6).toFixed(1)+" км/ч";
+  const payloadMetric = document.getElementById("payload-metric");
+  if (payloadMetric) payloadMetric.textContent = state.payload+" кг";
+  const payDetail = document.getElementById("pay-detail");
+  if (payDetail) payDetail.textContent = state.cargo ? `в отсеке ${state.payload} кг · доставлено ${state.delivered||0}` : "отсек пустой · IP65";
+  const logCount = document.getElementById("log-count");
+  if (logCount) logCount.textContent = `${state.logs.length} строк`;
+  const camHud = document.getElementById("cam-hud");
+  if (camHud) camHud.textContent = `${state.beacon?'маяк вкл':'маяк выкл'} · ${state.payload}кг · ${state.cargo?'груз': 'пусто'} · ${sectors.fwd.toFixed(1)}м`;
+  const camTs = document.getElementById("cam-ts");
+  if (camTs) camTs.textContent = `${new Date().toLocaleTimeString("ru-RU")} · ROS2 · /camera/front · ${spd.toFixed(2)} м/с`;
 
   renderModules();
 }
