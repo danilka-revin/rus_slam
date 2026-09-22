@@ -279,6 +279,7 @@ safeOn("btn-clear-route","click",()=>{
 const mapCanvas = document.getElementById("map");
 let mapDrag = null;
 if (mapCanvas){
+  // STATUS-ONLY: карта только для просмотра, нельзя делать маршрут
   mapCanvas.style.cursor = "grab";
   mapCanvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
@@ -297,29 +298,9 @@ if (mapCanvas){
     mapView.camY = mapDrag.camY + (dy * mapCanvas.height / r.height) / mapView.scale;
   });
   mapCanvas.addEventListener("pointerup", (e) => {
-    const drag = mapDrag && mapDrag.moved;
     mapDrag = null;
     mapCanvas.style.cursor = "grab";
-    if (drag || e.button !== 0) return;
-    const p = screenToWorld(e);
-    const s = snapToDriveable(p.x, p.y) || p;
-    if (state.placeMode) {
-      if (state.placeMode === "start") {
-        state.x = s.x; state.y = s.y;
-        state.bubble = "старт";
-        emit("ok", "старт: " + s.x.toFixed(1) + ", " + s.y.toFixed(1));
-      } else {
-        const st = stationOf(state.placeMode);
-        if (st) { st.x = s.x; st.y = s.y; }
-        seedStationPads();
-        emit("ok", (state.placeMode === "load" ? "А" : state.placeMode === "unload" ? "Б" : "база") + " поставлена");
-      }
-      state.placeMode = null;
-      toast("Точка на карте");
-      return;
-    }
-    if (!s || occupied(s.x, s.y)) { toast("Сюда нельзя — только проезд"); return; }
-    state.waypoints.push(s);
+    // no waypoint creation - status tab only
   });
   mapCanvas.addEventListener("wheel", (e) => {
     e.preventDefault();
@@ -327,8 +308,10 @@ if (mapCanvas){
   }, { passive: false });
   mapCanvas.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    state.waypoints.pop();
+    // no waypoint pop - status only
   });
+  // disable click to create route
+  mapCanvas.addEventListener("click", (e) => { e.preventDefault(); });
 }
 
 safeOn("btn-start-mission","click",()=>{
