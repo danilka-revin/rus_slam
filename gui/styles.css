@@ -1,4 +1,4 @@
-/* v2.4 as on picture: FL chassis FR / RL bat RR / map cams */
+/* v2.5 map height = 2 cams, no drift to top */
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0;padding:0;height:100%}
 body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace;font-size:13px;overflow:hidden}
@@ -14,8 +14,8 @@ body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace
 .top-meta{display:flex;gap:8px;align-items:center;font-size:10px}
 .top-meta span{padding:2px 8px;border-radius:999px;background:#1e2e26;border:1px solid var(--bdr)}
 .estop{background:var(--red);color:#fff;border:0;padding:5px 12px;border-radius:7px;font-weight:800}
-.content{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin}
-.top-grid{display:grid;grid-template-columns:180px 1fr 180px;gap:12px;align-items:stretch}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:12px;overflow:hidden}
+.top-grid{display:grid;grid-template-columns:180px 1fr 180px;gap:12px;flex-shrink:0}
 .card{background:var(--sb2);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;min-width:0}
 .chassis-card{display:grid;place-items:center;padding:8px;background:radial-gradient(60% at 50% 50%, rgba(213,255,69,.06), transparent 70%);min-height:340px}
 #chassis{width:300px;height:300px;max-width:100%;border-radius:10px;background:#080e0b;border:1px solid var(--bdr);display:block}
@@ -47,19 +47,18 @@ body{background:#0a0f0d;color:#dbe7e1;font-family:Inter,JetBrains Mono,monospace
 .bat-center i.on{opacity:1;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .bat-line{display:flex;gap:8px;font-size:9px;font-variant-numeric:tabular-nums}
-.bat-line span{opacity:.8}
 .bat-bar{width:100%;margin-top:4px}
 .bat-bar .track{height:6px;background:rgba(0,0,0,.3);border:1px solid var(--bdr);border-radius:99px;overflow:hidden}
 .bat-bar .track i{display:block;height:100%;background:var(--accent);border-radius:99px}
 
-.bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;flex:1;min-height:0;align-items:start}
-.map-panel{min-height:420px;display:flex;flex-direction:column}
-.map-wrap{position:relative;flex:1;min-height:420px;background:#080e0b;display:flex;overflow:hidden;border-radius:12px;border:1px solid var(--bdr)}
-.map-wrap canvas{flex:1;width:100%;height:100%;display:block;background:#101a16;min-height:420px}
-.cams{display:flex;flex-direction:column;gap:12px;min-width:0}
-.panel{background:var(--panel);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.cam canvas{width:100%;display:block;background:#000;aspect-ratio:16/9;min-height:180px}
+.bottom-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
+.map-panel{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+.map-wrap{position:relative;flex:1;min-height:0;height:100%;background:#080e0b;display:flex;overflow:hidden;border-radius:12px;border:1px solid var(--bdr)}
+.map-wrap canvas{flex:1;width:100%;height:100%;display:block;background:#101a16;min-height:0}
+.cams{display:flex;flex-direction:column;gap:12px;min-width:0;height:100%;min-height:0;overflow:hidden}
+.cams .panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.cams .panel canvas{flex:1;width:100%;height:100%;display:block;background:#000;min-height:0;aspect-ratio:auto}
 .toast{position:fixed;right:10px;bottom:10px;background:#fff;color:#000;padding:8px 12px;border-radius:8px;z-index:99}
 .hidden{display:none!important}
-@media (max-width:1000px){.top-grid{grid-template-columns:1fr 1fr}.chassis-card{grid-column:1 / -1;order:-1}.bottom-grid{grid-template-columns:1fr}.cams{flex-direction:row}.cams .panel{flex:1}}
-@media (max-width:600px){.app{flex-direction:column;height:auto;overflow:visible}.sidebar{width:100%;max-width:100%;flex-direction:row;align-items:center}.main{height:auto;overflow:visible}.content{overflow:visible}.top-grid{grid-template-columns:1fr 1fr}.chassis-card{grid-column:1 / -1}.bottom-grid{grid-template-columns:1fr}.cams{flex-direction:column}}
+@media (max-width:1100px){.top-grid{grid-template-columns:1fr 1fr}.chassis-card{grid-column:1 / -1;order:-1}.bottom-grid{grid-template-columns:1fr}.cams{flex-direction:row;height:280px}.cams .panel{flex:1}}
+@media (max-width:600px){.app{flex-direction:column;height:auto;min-height:100vh;overflow:visible}.sidebar{width:100%;max-width:100%;flex-direction:row}.main{height:auto;overflow:visible}.content{overflow:visible}.top-grid{grid-template-columns:1fr 1fr}.bottom-grid{grid-template-columns:1fr}.cams{flex-direction:column;height:auto}.cams .panel{flex:none;min-height:200px}}
