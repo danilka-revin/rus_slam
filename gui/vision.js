@@ -564,17 +564,18 @@ function drawRobotTop(ctx, u, v, yaw, s) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // lidar puck
+  // lidar puck - forward between front wheels
+  const lidarX = L * 0.62;
   ctx.fillStyle = "#0b120f";
-  ctx.beginPath(); ctx.arc(0,0,s*0.18,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lidarX,0,s*0.18,0,Math.PI*2); ctx.fill();
   ctx.strokeStyle = "#d5ff45"; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.fillStyle = "#d5ff45";
-  ctx.beginPath(); ctx.arc(0,0,s*0.06,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(lidarX,0,s*0.06,0,Math.PI*2); ctx.fill();
   // lidar sweep line
   const sweep = (performance.now()/600) % (Math.PI*2);
   ctx.strokeStyle = "rgba(213,255,69,0.35)";
   ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(sweep)*s*0.45, Math.sin(sweep)*s*0.45); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(lidarX,0); ctx.lineTo(lidarX + Math.cos(sweep)*s*0.45, Math.sin(sweep)*s*0.45); ctx.stroke();
 
   // cargo
   if (state.cargo) {
