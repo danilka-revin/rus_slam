@@ -356,29 +356,24 @@ function renderModules() {
   const container = document.getElementById("modules");
   if (!container) return;
   const html = state.modules.map((m) => {
-    const steerDeg = m.steer;
-    const steerAbs = Math.abs(steerDeg);
-    const rpm = m.rpm;
-    const temp = m.temp;
+    const steerDeg = m.steer || 0;
+    const rpm = m.rpm || 0;
+    const temp = m.temp || 36;
     const rpmPct = Math.min(100, Math.abs(rpm)/8);
     const tempPct = Math.min(100, (temp-20)/60*100);
     const steerNorm = ((steerDeg+90)/180*100);
-    const circ = 2*Math.PI*22;
-    const steerOffset = circ - (steerNorm/100)*circ;
-    const statusClass = temp>65 ? "warn" : temp>75 ? "err" : "ok";
-    const statusDot = temp>70 ? "warn" : "ok";
+    const circ = 2*Math.PI*18;
+    const steerOffset = circ - (Math.max(0,Math.min(100,steerNorm))/100)*circ;
+    const steerText = (steerDeg>=0?'+':'')+steerDeg.toFixed(1)+'°';
     return `
-    <div class="mod-card">
-      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="mod-status ${statusDot}"></span></div>
-      <div class="mod-dial">
-        <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" class="dial-bg"/><circle cx="26" cy="26" r="22" class="dial-fg" stroke-dasharray="${circ}" stroke-dashoffset="${steerOffset}" /></svg>
-        <div class="mod-dial-center"><b>${steerDeg.toFixed(0)}°</b><small>STEER</small></div>
-      </div>
+    <div class="mod">
+      <div class="mod-head"><span class="mod-id">${m.id}</span><span class="badge subtle" style="font-size:7px;padding:2px 5px">${m.homed?'HOMED':'SEEK'}</span></div>
+      <div class="mod-dial"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="18" class="dial-bg"/><circle cx="26" cy="26" r="18" class="dial-fg" stroke-dasharray="${circ}" stroke-dashoffset="${steerOffset}"/></svg><div class="mod-dial-center"><b>${steerDeg.toFixed(0)}°</b><small>STEER</small></div></div>
       <div class="mod-bars">
-        <div class="mod-bar"><span>RPM</span><div class="mod-bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><b style="font-size:10px;color:#dbe7e1;font-family:JetBrains Mono">${rpm.toFixed(0)}</b></div>
-        <div class="mod-bar"><span>TEMP</span><div class="mod-bar-track"><i class="temp" style="width:${tempPct}%"></i></div><b style="font-size:10px;color:#dbe7e1;font-family:JetBrains Mono">${temp.toFixed(0)}°</b></div>
+        <div class="mod-bar"><span>RPM</span><div class="bar-track"><i class="rpm" style="width:${rpmPct}%"></i></div><b style="font-family:JetBrains Mono,monospace;font-size:9px;min-width:24px;text-align:right">${rpm.toFixed(0)}</b></div>
+        <div class="mod-bar"><span>TEMP</span><div class="bar-track"><i class="temp" style="width:${tempPct}%"></i></div><b style="font-family:JetBrains Mono,monospace;font-size:9px;min-width:24px;text-align:right">${temp.toFixed(0)}°</b></div>
       </div>
-      <div class="mod-meta"><span>${m.id} · ${steerDeg>0?'+':''}${steerDeg.toFixed(1)}° · BLDC</span><span>${m.homed?'HOMED':'SEEK'}</span></div>
+      <div class="mod-meta"><span>${steerText}</span><span>${m.homed?'HOMED':'SEEK'}</span></div>
     </div>`;
   }).join("");
   container.innerHTML = html;
@@ -1527,7 +1522,15 @@ safeOn("cargo","change",(e)=>{ state.cargoLock = e.target.checked; });
 safeOn("btn-horn","click",()=>{ toast("Бип 85 дБ"); emit("warn", "зуммер"); });
 safeOn("btn-clear-logs","click",()=>{ state.logs=[]; renderLogs(); });
 
-document.querySelectorAll(".prog-add [data-blk]").forEach((btn) => {
+document.querySelectorAll(".prog-btns [data-blk]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    state.program.push(btn.dataset.blk);
+    renderProg();
+  });
+});
+// fallback for any data-blk elsewhere
+document.querySelectorAll("[data-blk]").forEach((btn)=>{
+  if (btn.closest(".prog-btns")) return;
   btn.addEventListener("click", () => {
     state.program.push(btn.dataset.blk);
     renderProg();

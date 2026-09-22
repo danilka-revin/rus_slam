@@ -157,8 +157,17 @@ function roundRect(ctx, x, y, w, h, r) {
 function drawCamView(canvasId, yawOff, title, isRear) {
   const c = document.getElementById(canvasId);
   if (!c) return;
+  // ensure canvas internal size matches display size for crisp rendering
+  const rect = c.getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const wantW = Math.max(320, Math.floor(rect.width * dpr));
+  const wantH = Math.max(180, Math.floor(rect.height * dpr));
+  if (c.width !== wantW || c.height !== wantH) {
+    c.width = wantW; c.height = wantH;
+  }
   const ctx = c.getContext("2d");
-  const w = c.width, h = c.height;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w = rect.width, h = rect.height;
   // sky gradient
   const sky = ctx.createLinearGradient(0,0,0,h);
   sky.addColorStop(0,"#1a2520");
@@ -251,12 +260,25 @@ function drawCam() {
 
 function drawMap() {
   const c = document.getElementById("map");
+  const container = document.getElementById("map-container");
   if (!c) return;
   const ctx = c.getContext("2d");
-  const dw = Math.max(320, c.clientWidth | 0);
-  const dh = Math.max(240, c.clientHeight | 0);
-  if (c.width !== dw || c.height !== dh) { c.width = dw; c.height = dh; }
-  const w = c.width, h = c.height;
+  const rect = (container || c).getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const cssW = Math.max(480, Math.floor(rect.width));
+  const cssH = Math.max(400, Math.floor(rect.height));
+  const dw = Math.floor(cssW * dpr);
+  const dh = Math.floor(cssH * dpr);
+  if (c.width !== dw || c.height !== dh) {
+    c.width = dw;
+    c.height = dh;
+    c.style.width = cssW + "px";
+    c.style.height = cssH + "px";
+  }
+  // reset transform to handle DPR
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w = cssW, h = cssH;
+
   // background
   ctx.fillStyle = "#121a16";
   ctx.fillRect(0, 0, w, h);
@@ -266,7 +288,6 @@ function drawMap() {
   const gs = mapView.scale;
   const ox0 = w*0.5 - (mapView.camX - GRID_OX)*gs;
   const oy0 = h*0.5 + (mapView.camY - GRID_OY)*gs;
-  // subtle grid lines every 1m
   for (let x=-18;x<18;x++){
     const u = ox0 + (x - GRID_OX)*gs;
     if (u<0||u>w) continue;
@@ -310,7 +331,6 @@ function drawMap() {
     }
   }
 
-  // lidar range circle
   ctx.strokeStyle = "rgba(213,255,69,0.10)";
   ctx.lineWidth = 1;
   ctx.setLineDash([6,6]);
@@ -318,13 +338,11 @@ function drawMap() {
   ctx.arc(ox, oy, LIDAR_MAX * scale, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
-  // inner circles
   ctx.strokeStyle = "rgba(255,255,255,0.04)";
   for (let r=2;r<LIDAR_MAX;r+=2){
     ctx.beginPath(); ctx.arc(ox,oy,r*scale,0,Math.PI*2); ctx.stroke();
   }
 
-  // scan polygon
   if (state.scan && state.scan.length){
     ctx.fillStyle = "rgba(255,90,74,0.08)";
     ctx.strokeStyle = "rgba(255,90,74,0.28)";
@@ -344,7 +362,6 @@ function drawMap() {
     });
   }
 
-  // stations
   const rp = mapPt(state.x, state.y, ox, oy, scale);
   (WORLD.stations || []).forEach((st) => {
     const q = mapPt(st.x, st.y, ox, oy, scale);
@@ -384,7 +401,6 @@ function drawMap() {
     }
   }
 
-  // bubble for waitConfirm
   const bub = state.waitConfirm === "load" ? "подтвердите загрузку" : state.waitConfirm === "unload" ? "подтвердите выгрузку" : state.bubble || "";
   if (bub) {
     ctx.font = "bold 12px Inter, sans-serif";
@@ -410,7 +426,6 @@ function drawMap() {
       if (i === 0) ctx.moveTo(q.u, q.v); else ctx.lineTo(q.u, q.v);
     });
     ctx.stroke();
-    // glow
     ctx.strokeStyle = "rgba(126,200,255,0.25)";
     ctx.lineWidth = 10;
     ctx.beginPath();
@@ -459,7 +474,6 @@ function drawMap() {
     ctx.textAlign = "left";
   }
 
-  // trail
   if (state.trail && state.trail.length>1){
     ctx.strokeStyle = "rgba(213,255,69,0.25)";
     ctx.lineWidth = 2;
@@ -473,7 +487,6 @@ function drawMap() {
     ctx.setLineDash([]);
   }
 
-  // info panels
   const pct = ((explored / grid.length) * 100).toFixed(1);
   ctx.fillStyle = "rgba(16,27,23,0.9)";
   roundRect(ctx, 12, 12, 220, 62, 10); ctx.fill();
@@ -489,7 +502,6 @@ function drawMap() {
   ctx.font = "10px Inter, sans-serif";
   ctx.fillText("ряды стеллажей · проезды · ворота", 22, 60);
 
-  // legend
   ctx.fillStyle = "rgba(16,27,23,0.9)";
   roundRect(ctx, 12, h - 62, 172, 50, 10); ctx.fill();
   ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.stroke();
@@ -650,8 +662,14 @@ function drawRobotTop(ctx, u, v, yaw, s) {
 function drawChassisPanel() {
   const c = document.getElementById("chassis");
   if (!c) return;
+  const rect = c.getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const wantW = Math.floor(rect.width * dpr) || 280;
+  const wantH = Math.floor(rect.height * dpr) || 280;
+  if (c.width !== wantW || c.height !== wantH) { c.width = wantW; c.height = wantH; }
   const ctx = c.getContext("2d");
-  const w = c.width, h = c.height;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w = rect.width, h = rect.height;
   // background with grid
   ctx.fillStyle = "#0b120f";
   ctx.fillRect(0, 0, w, h);
@@ -689,8 +707,15 @@ function drawChassisPanel() {
 function drawLidar() {
   const c = document.getElementById("lidar");
   if (!c) return;
+  const rect = c.getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const wantW = Math.floor(rect.width * dpr) || 360;
+  const wantH = Math.floor(rect.height * dpr) || 220;
+  if (c.width !== wantW || c.height !== wantH) { c.width = wantW; c.height = wantH; }
   const ctx = c.getContext("2d");
-  const w = c.width, h = c.height, cx = w / 2, cy = h / 2;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w = rect.width, h = rect.height;
+  const cx = w / 2, cy = h / 2;
   ctx.fillStyle = "#0b120f"; ctx.fillRect(0, 0, w, h);
   // grid
   ctx.strokeStyle = "rgba(213,255,69,0.08)";
