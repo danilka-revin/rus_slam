@@ -293,9 +293,23 @@
       </section>
 
       <section id="view-console" class="view hidden">
-        <div class="statusline">
-          <span><b>Сервисный пульт:</b> ячейка хранения · двигатели · АКБ · статистика</span>
-          <span class="csl-stand-badge hidden" id="csl-stand-badge">СЕРВИСНЫЙ РЕЖИМ · СТЕНД — автономия заблокирована</span>
+        <!-- И-1. Панель быстрых действий: всегда на виду, живые состояния -->
+        <div class="csl-toolbar" id="csl-toolbar">
+          <span class="csl-chip csl-chip-closed" id="csl-tb-estop">движение разрешено</span>
+          <span class="csl-chip csl-chip-closed" id="csl-tb-lock">ячейка: закрыта</span>
+          <button type="button" id="csl-tb-lock-btn">Открыть ячейку</button>
+          <span class="csl-chip csl-chip-closed" id="csl-tb-stand" title="Нажмите, чтобы переключить сервисный режим">автономия вкл</span>
+          <span class="csl-chip csl-chip-open" id="csl-tb-light">светофор: зелёный</span>
+          <canvas id="csl-tb-ring" width="34" height="34" title="SOC АКБ"></canvas>
+          <span class="csl-tb-text" id="csl-tb-sign">знаки: —</span>
+          <span class="csl-tb-text" id="csl-tb-trip">рейсы: 0</span>
+          <span class="csl-chip csl-chip-open hidden" id="csl-tb-peer">второе окно пульта активно</span>
+          <span class="csl-tb-spacer"></span>
+          <button type="button" id="csl-tb-stop" class="csl-danger" title="Alt+X">Стоп все</button>
+          <button type="button" id="csl-tb-palette" title="Ctrl+K">Команды</button>
+          <button type="button" id="csl-tb-sound" aria-pressed="true" title="Alt+Z">🔊 звук</button>
+          <button type="button" id="csl-tb-ui" aria-pressed="false" title="Alt+A">А+ крупный</button>
+          <button type="button" id="csl-tb-help" title="Горячие клавиши">?</button>
         </div>
 
         <div class="csl-grid">
@@ -310,9 +324,12 @@
             </div>
             <div class="csl-body">
               <div class="csl-pin-display">
-                <div class="csl-pin-dots" id="csl-pin-dots">— — — —</div>
-                <input class="csl-pin-hidden" id="csl-pin-input" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN ячейки" />
-                <small id="csl-lock-kind">Последний доступ: —</small>
+                <div class="csl-pin-dots" id="csl-pin-dots" aria-live="polite">— — — —</div>
+                <div class="csl-pin-row">
+                  <canvas id="csl-lock-ring" width="30" height="30" title="Автозакрытие"></canvas>
+                  <input class="csl-pin-hidden" id="csl-pin-input" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN ячейки" />
+                  <small id="csl-lock-kind">Последний доступ: —</small>
+                </div>
               </div>
               <div class="csl-keypad" id="csl-keypad"></div>
               <div class="csl-lock-actions">
@@ -320,9 +337,10 @@
                 <button type="button" id="csl-pin-close">Закрыть</button>
                 <button type="button" id="csl-pin-qr" title="Имитация считывания QR-метки">QR</button>
                 <button type="button" id="csl-pin-rfid" title="Имитация считывания RFID-метки">RFID</button>
+                <button type="button" id="csl-pin-extend" title="Отложить автозакрытие">+30 с</button>
               </div>
-              <div class="csl-msg" id="csl-pin-msg">Введите PIN и нажмите «Открыть ячейку». Заводской PIN — 2580.</div>
-              <div class="csl-timer" id="csl-lock-timer"></div>
+              <div class="csl-msg" id="csl-pin-msg" aria-live="polite">Введите PIN и нажмите «Открыть ячейку». Заводской PIN — 2580.</div>
+              <div class="csl-timer" id="csl-lock-timer" aria-live="polite"></div>
 
               <details class="csl-details">
                 <summary>Смена PIN / сброс</summary>
@@ -357,17 +375,18 @@
               </label>
             </div>
             <div class="csl-group-ops">
-              <button type="button" data-csl="stop-all">Стоп все</button>
+              <button type="button" data-csl="stop-all" title="Alt+X">Стоп все</button>
               <button type="button" data-csl="home-all">Хоминг всех</button>
               <label class="csl-inline">
                 синхронный угол, °
                 <input type="number" id="csl-steer-all" value="0" min="-180" max="180" step="5" />
               </label>
               <button type="button" data-csl="sync-steer">Задать всем</button>
-              <span class="csl-note">ввод разрешён только в режиме «стенд» и вне E-STOP</span>
+              <button type="button" data-csl="help">Справка</button>
+              <span class="csl-note">тяга на кнопках «−20 %/+20 %» подаётся только при удержании («мёртвая рука»)</span>
             </div>
             <div class="csl-mods" id="csl-mods"></div>
-            <p class="hint">Каждый «Ввод» формирует реальный кадр <code>AA 55 | ID | угол i16BE | ШИМ i16BE | флаги | CRC16</code> и показывает его HEX в карточке и в журнале. Телеметрию модуль отдаёт кадром 16 Б на 20 Гц.</p>
+            <p class="hint">Каждый «Ввод» формирует реальный кадр <code>AA 55 | ID | угол i16BE | ШИМ i16BE | флаги | CRC16</code> и показывает его HEX в карточке и в журнале. Ввод вне диапазона подсвечивается и приводится к границе. Телеметрию модуль отдаёт кадром 16 Б на 20 Гц.</p>
           </div>
 
           <!-- 3. АКБ -->
@@ -404,7 +423,7 @@
             </div>
           </div>
 
-          <!-- 4. Статистика -->
+          <!-- 4. Статистика и журнал -->
           <div class="panel csl-panel csl-wide">
             <div class="pt">
               <div>
@@ -419,6 +438,12 @@
                 <div>
                   <h4>Энергия по последним рейсам</h4>
                   <canvas id="csl-trip-chart" width="560" height="120"></canvas>
+                  <div class="csl-lock-actions">
+                    <button type="button" data-csl="csv">Отчёт CSV</button>
+                    <button type="button" data-csl="json">Отчёт JSON</button>
+                    <button type="button" class="primary" data-csl="print">Отчёт (печать)</button>
+                    <button type="button" class="csl-danger" data-csl="reset">Сбросить статистику</button>
+                  </div>
                 </div>
                 <div>
                   <h4>Последние рейсы</h4>
@@ -428,12 +453,19 @@
                   </table>
                 </div>
               </div>
-              <div class="csl-lock-actions">
-                <button type="button" data-csl="csv">Отчёт CSV</button>
-                <button type="button" data-csl="json">Отчёт JSON</button>
-                <button type="button" class="primary" data-csl="print">Отчёт (печать)</button>
-                <button type="button" class="csl-danger" data-csl="reset">Сбросить статистику</button>
+
+              <!-- И-8. Журнал сервисных действий -->
+              <h4 class="csl-jh">Журнал сервисных действий</h4>
+              <div class="csl-jtools">
+                <button type="button" data-jfilter="all" class="on">Все</button>
+                <button type="button" data-jfilter="ok">Успех</button>
+                <button type="button" data-jfilter="warn">Внимание</button>
+                <button type="button" data-jfilter="err">Ошибки</button>
+                <input id="csl-journal-q" type="search" placeholder="поиск по журналу…" />
+                <button type="button" id="csl-copy-frame" title="Скопировать последний кадр UART">Копировать кадр</button>
+                <button type="button" id="csl-journal-clear">Очистить</button>
               </div>
+              <div class="csl-journal" id="csl-journal-rows" role="log" aria-live="polite"></div>
             </div>
           </div>
         </div>
@@ -441,6 +473,30 @@
     </main>
   </div>
   <div class="toast hidden" id="toast"></div>
+
+  <!-- И-2. Палитра команд (Ctrl+K / «/») -->
+  <div class="csl-overlay hidden" id="csl-palette" role="dialog" aria-modal="true" aria-label="Палитра команд">
+    <div class="csl-palette-card">
+      <input id="csl-palette-input" type="text" placeholder="Введите команду: вкладка, стоп, отчёт, стенд…" autocomplete="off" />
+      <div class="csl-palette-list" id="csl-palette-list"></div>
+      <div class="csl-palette-foot">↑↓ выбор · Enter выполнить · Esc закрыть</div>
+    </div>
+  </div>
+
+  <!-- И-7. Модальное окно окна «Сервис» -->
+  <div class="csl-overlay hidden" id="csl-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="csl-modal-title">
+    <div class="csl-modal-card" id="csl-modal-card">
+      <div class="csl-modal-head">
+        <b id="csl-modal-title">Подтверждение</b>
+        <button type="button" id="csl-modal-x" aria-label="Закрыть">×</button>
+      </div>
+      <div class="csl-modal-body" id="csl-modal-body"></div>
+      <div class="csl-modal-foot">
+        <button type="button" class="primary" id="csl-modal-ok">Подтвердить</button>
+        <button type="button" id="csl-modal-cancel">Отмена</button>
+      </div>
+    </div>
+  </div>
   <script src="console-core.js"></script>
   <script src="vision.js"></script>
   <script src="app.js"></script>

@@ -122,7 +122,9 @@ const click = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles:
   stand.checked = true;
   stand.dispatchEvent(new window.Event('change', { bubbles: true }));
   check('режим «стенд» включён', window.eval('state.serviceStand') === true);
-  check('бейдж «стенд» показан', !window.document.getElementById('csl-stand-badge').classList.contains('hidden'));
+  check('чип панели показывает стенд', window.document.getElementById('csl-tb-stand').textContent.includes('СТЕНД'),
+    window.document.getElementById('csl-tb-stand').textContent);
+  check('класс service-stand на body', window.document.body.classList.contains('service-stand'));
   check('автономия сброшена в стенде', window.eval('state.auto') === false);
   const vIn = window.document.getElementById('csl-pwm-FL');
   vIn.value = '20';
@@ -138,7 +140,11 @@ const click = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles:
   click(window.document.querySelector('[data-csl="stop-all"]'));
   check('«Стоп все» обнулил тягу', Number(window.document.getElementById('csl-pwm-RR').value) === 0);
   click(window.document.querySelector('[data-csl="home-all"]'));
+  check('«Хоминг всех» спрашивает подтверждение', !window.document.getElementById('csl-modal').classList.contains('hidden'));
+  click(window.document.getElementById('csl-modal-ok'));
+  await sleep(40);
   check('«Хоминг всех» пометил модули seek', window.eval('state.modules.every((m) => !m.homed)') === true);
+  check('модальное окно хоминга закрылось', window.document.getElementById('csl-modal').classList.contains('hidden'));
 
   // 6. Стенд двигает только модули, корпус стоит
   window.eval('state.vx = 0; state.spdVy = 0;');
@@ -212,6 +218,128 @@ const click = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles:
   check('Enter отправил PIN на проверку', window.document.getElementById('csl-pin-msg').textContent.includes('Неверный PIN'),
     window.document.getElementById('csl-pin-msg').textContent);
   kb('Escape');
+
+  // 9.4. И-1: панель быстрых действий
+  check('панель быстрых действий отрисована', !!window.document.getElementById('csl-toolbar'));
+  check('чип ячейки в панели обновляется', /ячейка: (закрыта|ОТКРЫТА)/.test(window.document.getElementById('csl-tb-lock').textContent),
+    window.document.getElementById('csl-tb-lock').textContent);
+  check('чип E-STOP в панели', window.document.getElementById('csl-tb-estop').textContent.length > 0);
+  check('сводка рейсов в панели', /рейсы: \d+/.test(window.document.getElementById('csl-tb-trip').textContent),
+    window.document.getElementById('csl-tb-trip').textContent);
+  click(window.document.getElementById('csl-tb-stand'));
+  check('чип «автономия» переключает стенд', window.eval('state.serviceStand') === true);
+  click(window.document.getElementById('csl-tb-stand'));
+  check('повторный клик выключает стенд', window.eval('state.serviceStand') === false);
+
+  // 9.5. И-2: палитра команд
+  window.document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+  check('Ctrl+K открыл палитру команд', !window.document.getElementById('csl-palette').classList.contains('hidden'));
+  const pin = window.document.getElementById('csl-palette-input');
+  pin.value = 'хоминг';
+  pin.dispatchEvent(new window.Event('input', { bubbles: true }));
+  check('фильтр палитры нашёл команду', window.document.querySelectorAll('#csl-palette-list .csl-pitem').length === 1,
+    String(window.document.querySelectorAll('#csl-palette-list .csl-pitem').length));
+  pin.value = 'неттакойкоманды';
+  pin.dispatchEvent(new window.Event('input', { bubbles: true }));
+  check('пустой результат палитры', window.document.getElementById('csl-palette-list').textContent.includes('Ничего не найдено'));
+  window.document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  check('Esc закрыл палитру', window.document.getElementById('csl-palette').classList.contains('hidden'));
+
+  // 9.6. И-4: автокламп значений с подсветкой
+  const stand2 = window.document.getElementById('csl-stand');
+  stand2.checked = true; stand2.dispatchEvent(new window.Event('change', { bubbles: true }));
+  const steerFR = window.document.getElementById('csl-steer-FR');
+  steerFR.value = '250';
+  steerFR.dispatchEvent(new window.Event('input', { bubbles: true }));
+  check('значение вне диапазона подсвечено', steerFR.classList.contains('csl-invalid'));
+  steerFR.dispatchEvent(new window.Event('blur', { bubbles: true }));
+  check('автокламп привёл угол к 180', Number(steerFR.value) === 180, steerFR.value);
+  window.document.getElementById('csl-pwm-FR').value = '20';
+  click(window.document.querySelector('#csl-mod-FR .csl-send[data-ch="traction"]'));
+  await sleep(30);
+  check('кадр FR содержит ШИМ 200 (0x00C8)', window.document.getElementById('csl-frame-FR').textContent.includes('00 C8'),
+    window.document.getElementById('csl-frame-FR').textContent);
+
+  // 9.7. И-5: «мёртвая рука»
+  window.eval('state.modules.forEach((m) => { m.homed = true; });');   // хоминг завершён
+  const holdBtn = window.document.querySelector('[data-hold="RR"][data-val="20"]');
+  holdBtn.dispatchEvent(new window.MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
+  await sleep(30);
+  check('удержание подало тягу +20 %', window.RSConsole.cmd.RR && window.RSConsole.cmd.RR.pwm === 20);
+  check('карточка показывает УДЕРЖАНИЕ', window.document.getElementById('csl-state-RR').textContent === 'УДЕРЖАНИЕ');
+  window.dispatchEvent(new window.Event('pointerup', { bubbles: true }));
+  await sleep(30);
+  check('отпускание сбросило тягу в 0', window.RSConsole.cmd.RR.pwm === 0, String(window.RSConsole.cmd.RR.pwm));
+
+  // 9.8. И-6: звук и И-9: крупный интерфейс
+  const soundBtn = window.document.getElementById('csl-tb-sound');
+  const wasSound = window.RSConsole.settings.sound;
+  click(soundBtn);
+  check('тумблер звука переключил настройку', window.RSConsole.settings.sound === !wasSound);
+  check('настройка звука сохранена', window.localStorage.getItem('rus_slam_sound') === (!wasSound ? '1' : '0'));
+  click(soundBtn);
+  click(window.document.getElementById('csl-tb-ui'));
+  check('крупный интерфейс включён', window.document.body.classList.contains('ui-large'));
+  check('масштаб сохранён', window.localStorage.getItem('rus_slam_ui_scale') === 'large');
+  click(window.document.getElementById('csl-tb-ui'));
+  check('масштаб вернулся к обычному', !window.document.body.classList.contains('ui-large'));
+
+  // 9.9. И-7: модальные окна вместо confirm/alert
+  let modalOk = null;
+  window.RSConsole.confirmModal('Тест', 'Проверка модального окна', { okText: 'Да' }).then((v) => { modalOk = v; });
+  check('модальное окно открылось', !window.document.getElementById('csl-modal').classList.contains('hidden'));
+  click(window.document.getElementById('csl-modal-ok'));
+  await sleep(30);
+  check('модальное окно вернуло «подтверждено»', modalOk === true);
+  check('модальное окно закрылось', window.document.getElementById('csl-modal').classList.contains('hidden'));
+  click(window.document.querySelector('[data-csl="print"]'));
+  check('предпросмотр отчёта открылся', window.document.getElementById('csl-modal-body').textContent.includes('Оператор смены'));
+  click(window.document.getElementById('csl-modal-cancel'));
+  click(window.document.getElementById('csl-tb-help'));
+  check('справка показывает горячие клавиши', window.document.getElementById('csl-modal-body').textContent.includes('Ctrl'));
+  click(window.document.getElementById('csl-modal-ok'));
+
+  // 9.10. И-8: журнал сервисных действий с фильтрами и копированием
+  check('журнал окна накопил записи', window.RSConsole.journal.items.length > 0,
+    String(window.RSConsole.journal.items.length));
+  check('фильтр «ошибки» работает', (() => {
+    window.document.querySelector('[data-jfilter="err"]').click();
+    const rows = [...window.document.querySelectorAll('#csl-journal-rows .csl-jrow')];
+    return rows.length === 0 || rows.every((r) => r.classList.contains('err'));
+  })());
+  window.document.querySelector('[data-jfilter="all"]').click();
+  const q = window.document.getElementById('csl-journal-q');
+  q.value = 'UART';
+  q.dispatchEvent(new window.Event('input', { bubbles: true }));
+  check('поиск по журналу фильтрует строки',
+    [...window.document.querySelectorAll('#csl-journal-rows .csl-jrow')].every((r) => r.textContent.includes('UART')));
+  q.value = '';
+  q.dispatchEvent(new window.Event('input', { bubbles: true }));
+  check('кнопка копирования кадра есть в строках', !!window.document.querySelector('#csl-journal-rows [data-copy]'));
+  click(window.document.getElementById('csl-copy-frame'));
+  await sleep(30);
+  const copied = window.document.getElementById('csl-journal-rows').textContent;
+  const frameModal = window.document.getElementById('csl-modal-body').textContent;
+  check('копирование кадра: отчёт в журнале или окно с кадром',
+    copied.includes('Скопировано') || /([0-9A-F]{2} ){9}[0-9A-F]{2}/.test(frameModal),
+    copied.slice(0, 120));
+  if (!window.document.getElementById('csl-modal').classList.contains('hidden')) {
+    click(window.document.getElementById('csl-modal-ok'));
+  }
+
+  // 9.11. И-10: синхронизация между окнами через storage-событие
+  const remote = JSON.stringify({ open: true, kind: 'QR', at: Date.now(), by: 'other' });
+  window.localStorage.setItem('rus_slam_lock_state_v1', remote);
+  window.dispatchEvent(new window.StorageEvent('storage', { key: 'rus_slam_lock_state_v1', newValue: remote }));
+  await sleep(50);
+  check('состояние ячейки принято из другого окна', window.RSConsole.isLockOpen() === true);
+  check('в журнале есть отметка о другом окне',
+    window.document.getElementById('csl-journal-rows').textContent.includes('другом окне'));
+  window.eval('state.cargoLock = true;');
+
+  // 9.12. Возврат стенда и интерлоков в исходное состояние
+  const stand3 = window.document.getElementById('csl-stand');
+  stand3.checked = false; stand3.dispatchEvent(new window.Event('change', { bubbles: true }));
 
   // 10. Ошибки страницы
   const realProblems = problems.filter((p) => !/Хоминг|не найдена|CSS/.test(p));

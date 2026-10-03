@@ -309,8 +309,36 @@
   /* ======================================================================
    * 5. Хеширование (SHA-256: WebCrypto → node:crypto → резервный FNV)
    * ==================================================================== */
+  /**
+   * Кодировщик UTF-8: TextEncoder есть не везде (старые браузеры, jsdom),
+   * поэтому держим компактный резервный вариант.
+   */
+  const utf8 = (function () {
+    if (typeof TextEncoder === 'function') {
+      const enc = new TextEncoder();
+      return { encode: (str) => enc.encode(str) };
+    }
+    return {
+      encode(str) {
+        str = String(str);
+        const out = [];
+        for (let i = 0; i < str.length; i++) {
+          const c = str.charCodeAt(i);
+          if (c < 0x80) out.push(c);
+          else if (c < 0x800) out.push(0xC0 | (c >> 6), 0x80 | (c & 63));
+          else if (c >= 0xD800 && c < 0xDC00 && i + 1 < str.length) {
+            const cp = 0x10000 + ((c - 0xD800) << 10) + (str.charCodeAt(++i) - 0xDC00);
+            out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 63), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+          } else out.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+        }
+        return new Uint8Array(out);
+      },
+    };
+  })();
+  RS.utf8 = utf8;
+
   async function sha256Hex(text) {
-    const data = typeof text === 'string' ? new TextEncoder().encode(text) : text;
+    const data = typeof text === 'string' ? utf8.encode(text) : text;
     try {
       if (global.crypto && global.crypto.subtle) {
         const digest = await global.crypto.subtle.digest('SHA-256', data);
