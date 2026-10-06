@@ -778,15 +778,15 @@ def main(argv=None):
                                  partial(ApiHandler))
     url = "http://127.0.0.1:%d%s" % (args.port, MAIN_PAGE)
 
-    print("RUS SLAM · бэкенд основного экрана")
+    print("RUS SLAM · сервер борта: страницы и API (сам окон не открывает)")
     print("  источник данных : %s" % getattr(app.source, "name", "?"))
-    print("  основной экран  : %s" % url)
+    print("  на роботе       : %s" % url)
     for ip in local_ips():
-        print("  с планшета      : http://%s:%d%s" % (ip, args.port, MAIN_PAGE))
-    print("  инженерный пульт: http://127.0.0.1:%d%s" % (args.port, CONSOLE_PAGE))
+        print("  с планшета/ПК   : http://%s:%d%s" % (ip, args.port, MAIN_PAGE))
+    print("  пульт (удалённо): http://127.0.0.1:%d%s" % (args.port, CONSOLE_PAGE))
     print("  API             : /api/state · /api/lock/open · /api/lock/close · /api/audit · /api/health")
-    print("  окно на роботе не открывается: страницы смотрите в браузере по этим адресам")
-    print("  нужен киоск на дисплее робота — добавьте флаг --kiosk")
+    print("  дисплей робота  : страницу показывает deploy/rus-slam-display.service")
+    print("                    (разово — флаг --kiosk); сервер только отдаёт данные")
     print("  Ctrl+C — остановить\n")
 
     if args.kiosk or args.open:
