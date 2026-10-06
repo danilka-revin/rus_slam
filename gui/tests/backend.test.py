@@ -237,6 +237,42 @@ class TestApi(unittest.TestCase):
         check("API: новый PIN открывает отсек", status2 == 200 and body2.get("ok") is True, body2)
 
 
+class TestServerNoWindows(unittest.TestCase):
+    """Сервер борта сам ничего не открывает: страницы смотрят в браузере.
+
+    Основной экран на дисплее робота показывает отдельный сервис
+    (deploy/rus-slam-display.service), поэтому запуск backend.py без флагов
+    не должен трогать браузер робота.
+    """
+
+    def _run_main(self, argv):
+        import unittest.mock as mock
+        opened = []
+        with mock.patch.object(B.webbrowser, "open", lambda *a, **k: opened.append("webbrowser")), \
+             mock.patch.object(B, "launch_kiosk", lambda *a, **k: opened.append("kiosk")), \
+             mock.patch.object(B, "ThreadingHTTPServer") as srv:
+            srv.return_value.serve_forever.side_effect = KeyboardInterrupt
+            code = B.main(argv)
+            # даём шанс потоку-открывателю (если он есть) — заглушки ещё активны
+            deadline = time.time() + 0.7
+            while time.time() < deadline and not opened:
+                time.sleep(0.05)
+        return code, opened
+
+    def test_01_no_browser_by_default(self):
+        code, opened = self._run_main(["--port", "0"])
+        check("запуск без флагов: сервер не открывает окон", opened == [], opened)
+        check("запуск без флагов: код возврата 0", code == 0, code)
+
+    def test_02_kiosk_is_explicit(self):
+        code, opened = self._run_main(["--port", "0", "--kiosk", "--delay", "0"])
+        check("флаг --kiosk: страница на дисплее робота открывается", "kiosk" in opened, opened)
+
+    def test_03_open_is_explicit(self):
+        code, opened = self._run_main(["--port", "0", "--open", "--delay", "0"])
+        check("флаг --open: страница открывается в браузере", "webbrowser" in opened, opened)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=0, exit=False)
     print("\nИТОГО бэкенд: %d passed, %d failed" % (len(OK), len(FAIL)))

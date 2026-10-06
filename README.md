@@ -161,7 +161,7 @@ python3 gui/backend.py --port 8080     # /  → основной экран ро
                                        # /index.html, /console → инженерный пульт
 python3 gui/backend.py --kiosk         # то же + браузер без рамок на весь дисплей
 node gui/tests/console.test.js         # 32 теста ядра сервисного пульта
-python3 gui/tests/backend.test.py      # 36 проверок бэкенда и API
+python3 gui/tests/backend.test.py      # 40 проверок бэкенда и API
 python3 gui/tests/main.screen.test.js  # 38 проверок экрана (нужен jsdom: npm i jsdom)
 python3 gui/tests/ui.audit.test.js     # 20 проверок интерфейса: нет дублей кнопок и мёртвых ссылок
 python3 gui/tests/console.api.test.js  # 17 сквозных: PIN и журнал общие с бортом

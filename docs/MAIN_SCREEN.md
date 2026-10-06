@@ -15,12 +15,18 @@
 
 ## 1. Запуск на роботе
 
+Сервер борта **окон не открывает**: он отдаёт страницы и данные любому
+браузеру. Основной экран — статичная страница на дисплее робота: там
+обновляются показания и вводят PIN-код, которым открывается отсек на самом
+роботе. Инженерный пульт открывают удалённо (`/console`).
+
 ```bash
-python3 gui/serve.py                      # == python3 gui/backend.py
-python3 gui/serve.py --kiosk              # + браузер без рамок на весь дисплей
+python3 gui/serve.py                      # == python3 gui/backend.py: только сервер
 python3 gui/serve.py --source serial --ports /dev/ttyUSB0,/dev/ttyUSB1,/dev/ttyUSB2,/dev/ttyUSB3
 python3 gui/serve.py --source ros         # данные из ROS 2 (rclpy)
 python3 gui/serve.py --pin 2580 --reset-pin
+python3 gui/serve.py --kiosk              # разово: + браузер без рамок на дисплее робота
+python3 gui/serve.py --open               # разово: + страница в обычном окне браузера
 ```
 
 Что делает `--source`:
@@ -36,19 +42,16 @@ python3 gui/serve.py --pin 2580 --reset-pin
 (`Cache-Control: no-store`) — после обновления файлов достаточно перезагрузить
 страницу.
 
-Автозапуск (systemd, графическая сессия):
+Автозапуск — два независимых сервиса systemd (готовые файлы в `deploy/`,
+порядок установки — `deploy/README.md`):
 
-```ini
-[Unit]
-Description=RUS SLAM main screen
+| Сервис | Что делает |
+| :--- | :--- |
+| `rus-slam-server.service` | поднимает `gui/backend.py` (сервер, окон не открывает) |
+| `rus-slam-display.service` | показывает статичную страницу на дисплее робота: ждёт сервер и открывает `http://127.0.0.1:8080/` в браузере без рамок |
 
-[Service]
-ExecStart=/usr/bin/python3 /opt/rus_slam/gui/serve.py --kiosk
-Restart=always
-
-[Install]
-WantedBy=graphical.target
-```
+Если у робота нет дисплея — достаточно первого сервиса: страницы открывают с
+планшета или ноутбука, пульт — удалённо по `/console`.
 
 ---
 
@@ -219,7 +222,7 @@ python3 gui/backend.py
 
 | Страница | Назначение | Открывается |
 | :--- | :--- | :--- |
-| `main.html` | основной экран на роботе (киоск): моторы, отсек, АКБ | корень `/`, автозапуск |
+| `main.html` | основной экран: статично на дисплее робота, там же вводят PIN, отсек открывается на роботе | корень `/`, сервис `rus-slam-display` |
 | `index.html` | инженерный пульт: карта SLAM, миссия, сервисное окно, статистика | `/index.html`, `/console` |
 
 Обе страницы независимы: сбой одной не влияет на другую, общие файлы —
@@ -231,14 +234,15 @@ python3 gui/backend.py
 
 ```bash
 python3 gui/backend.py --port 8081                        # вручную в браузере
-python3 gui/tests/backend.test.py                         # 36 проверок бэкенда и API
+python3 gui/tests/backend.test.py                         # 40 проверок бэкенда и API
 NODE_PATH=/tmp/harness/node_modules node gui/tests/main.screen.test.js   # 38 проверок экрана
 NODE_PATH=/tmp/harness/node_modules node gui/tests/ui.audit.test.js      # 20 проверок интерфейса
 NODE_PATH=/tmp/harness/node_modules node gui/tests/main.api.test.js      # 20 сквозных (экран + API)
 NODE_PATH=/tmp/harness/node_modules node gui/tests/console.api.test.js   # 17 сквозных (пульт + борт)
 ```
 
-* `backend.test.py` — CRC16 и кадры протокола, разбор потока UART с мусором,
+* `backend.test.py` — поведение сервера (без флагов окон не открывает, `--kiosk`
+  и `--open` включают показ страницы явно), CRC16 и кадры протокола, разбор потока UART с мусором,
   модель АКБ (пороги, OCV), PIN-хранилище (попытки, блокировка, смена PIN,
   целостность аудита, персистентность), живой HTTP API (статика, `/api/state`,
   открытие/закрытие замка, журнал, смена PIN);
@@ -258,11 +262,12 @@ NODE_PATH=/tmp/harness/node_modules node gui/tests/console.api.test.js   # 17 с
   пультом, смена PIN с пульта действует на борту (старый PIN перестаёт
   работать), журнал пульта — это журнал борта.
 
-Всего по проекту GUI: **256 проверок** — 32 (ядро сервисного пульта) +
-93 (пульт в jsdom) + 36 (бэкенд и API) + 38 (экран) + 20 (аудит интерфейса) +
+Всего по проекту GUI: **260 проверок** — 32 (ядро сервисного пульта) +
+93 (пульт в jsdom) + 40 (бэкенд и API) + 38 (экран) + 20 (аудит интерфейса) +
 20 (экран + API) + 17 (пульт + борт).
 
-Как попадать на экраны (киоск, планшет, переходы) — `docs/RUN_AND_ACCESS.md`.
+Как попадать на экраны (дисплей робота, планшет, пульт удалённо) —
+`docs/RUN_AND_ACCESS.md`.
 
 ---
 

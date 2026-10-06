@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-backend.py — бэкенд основного экрана робота RUS SLAM.
+backend.py — сервер борта RUS SLAM: отдаёт экраны и данные любому браузеру.
 
+Ничего не открывает и не показывает сам: робот лишь отвечает по сети, а
+страницы смотрят в браузере — на дисплее робота, планшете или ноутбуке.
 Один процесс отдаёт оба экрана и данные к ним:
 
     /                     → основной экран робота (main.html, киоск)
@@ -27,10 +29,16 @@ backend.py — бэкенд основного экрана робота RUS SLA
     RUS_SLAM_LOCK_CMD='gpio write 7 1'   (open)   /  RUS_SLAM_LOCK_CMD_CLOSE  (close)
 
 Примеры запуска:
-    python3 gui/backend.py                          # стенд: симуляция + экраны
-    python3 gui/backend.py --kiosk                  # + браузер на весь экран
+    python3 gui/backend.py                          # только сервер (штатный режим)
     python3 gui/backend.py --source serial --ports /dev/ttyUSB0,/dev/ttyUSB1,/dev/ttyUSB2,/dev/ttyUSB3
     python3 gui/backend.py --source ros --pin 2580
+    python3 gui/backend.py --kiosk                   # опция: дисплей на борту, браузер без рамок
+    python3 gui/backend.py --open                    # опция: открыть страницу в браузере робота
+
+Кто где смотрит:
+    на роботе     http://127.0.0.1:8080/            основной экран
+    планшет/ПК    http://<ip-робота>:8080/          основной экран (оператор, получатель)
+    инженер       http://<ip-робота>:8080/console   инженерный пульт, удалённо
 """
 
 import argparse
@@ -745,8 +753,10 @@ def main(argv=None):
     ap.add_argument("--lock-file", default="", help="файл состояния замка (по умолчанию gui/state/lock.json)")
     ap.add_argument("--max-attempts", type=int, default=MAX_ATTEMPTS)
     ap.add_argument("--lock-sec", type=float, default=LOCK_MS / 1000.0)
-    ap.add_argument("--kiosk", action="store_true", help="открыть основной экран без рамок")
-    ap.add_argument("--open", action="store_true", help="открыть основной экран в браузере")
+    ap.add_argument("--kiosk", action="store_true",
+                    help="опция: открыть основной экран браузером на дисплее робота (без рамок)")
+    ap.add_argument("--open", action="store_true",
+                    help="опция: открыть основной экран в браузере робота (с рамками)")
     ap.add_argument("--delay", type=float, default=1.2)
     ap.add_argument("--reset-pin", action="store_true", help="сбросить PIN к заводскому")
     args = ap.parse_args(argv)
@@ -775,6 +785,8 @@ def main(argv=None):
         print("  с планшета      : http://%s:%d%s" % (ip, args.port, MAIN_PAGE))
     print("  инженерный пульт: http://127.0.0.1:%d%s" % (args.port, CONSOLE_PAGE))
     print("  API             : /api/state · /api/lock/open · /api/lock/close · /api/audit · /api/health")
+    print("  окно на роботе не открывается: страницы смотрите в браузере по этим адресам")
+    print("  нужен киоск на дисплее робота — добавьте флаг --kiosk")
     print("  Ctrl+C — остановить\n")
 
     if args.kiosk or args.open:
