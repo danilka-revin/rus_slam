@@ -104,8 +104,10 @@ async function waitHealth(base, timeoutMs) {
       window.document.getElementById('sc-lock-state').textContent);
     const state1 = await (await fetch(base + '/api/state')).json();
     check('состояние замка на сервере тоже открыто', state1.data.lock.open === true);
-    check('груз помечен как доступный на экране',
-      window.document.getElementById('sc-cargo-state').textContent.includes('ОТКРЫТ'));
+    const cargoText = window.document.getElementById('sc-cargo-state').textContent;
+    check('груз помечен как доступный на экране', cargoText.includes('доступен'), cargoText);
+    check('строка груза не повторяет состояние замка (оно в чипе)',
+      !/открыт|закрыт|заперт/i.test(cargoText), cargoText);
     check('кнопка предлагает закрыть отсек', openBtn.textContent.includes('Закрыть'), openBtn.textContent);
 
     // 4. Аудит попал в журнал и на экран

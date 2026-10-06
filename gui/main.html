@@ -14,14 +14,16 @@
       • Двигатели    — 4 модуля, угол, об/мин, температура, состояние;
       • Грузовой отсек — PIN-клавиатура, состояние замка, груз;
       • АКБ          — заряд в процентах, напряжение, ток, запас хода.
-  Данные берутся из бэкенда gui/backend.py (GET /api/state, POST /api/lock/*).
+  Данные берутся из бэкенда gui/backend.py (GET /api/state, POST /api/lock/open|close).
   Если сервера нет — экран работает в демо-режиме (см. gui/main.js).
+  Одно действие — один орган управления: очистка PIN — клавиша «СБРОС» клавиатуры,
+  открытие и закрытие отсека — одна кнопка, меняющая надпись по состоянию.
 -->
 <body>
   <!-- 1. Шапка: название, часы, режим, связь -->
   <header class="sc-head">
     <div class="sc-brand">
-      <span class="sc-logo" id="sc-logo" role="button" tabindex="0" title="нажмите 5 раз — инженерный пульт">
+      <span class="sc-logo" aria-hidden="true">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
           <path d="M4 14h16M7 10h10M9 6h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           <circle cx="7" cy="18" r="2.2" fill="currentColor"/>
@@ -40,7 +42,7 @@
       <span class="sc-chip sc-chip-warn" id="sc-data" title="источник показаний">данные: демо</span>
       <div class="sc-link" id="sc-link-wrap">
         <span class="sc-dot" id="sc-link-dot"></span>
-        <span id="sc-link-text">модули на связи</span>
+        <span id="sc-link-text">связь с бортом: есть</span>
       </div>
       <div class="sc-clock" id="sc-clock">--:--:--</div>
     </div>
@@ -85,7 +87,7 @@
       </div>
 
       <div class="sc-batt-foot">
-        <span id="sc-batt-hint">порог предупреждения 35,5 В</span>
+        <span id="sc-batt-hint">пороги: 35,5 В предупреждение · 33,5 В авария</span>
       </div>
     </section>
 
@@ -102,12 +104,11 @@
 
       <div class="sc-lock-buttons">
         <button type="button" class="sc-btn sc-btn-primary" id="sc-btn-open">Открыть отсек</button>
-        <button type="button" class="sc-btn" id="sc-btn-clear">Сброс</button>
       </div>
 
       <div class="sc-cargo">
         <span>груз: <b id="sc-cargo-kg">80 кг</b></span>
-        <span id="sc-cargo-state">закреплён, доступ закрыт</span>
+        <span id="sc-cargo-state">закреплён и заперт</span>
       </div>
     </section>
   </main>

@@ -137,7 +137,7 @@ const click = (el) => el.dispatchEvent(new window.MouseEvent('click', { bubbles:
   check('статистика: ручные команды учтены', window.RSConsole.stats.summary().manualOps >= 2);
   check('журнал пульта содержит UART-кадр', window.eval('state.logs').some((l) => l.msg.includes('UART → FL')));
   // групповые операции
-  click(window.document.querySelector('[data-csl="stop-all"]'));
+  click(window.document.querySelector('#csl-tb-stop'));
   check('«Стоп все» обнулил тягу', Number(window.document.getElementById('csl-pwm-RR').value) === 0);
   click(window.document.querySelector('[data-csl="home-all"]'));
   check('«Хоминг всех» спрашивает подтверждение', !window.document.getElementById('csl-modal').classList.contains('hidden'));

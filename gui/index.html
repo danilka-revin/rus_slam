@@ -158,15 +158,15 @@
               </div>
               <div class="prog-sec">2. Нажмите шаги — они добавятся в список</div>
               <div class="prog-add">
-                <button type="button" data-blk="goA">ехать на А</button>
-                <button type="button" data-blk="load">взять груз</button>
-                <button type="button" data-blk="goB">ехать на Б</button>
-                <button type="button" data-blk="unload">сдать груз</button>
-                <button type="button" data-blk="goP">ехать по точкам P</button>
-                <button type="button" data-blk="wait">пауза 2 с</button>
-                <button type="button" data-blk="dock">на базу</button>
-                <button type="button" data-blk="charge">зарядиться</button>
-                <button type="button" data-blk="loop">повторять сначала</button>
+                <button type="button" data-blk="goA">+ ехать на А</button>
+                <button type="button" data-blk="load">+ взять груз</button>
+                <button type="button" data-blk="goB">+ ехать на Б</button>
+                <button type="button" data-blk="unload">+ сдать груз</button>
+                <button type="button" data-blk="goP">+ ехать по точкам P</button>
+                <button type="button" data-blk="wait">+ пауза 2 с</button>
+                <button type="button" data-blk="dock">+ на базу</button>
+                <button type="button" data-blk="charge">+ зарядиться</button>
+                <button type="button" data-blk="loop">+ повторять сначала</button>
               </div>
               <div class="prog-sec">3. Ваша программа <span id="prog-now"></span></div>
               <ol class="prog-list" id="prog-list"></ol>
@@ -298,7 +298,6 @@
         <div class="csl-toolbar" id="csl-toolbar">
           <span class="csl-chip csl-chip-closed" id="csl-tb-estop">движение разрешено</span>
           <span class="csl-chip csl-chip-closed" id="csl-tb-lock">ячейка: закрыта</span>
-          <button type="button" id="csl-tb-lock-btn">Открыть ячейку</button>
           <span class="csl-chip csl-chip-closed" id="csl-tb-stand" title="Нажмите, чтобы переключить сервисный режим">автономия вкл</span>
           <span class="csl-chip csl-chip-open" id="csl-tb-light">светофор: зелёный</span>
           <canvas id="csl-tb-ring" width="34" height="34" title="SOC АКБ"></canvas>
@@ -376,7 +375,6 @@
               </label>
             </div>
             <div class="csl-group-ops">
-              <button type="button" data-csl="stop-all" title="Alt+X">Стоп все</button>
               <button type="button" data-csl="home-all">Хоминг всех</button>
               <label class="csl-inline">
                 синхронный угол, °

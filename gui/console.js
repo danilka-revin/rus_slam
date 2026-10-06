@@ -492,8 +492,6 @@
       event('ok', 'сервисный режим выключен');
       beep('tick');
     }
-    const badge = $('csl-stand-badge');
-    if (badge) badge.classList.toggle('hidden', !state.serviceStand);
     document.body.classList.toggle('service-stand', state.serviceStand);
     const runBtn = $('btn-prog-run');
     if (runBtn) runBtn.disabled = state.serviceStand;
@@ -578,8 +576,6 @@
     }
     setText('csl-tb-sign', lastSeen.sign === '—' ? 'знаки: —' : 'знак: ' + lastSeen.sign + ' (' + F.time(lastSeen.signAt) + ')');
     setText('csl-tb-trip', 'рейсы: ' + stats.summary().trips + ' · смена ' + F.dur((Date.now() - stats.session.startedAt) / 1000));
-    const openBtn = $('csl-tb-lock-btn');
-    if (openBtn) openBtn.textContent = lock.open ? 'Закрыть ячейку' : 'Открыть ячейку';
     const soundBtn = $('csl-tb-sound');
     if (soundBtn) {
       soundBtn.textContent = settings.sound ? '🔊 звук' : '🔇 звук';
@@ -1311,7 +1307,6 @@
     }
 
     /* --- панель быстрых действий (И-1) --- */
-    if ($('csl-tb-lock-btn')) $('csl-tb-lock-btn').addEventListener('click', () => (lock.open ? closeLock('кнопка') : tryOpen('pin')));
     if ($('csl-tb-stand')) $('csl-tb-stand').addEventListener('click', () => toggleStand());
     if ($('csl-tb-stop')) $('csl-tb-stop').addEventListener('click', allStop);
     if ($('csl-tb-palette')) $('csl-tb-palette').addEventListener('click', openPalette);

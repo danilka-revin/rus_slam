@@ -22,7 +22,9 @@
 node tests/console.test.js        # 32 теста ядра сервисного пульта (без зависимостей)
 python3 backend.py --port 8081    # основной экран робота + API замка
 python3 tests/backend.test.py     # 36 проверок бэкенда и API
-                                  # экран+API (jsdom): tests/main.api.test.js — 19 проверок
+                                  # экран (jsdom): tests/main.screen.test.js — 38 проверок
+                                  # аудит интерфейса: tests/ui.audit.test.js — 20 проверок
+                                  # экран + API (jsdom): tests/main.api.test.js — 20 проверок
                                   # jsdom-прогоны: docs/GUI.md §7.1 и docs/MAIN_SCREEN.md §6
 ```
 

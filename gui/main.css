@@ -171,7 +171,7 @@ body{
 .sc-key:active{transform:translateY(1px);background:#24382f}
 .sc-key.sc-key-mode{color:var(--muted);font-size:clamp(15px,2.4vh,21px)}
 
-.sc-lock-buttons{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:10px}
+.sc-lock-buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
 .sc-btn{
   border:1px solid var(--line);background:var(--panel-2);color:var(--text);
   border-radius:14px;font:inherit;font-size:15px;font-weight:700;padding:14px 10px;cursor:pointer;
@@ -214,6 +214,7 @@ body{
 
 /* Ссылка на инженерный пульт в подвале (переход между экранами) */
 .sc-foot-link{
+  min-height:44px;display:inline-flex;align-items:center;
   margin-left:14px;color:var(--accent);text-decoration:none;font-weight:700;
   border:1px solid #3a4a1f;border-radius:999px;padding:6px 12px;white-space:nowrap;
 }

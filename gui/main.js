@@ -3,11 +3,21 @@
  *
  * Источник данных:
  *   1) бэкенд `gui/backend.py` — GET /api/state каждые 300 мс (двигатели, АКБ,
- *      груз, замок, связь), POST /api/lock/open|close|pin, GET /api/audit;
+ *      груз, замок, связь), POST /api/lock/open|close, GET /api/audit;
  *   2) если сервера нет (страница открыта как файл или обычным static-сервером)
  *      — локальная демонстрация, чтобы экран не оставался пустым.
  *
- * Переход на инженерный пульт: ссылка в подвале, либо 5 нажатий по логотипу.
+ * ПРАВИЛА ЭКРАНА (чтобы в интерфейсе не было дублей):
+ *   • одно действие — один орган управления. Очистка ввода PIN — только клавиша
+ *     «СБРОС» на клавиатуре; открытие/закрытие отсека — одна кнопка, её надпись
+ *     меняется по состоянию. Второй кнопки сброса нет;
+ *   • одно состояние показывается в одном месте: замок — чип в шапке панели
+ *     «Грузовой отсек»; груз — строка под клавиатурой; заряд — кольцо АКБ;
+ *     связь с модулями — подвал панели «Двигатели»; канал данных — чип в шапке;
+ *   • сообщение под PIN-кодом — только отклик на последнее действие
+ *     (доступ разрешён / неверный PIN / блокировка), оно не повторяет состояние.
+ *
+ * Переход на инженерный пульт: одна ссылка в подвале экрана.
  * ========================================================================== */
 (function () {
   'use strict';
@@ -15,6 +25,7 @@
   const $ = (id) => document.getElementById(id);
   const POLL_MS = 300;
   const AUDIT_MS = 5000;
+  const PROMPT = 'Введите PIN-код и нажмите «Открыть»';
 
   /* ======================================================================
    * 1. Демонстрационный источник (резерв, когда API недоступен)
@@ -73,6 +84,9 @@
 
   function apiUrl(path) { return path; }        // относительные URL — работает на любом порту
 
+  /** Данные сервера свежие (ответ был меньше 2 с назад). */
+  function apiFresh() { return api.ok && !!api.data && (Date.now() - api.at) < 2000; }
+
   async function apiPoll() {
     if (!hasFetch) return;
     try {
@@ -113,8 +127,7 @@
 
   /** Данные для отрисовки: свежий снимок API либо локальная демонстрация. */
   function read() {
-    const fresh = api.ok && api.data && (Date.now() - api.at) < 2000;
-    if (fresh) return api.data;
+    if (apiFresh()) return api.data;
     return {
       motors: DEMO.motors,
       battery: DEMO.battery,
@@ -130,12 +143,38 @@
   /* ======================================================================
    * 3. Состояние экрана
    * ==================================================================== */
-  const lock = { open: false, pin: '', fails: 0, lockUntil: 0, busy: false };
+  const lock = { pin: '', busy: false, demoOpen: false, fails: 0, lockUntil: 0 };
+
+  /**
+   * Единственный источник правды о замке: пока сервер отвечает — его состояние,
+   * иначе — локальное демонстрационное. Экрану не нужна своя копия состояния.
+   */
+  function lockView() {
+    if (apiFresh() && api.data.lock) {
+      const l = api.data.lock;
+      return {
+        open: !!l.open,
+        blocked: !!l.blocked,
+        remainingMs: Number(l.remainingMs || 0),
+        attemptsLeft: l.attemptsLeft,
+        from: 'сервер',
+      };
+    }
+    const left = Math.max(0, lock.lockUntil - Date.now());
+    return {
+      open: lock.demoOpen,
+      blocked: left > 0,
+      remainingMs: left,
+      attemptsLeft: DEMO.maxAttempts - lock.fails,
+      from: 'демо',
+    };
+  }
 
   /* ======================================================================
    * 4. Разметка
    * ==================================================================== */
-  const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'];
+  const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'СБРОС'];
+  const KEY_LABEL = { '⌫': '⌫', 'СБРОС': 'СБРОС' };
 
   function mountMotors() {
     const grid = $('sc-motor-grid');
@@ -173,10 +212,12 @@
     const pad = $('sc-keypad');
     if (!pad) return;
     pad.innerHTML = KEYPAD.map((k) => {
-      const mode = k === 'C' || k === '⌫';
-      const label = k === 'C' ? 'СБРОС' : k === '⌫' ? '⌫' : k;
+      const mode = k === '⌫' || k === 'СБРОС';
+      const label = KEY_LABEL[k] || k;
+      const aria = k === '⌫' ? 'удалить последнюю цифру'
+        : k === 'СБРОС' ? 'очистить ввод' : 'цифра ' + k;
       return `<button type="button" class="sc-key${mode ? ' sc-key-mode' : ''}" data-key="${k}"
-                 aria-label="${mode ? label : 'цифра ' + k}">${label}</button>`;
+                 aria-label="${aria}">${label}</button>`;
     }).join('');
     pad.querySelectorAll('[data-key]').forEach((b) => b.addEventListener('click', () => press(b.dataset.key)));
   }
@@ -184,16 +225,16 @@
   /* ======================================================================
    * 5. Замок грузового отсека
    * ==================================================================== */
-  function isBlocked() {
-    if (api.ok) return false;                       // блокировку считает бэкенд
-    return lock.lockUntil > Date.now();
-  }
-
   function press(k) {
     if (lock.busy) return;                       // идёт проверка PIN — ввод не принимаем
-    if (!api.ok && lock.lockUntil > Date.now()) return;
-    if (k === 'C') lock.pin = '';
-    else if (k === '⌫') lock.pin = lock.pin.slice(0, -1);
+    if (lockView().blocked) return;              // блокировку считает сервер (или демо-режим)
+    if (k === 'СБРОС' || k === 'C') {
+      lock.pin = '';
+      renderPin();
+      setMsg(PROMPT);
+      return;
+    }
+    if (k === '⌫') lock.pin = lock.pin.slice(0, -1);
     else if (lock.pin.length < 8) lock.pin += k;
     renderPin();
   }
@@ -217,45 +258,47 @@
     setTimeout(() => box.parentElement.classList.remove('sc-shake'), 400);
   }
 
+  /** Главное действие: открыть отсек по PIN либо закрыть уже открытый. */
+  function toggleCargo() {
+    if (lockView().open) closeCargo(); else tryOpen();
+  }
+
   async function tryOpen() {
     if (lock.busy) return;
+    const lv = lockView();
+    if (lv.blocked) {
+      setMsg('Ввод заблокирован: ещё ' + Math.ceil(lv.remainingMs / 1000) + ' с', 'err');
+      return;
+    }
     if (lock.pin.length < 4) { setMsg('PIN — не менее 4 цифр', 'warn'); return; }
     lock.busy = true;
     try {
       if (api.ok) {
         const res = await apiLock('api/lock/open', { pin: lock.pin });
+        lock.pin = '';
+        renderPin();
         if (res.ok) {
-          lock.open = true;
-          lock.pin = '';
-          renderPin();
-          setMsg('Доступ разрешён. Отсек открыт', 'ok');
+          setMsg('Доступ разрешён', 'ok');
           await apiAudit();
         } else if (res.reason === 'blocked') {
-          lock.pin = '';
-          renderPin();
           setMsg('Ввод заблокирован: ещё ' + Math.ceil((res.remainingMs || 0) / 1000) + ' с', 'err');
           shake();
         } else {
-          lock.pin = '';
-          renderPin();
           const left = res.attemptsLeft;
-          setMsg(left !== undefined
-            ? 'Неверный PIN. Осталось попыток: ' + left
-            : 'Неверный PIN', 'err');
+          setMsg(left !== undefined ? 'Неверный PIN. Осталось попыток: ' + left : 'Неверный PIN', 'err');
           shake();
         }
       } else {
         // демо-режим: проверка на месте
-        if (lock.pin === DEMO.localPin) {
-          lock.open = true;
-          lock.pin = '';
+        const pin = lock.pin;
+        lock.pin = '';
+        renderPin();
+        if (pin === DEMO.localPin) {
+          lock.demoOpen = true;
           lock.fails = 0;
-          renderPin();
-          setMsg('Доступ разрешён. Отсек открыт (демо-режим)', 'ok');
+          setMsg('Доступ разрешён (демо-режим)', 'ok');
         } else {
           lock.fails += 1;
-          lock.pin = '';
-          renderPin();
           if (lock.fails >= DEMO.maxAttempts) {
             lock.fails = 0;
             lock.lockUntil = Date.now() + DEMO.lockMs;
@@ -275,12 +318,16 @@
   }
 
   async function closeCargo() {
-    if (!lock.open) return;
+    if (!lockView().open) return;
+    lock.busy = true;
     try {
       if (api.ok) await apiLock('api/lock/close', {});
     } catch (err) { /* закрываем локально в любом случае */ }
-    lock.open = false;
+    lock.demoOpen = false;
+    lock.pin = '';
+    renderPin();
     setMsg('Отсек закрыт', 'ok');
+    lock.busy = false;
     render();
   }
 
@@ -302,12 +349,14 @@
 
   function render() {
     const d = read();
-    const fresh = api.ok && (Date.now() - api.at) < 2000;
+    const fresh = apiFresh();
+    const lv = lockView();
 
-    /* двигатели */
+    /* двигатели: карточки + сводка */
     let moving = 0;
     let online = 0;
-    (d.motors || []).forEach((m) => {
+    const motors = d.motors || [];
+    motors.forEach((m) => {
       const needle = $('mc-needle-' + m.id);
       if (needle) needle.style.transform = 'rotate(' + Number(m.angle || 0).toFixed(1) + 'deg)';
       const ang = $('mc-angle-' + m.id);
@@ -331,10 +380,10 @@
       if (m.online !== false) online += 1;
     });
     const sum = $('sc-motors-sum');
-    if (sum) sum.textContent = 'в движении: ' + moving + ' из ' + (d.motors || []).length
-      + ' · на связи: ' + online;
+    if (sum) sum.textContent = 'в движении: ' + moving + ' из ' + motors.length
+      + ' · модули на связи: ' + online + ' из ' + motors.length;
 
-    /* АКБ */
+    /* АКБ: кольцо (заряд и уровень), строки, подсказка о порогах */
     const b = d.battery || {};
     const soc = Number(b.soc || 0);
     const C = 2 * Math.PI * 60;
@@ -346,7 +395,7 @@
     const socEl = $('sc-soc');
     if (socEl) socEl.innerHTML = Math.round(soc) + '<span>%</span>';
     const label = $('sc-soc-label');
-    if (label) label.textContent = soc < 20 ? 'аварийный заряд' : soc < 40 ? 'низкий заряд' : 'заряд';
+    if (label) label.textContent = String(b.level || '—').toLowerCase();
     const volts = $('sc-volts');
     if (volts) volts.textContent = fmt(b.volts, 1) + ' В';
     const amps = $('sc-amps');
@@ -358,20 +407,18 @@
     const hint = $('sc-batt-hint');
     if (hint) {
       const v = Number(b.volts || 0);
-      hint.textContent = v && v < 33.5 ? 'аварийный порог 33,5 В — движение запрещено'
-        : v && v < 35.5 ? 'низкое напряжение — «ползучий» режим'
-        : 'порог предупреждения 35,5 В';
+      hint.textContent = v && v < 33.5 ? 'ниже аварийного порога 33,5 В — движение запрещено'
+        : v && v < 35.5 ? 'ниже порога 35,5 В — «ползучий» режим'
+        : 'пороги: 35,5 В предупреждение · 33,5 В авария';
       hint.style.color = v && v < 33.5 ? 'var(--err)' : v && v < 35.5 ? 'var(--warn)' : '';
     }
 
-    /* груз */
+    /* груз: только про груз, состояние замка показывает чип панели */
     const cargo = d.cargo || {};
     const kg = $('sc-cargo-kg');
     if (kg) kg.textContent = (cargo.kg === undefined ? '—' : cargo.kg) + ' кг';
     const cst = $('sc-cargo-state');
-    if (cst) {
-      cst.textContent = lock.open ? 'ОТКРЫТ — груз доступен' : 'закреплён, доступ закрыт';
-    }
+    if (cst) cst.textContent = lv.open ? 'доступен для погрузки/выгрузки' : 'закреплён и заперт';
 
     /* шапка и подвал */
     const mode = $('sc-mode');
@@ -383,7 +430,7 @@
     const dot = $('sc-link-dot');
     if (dot) dot.classList.toggle('off', !d.linkOk);
     const txt = $('sc-link-text');
-    if (txt) txt.textContent = d.linkOk ? 'модули на связи' : 'нет связи с модулями';
+    if (txt) txt.textContent = d.linkOk ? 'связь с бортом: есть' : 'связь с бортом: нет';
 
     /* режим данных: сервер или демо */
     const chip = $('sc-data');
@@ -398,19 +445,17 @@
     }
     const ev = $('sc-foot-event');
     if (ev) {
-      ev.textContent = api.lastAudit
-        ? 'журнал: ' + (api.lastAudit.ok ? 'доступ разрешён' : 'отказ в доступе')
-        : 'журнал: —';
+      const e = api.lastAudit;
+      ev.textContent = 'журнал: ' + (e ? (e.ok ? 'доступ разрешён' : 'отказ в доступе') : '—');
     }
 
-    /* замок: состояние берём у сервера, а в демо-режиме считаем на месте */
+    /* замок: чип и единственная кнопка действия */
     const chipLock = $('sc-lock-state');
-    const ls = (fresh && d.lock) ? d.lock : { blocked: lock.lockUntil > Date.now(), remainingMs: Math.max(0, lock.lockUntil - Date.now()) };
     if (chipLock) {
-      if (ls.blocked) {
-        chipLock.textContent = 'БЛОКИРОВКА ' + Math.ceil((ls.remainingMs || 0) / 1000) + ' с';
+      if (lv.blocked) {
+        chipLock.textContent = 'БЛОКИРОВКА ' + Math.ceil(lv.remainingMs / 1000) + ' с';
         chipLock.className = 'sc-chip sc-chip-blocked';
-      } else if (lock.open) {
+      } else if (lv.open) {
         chipLock.textContent = 'ОТКРЫТО';
         chipLock.className = 'sc-chip sc-chip-open';
       } else {
@@ -420,8 +465,8 @@
     }
     const openBtn = $('sc-btn-open');
     if (openBtn) {
-      openBtn.disabled = !!ls.blocked;
-      openBtn.textContent = lock.open ? 'Закрыть отсек' : 'Открыть отсек';
+      openBtn.disabled = lv.blocked || lock.busy;
+      openBtn.textContent = lv.open ? 'Закрыть отсек' : 'Открыть отсек';
     }
   }
 
@@ -438,18 +483,6 @@
   function initNav() {
     const link = $('sc-console-link');
     if (link) link.addEventListener('click', (e) => { e.preventDefault(); goConsole(); });
-    const logo = $('sc-logo');
-    if (logo) {
-      let taps = 0;
-      let stop = 0;
-      logo.addEventListener('click', () => {
-        const now = Date.now();
-        if (now - stop > 1200) taps = 0;
-        stop = now;
-        taps += 1;
-        if (taps >= 5) { taps = 0; goConsole(); }
-      });
-    }
   }
 
   /* ======================================================================
@@ -459,24 +492,21 @@
     mountMotors();
     mountKeypad();
     renderPin();
+    setMsg(PROMPT);
     initNav();
     clock();
     setInterval(clock, 1000);
 
-    if ($('sc-btn-open')) $('sc-btn-open').addEventListener('click', () => {
-      if (lock.open) closeCargo(); else tryOpen();
-    });
-    if ($('sc-btn-clear')) $('sc-btn-clear').addEventListener('click', () => {
-      lock.pin = '';
-      renderPin();
-      setMsg(lock.open ? 'Отсек открыт' : 'Введите PIN-код и нажмите «Открыть»');
-    });
+    // Единственная кнопка отсека: открыть по PIN либо закрыть
+    const openBtn = $('sc-btn-open');
+    if (openBtn) openBtn.addEventListener('click', toggleCargo);
 
+    // Физическая клавиатура (дубликатов органов управления не создаёт)
     document.addEventListener('keydown', (e) => {
       if (/^[0-9]$/.test(e.key)) press(e.key);
       else if (e.key === 'Backspace') press('⌫');
-      else if (e.key === 'Escape') press('C');
-      else if (e.key === 'Enter') { if (lock.open) closeCargo(); else tryOpen(); }
+      else if (e.key === 'Escape') press('СБРОС');
+      else if (e.key === 'Enter') toggleCargo();
     });
 
     // Опрос бэкенда
@@ -487,15 +517,13 @@
       apiAudit();
     }
 
-    // Локальная анимация (только когда сервера данных нет)
+    // Отрисовка; локальная анимация — только когда данных сервера нет
     let last = performance.now();
     setInterval(() => {
       const now = performance.now();
       const dt = Math.min(0.5, (now - last) / 1000);
       last = now;
-      const fresh = api.ok && (Date.now() - api.at) < 2000;
-      if (!fresh) demoStep(dt);
-      lock.open = lock.open && !(api.ok && api.data && api.data.lock && !api.data.lock.open && false);
+      if (!apiFresh()) demoStep(dt);
       render();
     }, 200);
 
@@ -509,5 +537,5 @@
   else boot();
 
   // Для тестов и отладки в консоли браузера
-  window.RS_MAIN = { api, lock, read, press, tryOpen, closeCargo, render };
+  window.RS_MAIN = { api, lock, read, press, tryOpen, closeCargo, toggleCargo, lockView, render };
 })();
