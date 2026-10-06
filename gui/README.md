@@ -25,6 +25,7 @@ python3 tests/backend.test.py     # 36 проверок бэкенда и API
                                   # экран (jsdom): tests/main.screen.test.js — 38 проверок
                                   # аудит интерфейса: tests/ui.audit.test.js — 20 проверок
                                   # экран + API (jsdom): tests/main.api.test.js — 20 проверок
+                                  # пульт + борт (jsdom): tests/console.api.test.js — 17 проверок
                                   # jsdom-прогоны: docs/GUI.md §7.1 и docs/MAIN_SCREEN.md §6
 ```
 

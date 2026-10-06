@@ -314,8 +314,13 @@ trip = {
 ### 7.3. Замок ячейки (PIN)
 
 ```text
-Хранение:  salt = random 16 байт (hex)
+Хранение:  борт (gui/backend.py): gui/state/lock.json —
+           salt = random 16 байт (hex)
            pinHash = SHA-256(salt + ":" + pin)
+           Пульт, открытый через борт (адрес /console того же сервера),
+           работает с ЭТИМ замком по API: PIN и журнал общие с основным
+           экраном. Локальное хранилище браузера включается только когда
+           сервера нет (страница открыта как файл) — демо-режим.
 Проверка:  attempts < 5 ? compare(hash(input)) : lockout 30 c
 Успех:     fails = 0, lockUntil = 0, запись аудита {action:"unlock", ok:true}
 Неудача:   fails++, запись аудита {action:"unlock", ok:false, fails}

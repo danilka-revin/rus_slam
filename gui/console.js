@@ -50,7 +50,11 @@
   RS._onTripStart = (trip) => { try { event('nav', 'рейс №' + trip.id + ' начат: ' + trip.route); } catch (e) {} };
   RS._onTripEnd = (trip) => { try { event('ok', 'рейс №' + trip.id + ' завершён: ' + F.km(trip.distanceM) + ', ' + F.wh(trip.energyWh)); } catch (e) {} };
 
-  const vault = new RS.PinVault(storage, {
+  /* Замок. Единственный источник правды — борт (`gui/backend.py`): тот же
+     PIN и тот же журнал, что у основного экрана. Если борт недоступен
+     (страница открыта как файл или без сервера), включается локальный
+     демо-замок в хранилище браузера — чтобы пульт не остался без ячейки. */
+  const localVault = new RS.PinVault(storage, {
     key: 'rus_slam_lock_v1',
     maxAttempts: 5,
     lockMs: 30000,
@@ -64,6 +68,134 @@
       else if (action === 'pin_change') say('warn', 'замок ячейки: PIN изменён');
     },
   });
+
+  /** Запрос с ограничением по времени: борт не должен «подвешивать» пульт. */
+  function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('таймаут')), ms);
+      Promise.resolve(promise).then(
+        (v) => { clearTimeout(t); resolve(v); },
+        (e) => { clearTimeout(t); reject(e); });
+    });
+  }
+
+  const lockSource = {
+    mode: 'local',        // 'api' — замок на борту, 'local' — демо в браузере
+    snap: null,           // последний снимок /api/state
+    auditCache: [],
+    timer: null,
+    errors: 0,
+
+    async init() {
+      if (typeof fetch !== 'function') return;          // нет сети — демо-режим
+      const j = await withTimeout(fetch('api/health', { cache: 'no-store' }), 1500).then((r) => (r.ok ? r.json() : null));
+      if (!j || !j.ok) return;
+      this.mode = 'api';
+      await this.refresh();
+      this.refreshAudit();
+      this.timer = setInterval(() => this.refresh(), 1000);
+      say('ok', 'замок ячейки: PIN и журнал на борту (сервер), PIN по умолчанию ' + (j.pinDefault || '2580'));
+    },
+
+    async refresh() {
+      try {
+        const r = await withTimeout(fetch('api/state', { cache: 'no-store' }), 1500);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const body = await r.json();
+        const d = body && body.ok ? body.data : null;
+        if (!d || !d.lock) throw new Error('нет данных замка');
+        this.snap = d.lock;
+        this.errors = 0;
+        // открытие/закрытие, сделанное на основном экране, видно и на пульте
+        if (typeof d.lock.open === 'boolean' && d.lock.open !== lock.open) {
+          lock.open = d.lock.open;
+          lock.lastKind = 'основной экран';
+          applyLockToSim(lock.open);
+          if (lock.open) autoClose(true); else lock.autoCloseAt = 0;
+          pushLockState();
+          renderLock();
+        }
+        this.auditTick = (this.auditTick || 0) + 1;
+        if (this.auditTick % 5 === 0) this.refreshAudit();
+      } catch (e) {
+        this.errors += 1;
+        if (this.errors >= 3) {
+          this.mode = 'local';
+          this.snap = null;
+          if (this.timer) clearInterval(this.timer);
+          this.timer = null;
+          say('warn', 'борт не отвечает — замок пульта переключён в демо-режим');
+        }
+      }
+    },
+
+    async refreshAudit() {
+      try {
+        const r = await withTimeout(fetch('api/audit?limit=12', { cache: 'no-store' }), 1500);
+        if (!r.ok) return;
+        const body = await r.json();
+        if (body && body.ok) { this.auditCache = body.audit || []; renderAudit(); }
+      } catch (e) { /* журнал обновится следующим циклом */ }
+    },
+
+    remaining() { return this.snap ? Math.max(0, Number(this.snap.remainingMs || 0)) : 0; },
+
+    async verify(pin) {
+      const r = await withTimeout(fetch('api/lock/open', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      }), 4000);
+      const res = await r.json();
+      if (res && res.lock) this.snap = res.lock;
+      if (res.ok) return { ok: true, reason: 'ok' };
+      if (res.reason === 'blocked') return { ok: false, reason: 'locked', remainingMs: res.remainingMs || this.remaining() };
+      if (res.reason === 'format') return { ok: false, reason: 'format' };
+      const left = res.attemptsLeft === undefined ? 0 : res.attemptsLeft;
+      return { ok: false, reason: 'wrong', fails: 5 - left };
+    },
+
+    async close() {
+      const r = await withTimeout(fetch('api/lock/close', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }), 4000);
+      const res = await r.json();
+      if (res && res.lock) this.snap = res.lock;
+      return res;
+    },
+
+    async setPin(cur, nw) {
+      const r = await withTimeout(fetch('api/lock/pin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current: cur, new: nw }),
+      }), 4000);
+      const res = await r.json();
+      if (res && res.lock) this.snap = res.lock;
+      return res;
+    },
+  };
+
+  /* Один и тот же интерфейс для пульта: борт, а без него — локальный замок. */
+  const vault = {
+    get mode() { return lockSource.mode; },
+    init: () => Promise.resolve(lockSource.init()).then(() => localVault.init()),
+    isLocked: () => (lockSource.mode === 'api' ? lockSource.remaining() > 0 : localVault.isLocked()),
+    lockRemainingMs: () => (lockSource.mode === 'api' ? lockSource.remaining() : localVault.lockRemainingMs()),
+    verify: (pin) => (lockSource.mode === 'api' ? lockSource.verify(pin) : localVault.verify(pin)),
+    audit: (n) => (lockSource.mode === 'api' ? lockSource.auditCache.slice(0, n) : localVault.audit(n)),
+    async setPin(cur, nw) {
+      if (lockSource.mode !== 'api') return localVault.setPin(cur, nw);
+      const res = await lockSource.setPin(cur, nw);
+      if (res && res.ok) {
+        say('warn', 'замок борта: PIN изменён');
+        if (lock.open) closeLock('смена PIN');
+      }
+      return res;
+    },
+    async resetToDefault(cur) {
+      if (lockSource.mode !== 'api') return localVault.resetToDefault(cur);
+      const res = await lockSource.setPin(cur, '2580');
+      if (res && res.ok) say('warn', 'замок борта: PIN сброшен к заводскому 2580');
+      return res;
+    },
+  };
 
   const lock = { open: false, autoCloseAt: 0, lastKind: '—', pinBuf: '', busy: false };
   const settings = {
@@ -661,6 +793,11 @@
       beep('warn');
       return;
     }
+    if (kind !== 'pin' && vault.mode === 'api') {
+      setMsg('Внешний считыватель ' + kind.toUpperCase() + ' на борту не подключён: вход по PIN-коду', 'warn');
+      beep('warn');
+      return;
+    }
     lock.busy = true;
     try {
       if (vault.isLocked() && kind === 'pin') { renderLockStatus(); return; }
@@ -699,6 +836,9 @@
 
   function closeLock(reason) {
     if (!lock.open) return;
+    if (lockSource.mode === 'api') {
+      lockSource.close().catch(() => { /* закроется следующим опросом */ });
+    }
     lock.open = false;
     lock.autoCloseAt = 0;
     applyLockToSim(false);
