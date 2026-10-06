@@ -1509,6 +1509,7 @@ document.getElementById("btn-theme")?.addEventListener("click", () => {
   applyTheme(!document.body.classList.contains("dark"));
 });
 document.getElementById("btn-refresh")?.addEventListener("click", () => location.reload());
+document.getElementById("btn-main-screen")?.addEventListener("click", () => { location.href = "main.html"; });
 
 renderModules();
 renderFsm();

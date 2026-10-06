@@ -27,6 +27,7 @@
 | 🔌 **Протокол обмена** | Кадры команд и телеметрии между бортовым ПК и модулями (CRC16) | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) |
 | 🤖 **Пакеты ROS 2** | 8 пакетов: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск | [`ros2_ws/src/`](ros2_ws/src/) |
 | 🖥 **GUI — пульт робота** | Веб-пульт: карта SLAM (pan/zoom), окно камеры, тумблер Карта/Камера, кастомизация (дизайн ZMK Vision) | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) |
+| 🖥 **Основной экран робота** | Киоск на дисплее: 4 двигателя, заряд АКБ в процентах, PIN-код и состояние грузового отсека; бэкенд `gui/backend.py` (HTTP API, замок, источники sim/serial/ROS 2) | [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
 | 🔐 **Сервисный пульт (окно «Сервис»)** | Ячейка хранения по PIN/QR/RFID с аудитом доступа, ручная подача команд каждому двигателю (кадр UART + CRC16), панель АКБ 12S3P, статистика рейсов и отчёты | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) |
 
 Каждый Markdown-документ в `docs/` продублирован в PDF рядом с исходником
@@ -153,12 +154,21 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
 
 ---
 
-### Веб-пульт и сервисное окно (без ROS 2, демо-режим)
+### Экран робота и веб-пульт (без ROS 2, демо-режим)
 
 ```bash
-python3 -m http.server 8080 --directory gui   # открыть http://localhost:8080
-node gui/tests/console.test.js                # 32 модульных теста ядра сервисного пульта
+python3 gui/backend.py --port 8080     # /  → основной экран робота (киоск)
+                                       # /index.html, /console → инженерный пульт
+python3 gui/backend.py --kiosk         # то же + браузер без рамок на весь дисплей
+node gui/tests/console.test.js         # 32 теста ядра сервисного пульта
+python3 gui/tests/backend.test.py      # 36 проверок бэкенда и API
+python3 gui/tests/main.screen.test.js  # 27 проверок экрана (нужен jsdom: npm i jsdom)
+python3 gui/tests/main.api.test.js     # 19 сквозных: экран ↔ живой бэкенд
 ```
+
+Источник данных для экрана: `--source sim` (стенд), `--source serial`
+(4 UART, кадры телеметрии 16 Б) или `--source ros` (ROS 2). Доступ к экранам
+с планшета — `http://<ip-робота>:8080/`; подробно — [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md).
 
 Окно **«Сервис»** (вкладка в сайдбаре) закрывает требования задания № 2 по
 защите груза: доступ к ячейке хранения по PIN (заводской `2580`; 5 неудачных
