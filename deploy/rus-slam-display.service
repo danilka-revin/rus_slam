@@ -1,0 +1,22 @@
+[Unit]
+Description=RUS SLAM: основной экран на дисплее робота
+Documentation=file:/opt/rus_slam/docs/RUN_AND_ACCESS.md
+After=rus-slam-server.service
+Wants=rus-slam-server.service
+PartOf=graphical.target
+
+[Service]
+Type=simple
+
+# Страница на дисплее робота: тот же адрес, что открывает инженер удалённо.
+ExecStart=/opt/rus_slam/deploy/display.sh http://127.0.0.1:8080/
+
+Restart=always
+RestartSec=3
+
+# Графическая сессия дисплея робота: подставьте своего пользователя и дисплей.
+Environment=DISPLAY=:0
+User=rus
+
+[Install]
+WantedBy=graphical.target

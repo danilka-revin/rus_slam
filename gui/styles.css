@@ -159,3 +159,213 @@ body.dark .stick-vals{color:#8a9a92}
   .feed.map canvas{height:380px}
   main{min-width:0}
 }
+
+/* ===== Окно «Сервис» (console.js) ===== */
+.csl-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px}
+.csl-panel{display:flex;flex-direction:column}
+.csl-wide{grid-column:span 1}
+.csl-body{padding:6px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.csl-stand-badge{background:#e4503e;color:#fff;font-weight:800;font-size:10px;letter-spacing:.06em;border-radius:6px;padding:5px 9px}
+.csl-stand-toggle{font-weight:700}
+.csl-note{color:#849089;font-size:10px}
+.csl-group-ops{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 14px 10px}
+.csl-group-ops button,.csl-lock-actions button,.csl-pin-change button{font-size:11px;padding:7px 10px;border:1px solid #dfe5e2;background:#fff;border-radius:8px;cursor:pointer}
+.csl-inline{font-size:11px;color:#5c6963;display:flex;gap:6px;align-items:center}
+.csl-inline input{width:64px;border:1px solid #dfe5e2;border-radius:7px;padding:6px 8px;font:inherit}
+.csl-danger{color:#b42318!important;border-color:#f0c4be!important}
+.csl-chip{font-size:9px;font-weight:800;letter-spacing:.05em;padding:4px 8px;border-radius:999px;background:#f0f3f1;color:#5c6963;white-space:nowrap}
+.csl-chip-open{background:#e9f8ee;color:#1f6b3a}
+.csl-chip-closed{background:#f0f3f1;color:#5c6963}
+.csl-chip-locked{background:#fdebea;color:#b42318}
+.csl-level{font-size:10px;font-weight:800;padding:5px 9px;border-radius:999px}
+.csl-green{background:#e9f8ee;color:#1f6b3a}
+.csl-amber{background:#fff4dc;color:#8a5a10}
+.csl-red{background:#fdebea;color:#b42318}
+.csl-bar{height:8px;border-radius:6px;background:#e7ece9;overflow:hidden}
+.csl-bar-fill{display:block;height:100%;border-radius:6px;background:#7ddc52;transition:width .3s}
+.csl-bar-fill.csl-amber{background:#e5a438}
+.csl-bar-fill.csl-red{background:#e4503e}
+.csl-pin-display{display:flex;flex-direction:column;gap:4px}
+.csl-pin-dots{font-size:26px;letter-spacing:.32em;font-weight:800;font-family:ui-monospace,Menlo,monospace}
+.csl-pin-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.csl-pin-display small{color:#849089;font-size:10px}
+.csl-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:280px}
+.csl-key{border:1px solid #dfe5e2;background:#fff;border-radius:9px;padding:10px 0;font-size:14px;font-weight:700;cursor:pointer}
+.csl-key:active{background:#eff9f2}
+.csl-key-c{color:#b42318}
+.csl-lock-actions{display:flex;flex-wrap:wrap;gap:6px}
+.csl-msg{font-size:11px;border-radius:8px;padding:8px 10px;background:#f0f3f1;color:#3d4a44}
+.csl-msg.ok{background:#e9f8ee;color:#1f6b3a}
+.csl-msg.warn{background:#fff4dc;color:#8a5a10}
+.csl-msg.err{background:#fdebea;color:#b42318}
+.csl-timer{font-size:10px;color:#8a5a10;font-weight:700}
+.csl-details{border-top:1px solid #edf0ee;padding-top:8px}
+.csl-details summary{font-size:11px;font-weight:700;cursor:pointer;color:#3d4a44;margin-bottom:8px}
+.csl-pin-change{display:flex;flex-wrap:wrap;gap:6px}
+.csl-pin-change input,.csl-mod input{border:1px solid #dfe5e2;border-radius:8px;padding:7px 9px;font:inherit;font-size:12px;width:150px;min-width:0}
+.csl-table{width:100%;border-collapse:collapse;font-size:10.5px}
+.csl-table th{text-align:left;color:#8e9994;font-size:9px;text-transform:uppercase;padding:6px 6px;border-bottom:1px solid #edf0ee}
+.csl-table td{padding:6px 6px;border-bottom:1px solid #f2f5f3}
+.csl-table td.ok{color:#1f6b3a;font-weight:700}
+.csl-table td.err{color:#b42318;font-weight:700}
+.csl-table td.muted{color:#8e9994}
+.csl-mods{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 14px 6px}
+.csl-mod{border:1px solid #e2e7e4;border-radius:10px;padding:9px;display:flex;flex-direction:column;gap:7px;background:#fafbfa}
+.csl-mod header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0;background:transparent;border:0;height:auto}
+.csl-mod header b{font-size:13px;font-family:Manrope,Inter,sans-serif}
+.csl-mod-sub{font-size:9px;color:#849089;margin-right:auto}
+.csl-field{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;gap:5px;align-items:center}
+.csl-field label{font-size:10px;color:#5c6963}
+.csl-field input{width:100%;padding:6px 7px;font-size:12px}
+.csl-send{border:0;background:#16241e;color:#d5ff45;border-radius:8px;padding:7px 6px;font-size:11px;font-weight:800;cursor:pointer}
+.csl-send:hover{background:#203029}
+.csl-jog{display:flex;gap:4px}
+.csl-jog button{flex:1;border:1px solid #dfe5e2;background:#fff;border-radius:7px;padding:5px 0;font-size:10px;cursor:pointer}
+.csl-jog button:hover{background:#eff9f2}
+.csl-jog .csl-stop{color:#b42318;font-weight:800}
+.csl-fact{font-size:9.5px;color:#3d4a44;line-height:1.45;background:#fff;border:1px solid #edf0ee;border-radius:8px;padding:6px 7px}
+.csl-frame{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9.5px;background:#101b17;color:#d5ff45;border-radius:7px;padding:6px 7px;margin:0;overflow-x:auto;white-space:nowrap}
+.csl-bat-head{display:flex;gap:12px}
+.csl-bat-head>div{flex:1}
+.csl-bat-head span,.csl-bat-grid span{display:block;color:#76827c;font-size:10px}
+.csl-bat-head b{font-size:24px}
+.csl-bat-head small{display:block;color:#8a958f;font-size:9.5px;margin-top:2px}
+.csl-bat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.csl-bat-grid b{font-size:12px}
+.csl-bat-grid div{background:#fafbfa;border:1px solid #edf0ee;border-radius:8px;padding:7px 9px}
+#csl-bat-chart,#csl-speed-chart,#csl-trip-chart{width:100%;height:auto;border-radius:8px;display:block}
+.csl-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.csl-kpi article{background:#fafbfa;border:1px solid #edf0ee;border-radius:9px;padding:8px 10px}
+.csl-kpi span{display:block;color:#76827c;font-size:9px}
+.csl-kpi b{font-size:15px}
+.csl-kpi small{display:block;color:#8a958f;font-size:9px;margin-top:2px}
+.csl-stats-cols{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);gap:10px}
+.csl-stats-cols h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6d7973}
+body.dark .csl-key,body.dark .csl-group-ops button,body.dark .csl-lock-actions button,body.dark .csl-pin-change button,body.dark .csl-jog button{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-pin-change input,body.dark .csl-mod input{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-mod{background:#101b17;border-color:#2a3a32}
+body.dark .csl-fact{background:#16211c;border-color:#2a3a32;color:#c5d4cc}
+body.dark .csl-msg{background:#203029;color:#dbe7e1}
+body.dark .csl-msg.ok{background:#16301f;color:#7ddc52}
+body.dark .csl-msg.warn{background:#3a3218;color:#e5a438}
+body.dark .csl-msg.err{background:#3a1a17;color:#ff8a7d}
+body.dark .csl-details{border-color:#2a3a32}
+body.dark .csl-details summary{color:#c5d4cc}
+body.dark .csl-table th,body.dark .csl-table td{border-color:#2a3a32}
+body.dark .csl-table th{color:#8a9a92}
+body.dark .csl-table td{color:#dbe7e1}
+body.dark .csl-bat-grid div,body.dark .csl-kpi article{background:#101b17;border-color:#2a3a32}
+body.dark .csl-level.csl-green{background:#16301f;color:#7ddc52}
+body.dark .csl-chip-closed{background:#203029;color:#c5d4cc}
+body.dark .csl-stats-cols h4{color:#8a9a92}
+body.dark .csl-note,body.dark .csl-inline{color:#8a9a92}
+body.dark .csl-inline input{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-bar{background:#203029}
+@media (max-width:1240px){
+  .csl-mods{grid-template-columns:repeat(2,1fr)}
+  .csl-kpi{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:1100px){
+  .csl-grid,.csl-stats-cols{grid-template-columns:1fr}
+  .csl-mods{grid-template-columns:1fr}
+}
+
+/* ===== И-1…И-10: доработки окна «Сервис» ===== */
+/* И-1. Панель быстрых действий — залипает под шапкой */
+.csl-toolbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  background:#fff;border:1px solid #e2e7e4;border-radius:11px;padding:7px 10px;margin-bottom:10px;
+  box-shadow:0 6px 14px #18251f0d}
+body.dark .csl-toolbar{background:#16211c;border-color:#2a3a32;box-shadow:none}
+.csl-toolbar button{font-size:11px;padding:6px 9px;border:1px solid #dfe5e2;background:#fff;border-radius:8px;cursor:pointer}
+.csl-toolbar button:hover{background:#eff9f2}
+.csl-toolbar button.on{background:#16241e;color:#d5ff45;border-color:#16241e}
+.csl-tb-text{font-size:10px;color:#6d7973}
+.csl-tb-spacer{flex:1}
+#csl-tb-ring{width:34px;height:34px;border-radius:50%;background:#101b17}
+body.dark .csl-toolbar button{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-tb-text{color:#8a9a92}
+
+/* И-4. Подсветка некорректного ввода и автокламп */
+.csl-mod input{transition:box-shadow .15s,border-color .15s}
+.csl-mod input.csl-invalid{border-color:#e4503e;box-shadow:0 0 0 3px #e4503e28;background:#fdebea}
+.csl-mod input.csl-clamped{animation:cslFlash .7s ease}
+@keyframes cslFlash{0%{background:#fff4dc}100%{background:#fff}}
+.csl-hint{font-size:9.5px;color:#8a5a10;min-height:12px}
+body.dark .csl-mod input.csl-invalid{background:#3a1a17}
+body.dark .csl-hint{color:#e5a438}
+
+/* И-5. «Мёртвая рука» */
+.csl-jog-hold button{font-weight:700}
+.csl-jog-hold button.on{background:#16241e;color:#d5ff45;border-color:#16241e}
+.csl-jog button:active{transform:translateY(1px)}
+
+/* И-3. Кольцо автозакрытия */
+.csl-pin-row{display:flex;align-items:center;gap:8px}
+#csl-lock-ring{width:30px;height:30px;border-radius:50%;background:#101b17;flex-shrink:0}
+
+/* И-8. Журнал сервисных действий */
+.csl-jh{margin:10px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6d7973}
+.csl-jtools{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:6px}
+.csl-jtools button{font-size:10.5px;padding:5px 9px;border:1px solid #dfe5e2;background:#fff;border-radius:7px;cursor:pointer}
+.csl-jtools button.on{background:#16241e;color:#d5ff45;border-color:#16241e}
+.csl-jtools input{flex:1;min-width:140px;border:1px solid #dfe5e2;border-radius:7px;padding:6px 9px;font:inherit;font-size:11px}
+.csl-journal{max-height:190px;overflow:auto;border:1px solid #edf0ee;border-radius:9px;background:#fafbfa;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.csl-jrow{display:flex;gap:8px;align-items:center;padding:4px 9px;border-bottom:1px solid #eef2f0;font-size:10.5px}
+.csl-jrow:last-child{border-bottom:0}
+.csl-jts{color:#8e9994;flex-shrink:0}
+.csl-jmsg{flex:1;word-break:break-word}
+.csl-jrow.ok .csl-jmsg{color:#1f6b3a}
+.csl-jrow.warn .csl-jmsg{color:#8a5a10}
+.csl-jrow.err .csl-jmsg{color:#b42318}
+.csl-jcopy{border:1px solid #dfe5e2;background:#fff;border-radius:6px;font-size:9px;padding:2px 6px;cursor:pointer}
+.csl-jempty{padding:10px;color:#8e9994;font-size:11px}
+body.dark .csl-jtools button{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-jtools input{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-journal{background:#101b17;border-color:#2a3a32}
+body.dark .csl-jrow{border-color:#22322b}
+body.dark .csl-jrow.ok .csl-jmsg{color:#7ddc52}
+body.dark .csl-jrow.warn .csl-jmsg{color:#e5a438}
+body.dark .csl-jrow.err .csl-jmsg{color:#ff8a7d}
+body.dark .csl-jcopy{background:#16211c;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-jh{color:#8a9a92}
+
+/* И-7/И-2. Оверлеи: модальное окно и палитра команд */
+.csl-overlay{position:fixed;inset:0;background:#0b1411d9;backdrop-filter:blur(2px);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px 16px}
+.csl-modal-card,.csl-palette-card{background:#fff;border:1px solid #dfe5e2;border-radius:14px;box-shadow:0 24px 60px #0000004d;width:100%;max-width:520px;overflow:hidden;display:flex;flex-direction:column;max-height:80vh}
+.csl-modal-card.csl-modal-wide{max-width:860px}
+.csl-modal-card.csl-modal-danger .primary{background:#e4503e!important;color:#fff!important}
+.csl-modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #edf0ee}
+.csl-modal-head b{font-size:13px}
+.csl-modal-head button{border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#6d7973}
+.csl-modal-body{padding:12px 14px;overflow:auto;font-size:12px}
+.csl-modal-text{margin:0 0 8px;color:#3d4a44;line-height:1.5}
+.csl-modal-textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;border:1px solid #dfe5e2;border-radius:8px;padding:8px}
+.csl-modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:1px solid #edf0ee}
+.csl-modal-foot button{font-size:12px;padding:8px 14px;border:1px solid #dfe5e2;background:#fff;border-radius:8px;cursor:pointer}
+.csl-report{background:#fff;color:#17211d;border-radius:10px;padding:4px 10px;max-height:52vh;overflow:auto}
+.csl-palette-card{max-width:600px}
+#csl-palette-input{width:100%;border:0;border-bottom:1px solid #edf0ee;padding:14px 16px;font:inherit;font-size:13px;outline:none}
+.csl-palette-list{overflow:auto;max-height:56vh;padding:6px}
+.csl-pitem{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:10px 12px;font:inherit;font-size:12px;cursor:pointer}
+.csl-pitem em{font-style:normal;color:#8e9994;font-size:10px}
+.csl-pitem.on{background:#16241e;color:#d5ff45}
+.csl-pitem.on em{color:#b7d16a}
+.csl-palette-foot{padding:8px 14px;border-top:1px solid #edf0ee;color:#8e9994;font-size:10px}
+body.dark .csl-modal-card,body.dark .csl-palette-card{background:#16211c;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-modal-head,body.dark .csl-modal-foot,body.dark .csl-palette-foot{border-color:#2a3a32}
+body.dark .csl-modal-foot button{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark #csl-palette-input{background:#16211c;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-pitem.on{background:#d5ff45;color:#17211d}
+body.dark .csl-modal-textarea{background:#101b17;border-color:#2a3a32;color:#dbe7e1}
+body.dark .csl-modal-text{color:#c5d4cc}
+
+/* И-9. Крупный интерфейс и доступность */
+body.ui-large .csl-grid{gap:14px}
+body.ui-large .csl-table{font-size:12.5px}
+body.ui-large .csl-key{font-size:18px;padding:14px 0}
+body.ui-large .csl-kpi b{font-size:19px}
+body.ui-large .csl-fact,body.ui-large .csl-frame,body.ui-large .csl-tb-text{font-size:12px}
+body.ui-large .csl-jrow{font-size:12.5px}
+body.ui-large .csl-chip{font-size:11px}
+*:focus-visible{outline:2px solid #d5ff45;outline-offset:2px}
+body.service-stand .csl-toolbar{border-color:#e4503e}

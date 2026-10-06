@@ -1,0 +1,28 @@
+[Unit]
+Description=RUS SLAM: сервер борта (основной экран и API)
+Documentation=file:/opt/rus_slam/docs/RUN_AND_ACCESS.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rus_slam
+
+# Сервер только отдаёт страницы и данные по сети — сам он окон не открывает.
+# Источник данных: auto = ROS 2, а если rclpy нет — модель (стенд).
+ExecStart=/usr/bin/python3 /opt/rus_slam/gui/backend.py --port 8080 --source auto
+
+Restart=always
+RestartSec=2
+
+# Реальный замок отсека: раскомментируйте и подставьте свои команды
+# (реле, соленоид, GPIO). Пока не заданы — замок программный.
+#Environment=RUS_SLAM_LOCK_CMD=gpio write 7 1
+#Environment=RUS_SLAM_LOCK_CMD_CLOSE=gpio write 7 0
+
+# Первый запуск с другим PIN: добавьте к ExecStart флаг --pin 1234
+# (действует только когда файла gui/state/lock.json ещё нет),
+# сброс к заводскому — отдельным запуском --reset-pin.
+
+[Install]
+WantedBy=multi-user.target

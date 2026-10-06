@@ -21,6 +21,7 @@ const WORLD = {
     { x: -8, y: -8.4, kind: "stop", label: "СТОП" },
     { x: 6, y: -8.4, kind: "cross", label: "переход" },
     { x: -2, y: 5.4, kind: "bump", label: "неровность" },
+    { x: -14, y: -1.2, kind: "light", label: "светофор" },
   ],
   stations: [
     { id: "A", x: -9.5, y: -1.2, kind: "load", label: "А · загрузка" },
@@ -260,6 +261,33 @@ function drawMap() {
   });
 
   const rp = mapPt(state.x, state.y, ox, oy, scale);
+  /* дорожные знаки и светофор стенда (нормативная часть регламента) */
+  (WORLD.signs || []).forEach((sg) => {
+    const q = mapPt(sg.x, sg.y, ox, oy, scale);
+    if (sg.kind === "light") {
+      const green = state.lightGreen !== false;
+      ctx.fillStyle = "#101b17";
+      ctx.beginPath(); ctx.arc(q.u, q.v, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#39463f"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = green ? "#7ddc52" : "#e4503e";
+      ctx.beginPath(); ctx.arc(q.u, q.v - (green ? 3 : 3), 3.6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(228,80,62,0.35)";
+      if (!green) { ctx.beginPath(); ctx.arc(q.u, q.v + 4, 3, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = "#d5ff45";
+      ctx.font = "9px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(green ? "зелёный" : "красный", q.u, q.v - 14);
+      return;
+    }
+    const color = sg.kind === "stop" ? "#e4503e" : sg.kind === "cross" ? "#e5a438" : "#7ddc52";
+    ctx.fillStyle = "rgba(16,27,23,0.9)";
+    ctx.beginPath(); ctx.arc(q.u, q.v, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 2.4; ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.font = "bold 9px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(sg.kind === "stop" ? "STOP" : sg.kind === "cross" ? "▮▮" : "≈", q.u, q.v + 3);
+  });
   (WORLD.stations || []).forEach((st) => {
     const q = mapPt(st.x, st.y, ox, oy, scale);
     ctx.fillStyle = st.kind === "load" ? "rgba(125,220,82,0.35)" : st.kind === "unload" ? "rgba(228,80,62,0.35)" : "rgba(213,255,69,0.28)";

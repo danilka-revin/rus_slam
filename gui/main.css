@@ -1,0 +1,222 @@
+/* ============================================================================
+ * main.css — основной экран робота (киоск).
+ * Тёмная тема ZMK Vision, крупные элементы под сенсорный дисплей 10–15″.
+ * Рассчитан на 1024×600 … 1920×1080 без прокрутки страницы.
+ * ========================================================================== */
+
+:root{
+  --bg:#0b1411;
+  --panel:#121d18;
+  --panel-2:#16241e;
+  --line:#22322b;
+  --text:#e6f0eb;
+  --muted:#8fa79d;
+  --accent:#d5ff45;
+  --ok:#7ddc52;
+  --warn:#e5a438;
+  --err:#ff6a55;
+  --radius:18px;
+}
+
+*{box-sizing:border-box}
+
+html,body{height:100%}
+body{
+  margin:0;
+  background:radial-gradient(1200px 700px at 20% -10%, #14231d 0%, transparent 60%);
+  background-color:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",system-ui,Arial,sans-serif;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:10px;
+  padding:10px;
+  overflow:hidden;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ---------- 1. Шапка ---------- */
+.sc-head{
+  display:flex;align-items:center;gap:14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 16px;
+}
+.sc-brand{display:flex;align-items:center;gap:11px}
+.sc-logo{
+  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:var(--accent);color:#17211d;flex-shrink:0;
+}
+.sc-brand b{display:block;font-size:19px;letter-spacing:.06em}
+.sc-brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+
+.sc-mode{
+  margin-left:auto;
+  font-size:14px;font-weight:800;letter-spacing:.05em;
+  color:var(--accent);border:1px solid #3a4a1f;background:#1a2410;
+  padding:8px 14px;border-radius:999px;white-space:nowrap;
+}
+.sc-head-right{display:flex;align-items:center;gap:16px}
+.sc-link{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
+.sc-dot{width:11px;height:11px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px #7ddc5222}
+.sc-dot.off{background:var(--err);box-shadow:0 0 0 4px #ff6a5522}
+.sc-clock{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+/* ---------- 2. Сетка ---------- */
+.sc-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.6fr) minmax(230px,0.9fr) minmax(270px,1fr);
+  gap:10px;
+  min-height:0;
+}
+.sc-panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;
+}
+.sc-panel-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.sc-panel-head h1{margin:0;font-size:15px;text-transform:uppercase;letter-spacing:.08em}
+.sc-note{color:var(--muted);font-size:11px;margin-left:auto;text-align:right}
+
+/* ---------- Двигатели ---------- */
+.sc-motor-grid{
+  flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;
+}
+.mcard{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:14px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:0;
+}
+.mcard-top{display:flex;align-items:center;gap:8px}
+.mcard-top b{font-size:22px;letter-spacing:.04em}
+.mcard-name{color:var(--muted);font-size:11px}
+.mcard-body{flex:1;display:flex;align-items:center;gap:12px;min-height:0}
+
+/* циферблат угла руля */
+.dial{position:relative;width:100%;max-width:130px;flex-shrink:0}
+.dial svg{width:100%;height:auto;display:block}
+.dial-bg{fill:none;stroke:#26382f;stroke-width:7}
+.dial-tick{stroke:#3a5148;stroke-width:2.5}
+.dial-needle{stroke:var(--accent);stroke-width:5;stroke-linecap:round;transform-origin:50px 50px;transition:transform .18s linear}
+.dial-hub{fill:var(--accent)}
+.dial-val{
+  position:absolute;left:0;right:0;bottom:-2px;text-align:center;
+  font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
+}
+
+.mcard-stats{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mstat{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.mstat span{color:var(--muted);font-size:11px;white-space:nowrap}
+.mstat b{font-size:21px;font-variant-numeric:tabular-nums}
+.mstat b small{font-size:11px;font-weight:600;color:var(--muted);margin-left:3px}
+.pbar{height:9px;border-radius:6px;background:#0d1714;overflow:hidden;border:1px solid var(--line)}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7ddc52,#d5ff45);transition:width .25s}
+.pbar i.neg{background:linear-gradient(90deg,#e5a438,#ff6a55)}
+
+.sc-chip{
+  margin-left:auto;font-size:10.5px;font-weight:800;letter-spacing:.05em;
+  padding:5px 9px;border-radius:999px;white-space:nowrap;
+}
+.sc-chip-ok{background:#16301f;color:var(--ok)}
+.sc-chip-move{background:#1a2a22;color:var(--accent)}
+.sc-chip-idle{background:#1b2622;color:var(--muted)}
+.sc-chip-warn{background:#3a3218;color:var(--warn)}
+.sc-chip-err{background:#3a1a17;color:var(--err)}
+
+.sc-motor-foot{
+  display:flex;justify-content:space-between;gap:10px;margin-top:10px;
+  color:var(--muted);font-size:11px;
+}
+
+/* ---------- Аккумулятор ---------- */
+.sc-batt{align-items:stretch}
+.sc-ring-wrap{position:relative;display:grid;place-items:center;flex:1;min-height:0;padding:4px 0}
+.sc-ring{width:min(100%,260px);height:auto;max-height:100%;transform:rotate(-90deg)}
+.sc-ring-bg{fill:none;stroke:#1d2b25;stroke-width:13}
+.sc-ring-fill{
+  fill:none;stroke:var(--ok);stroke-width:13;stroke-linecap:round;
+  stroke-dasharray:0 999;transition:stroke-dasharray .4s linear,stroke .3s;
+}
+.sc-ring-center{position:absolute;text-align:center}
+.sc-ring-center b{font-size:clamp(38px,7vh,64px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.sc-ring-center b span{font-size:.45em;color:var(--muted);margin-left:2px}
+.sc-ring-center small{display:block;color:var(--muted);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+.sc-batt-rows{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.sc-batt-row{display:flex;flex-direction:column;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:7px 10px}
+.sc-batt-row span{color:var(--muted);font-size:10.5px}
+.sc-batt-row b{font-size:17px;font-variant-numeric:tabular-nums}
+.sc-batt-foot{margin-top:8px;color:var(--muted);font-size:11px;text-align:center}
+
+/* ---------- Грузовой отсек ---------- */
+.sc-lock{justify-content:flex-start}
+.sc-chip-closed{background:#1b2622;color:var(--muted)}
+.sc-chip-open{background:#16301f;color:var(--ok)}
+.sc-chip-blocked{background:#3a1a17;color:var(--err)}
+
+.sc-pin{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:clamp(26px,4.4vh,40px);font-weight:800;letter-spacing:.34em;
+  text-align:center;padding:10px 4px;color:var(--accent);min-height:1.2em;
+}
+.sc-pin-msg{text-align:center;color:var(--muted);font-size:12px;min-height:32px;padding:0 4px 8px}
+.sc-pin-msg.ok{color:var(--ok)}
+.sc-pin-msg.err{color:var(--err)}
+.sc-pin-msg.warn{color:var(--warn)}
+
+.sc-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-height:0}
+.sc-key{
+  border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+  border-radius:14px;font:inherit;font-size:clamp(20px,3.4vh,30px);font-weight:700;
+  cursor:pointer;min-height:44px;transition:background .1s,transform .06s;
+}
+.sc-key:hover{background:#1d2f28}
+.sc-key:active{transform:translateY(1px);background:#24382f}
+.sc-key.sc-key-mode{color:var(--muted);font-size:clamp(15px,2.4vh,21px)}
+
+.sc-lock-buttons{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.sc-btn{
+  border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+  border-radius:14px;font:inherit;font-size:15px;font-weight:700;padding:14px 10px;cursor:pointer;
+}
+.sc-btn:hover{background:#1d2f28}
+.sc-btn-primary{background:var(--accent);color:#17211d;border-color:var(--accent)}
+.sc-btn-primary:hover{background:#c8f43a}
+.sc-btn[disabled]{opacity:.55;cursor:default}
+
+.sc-cargo{
+  display:flex;justify-content:space-between;gap:8px;margin-top:10px;padding-top:9px;
+  border-top:1px solid var(--line);color:var(--muted);font-size:11.5px;
+}
+.sc-cargo b{color:var(--text)}
+
+.sc-shake{animation:scShake .35s ease}
+@keyframes scShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+/* ---------- 3. Подвал ---------- */
+.sc-foot{
+  display:flex;justify-content:space-between;gap:12px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:9px 16px;color:var(--muted);font-size:11.5px;
+}
+.sc-foot-hint{margin-left:auto;text-align:right}
+
+/* ---------- Адаптация под узкие/невысокие дисплеи ---------- */
+@media (max-width:1100px){
+  .sc-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);grid-template-rows:minmax(0,1.2fr) minmax(0,1fr)}
+  .sc-lock{grid-column:2;grid-row:1 / span 2}
+  .sc-motors{grid-column:1;grid-row:1}
+  .sc-batt{grid-column:1;grid-row:2}
+  .sc-batt-rows{grid-template-columns:1fr 1fr}
+}
+@media (max-height:620px){
+  .sc-brand small,.sc-note,.sc-motor-foot,.sc-foot-hint{display:none}
+  .sc-clock{font-size:20px}
+  .sc-pin{font-size:26px}
+}
+
+/* Ссылка на инженерный пульт в подвале (переход между экранами) */
+.sc-foot-link{
+  min-height:44px;display:inline-flex;align-items:center;
+  margin-left:14px;color:var(--accent);text-decoration:none;font-weight:700;
+  border:1px solid #3a4a1f;border-radius:999px;padding:6px 12px;white-space:nowrap;
+}
+.sc-foot-link:hover{background:#1a2410}
+#sc-data{cursor:default}

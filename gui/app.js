@@ -47,9 +47,17 @@ const state = {
   waitConfirm: null,
   chargeTo: 80,
   charging: false,
+  // сервисный пульт (gui/console.js)
+  serviceStand: false,
+  lockOpen: false,
+  origin: "база",
+  _wasSpin: false,
 };
 
 const FSM = ["IDLE", "READY", "NAVIGATE", "YIELD_SIGN", "WAIT_LIGHT", "DELIVER", "RETURN", "FAULT"];
+
+/* Единая «часы» симуляции: удобно подменять в тестах (jsdom) и стабилизировать светофор. */
+function nowMs0() { return (window.__rsNow && window.__rsNow()) || performance.now(); }
 
 function log(level, msg) {
   const ts = new Date().toLocaleTimeString("ru-RU", { hour12: false });
@@ -104,6 +112,10 @@ function driveKeyDown() {
 }
 
 function applyKeys() {
+  if (state.serviceStand) {
+    state.vx = state.vy = state.wz = 0;
+    return;
+  }
   if (state.estop) {
     state.vx = state.vy = state.wz = 0;
     return;
@@ -201,6 +213,8 @@ document.getElementById("btn-recenter").addEventListener("click", () => {
 
 document.getElementById("btn-auto").addEventListener("click", () => {
   if (state.estop) { toast("Снимите E-stop"); return; }
+  if (!state.auto && !state.cargoLock) { toast("Закройте ячейку хранения (окно «Сервис»)"); return; }
+  if (!state.auto && state.serviceStand) { toast("Выключите сервисный режим «стенд»"); return; }
   if (!state.waypoints.length) { toast("Сначала кликните точки на карте"); return; }
   state.auto = !state.auto;
   if (state.auto) {
@@ -279,6 +293,7 @@ mapCanvas.addEventListener("contextmenu", (e) => {
 
 document.getElementById("btn-start-mission").addEventListener("click", () => {
   if (state.estop) { toast("Снимите E-stop"); return; }
+  if (!state.cargoLock) { toast("Закройте ячейку хранения (окно «Сервис»)"); return; }
   setMission("NAVIGATE");
   toast("Nav2: цель доставки");
 });
@@ -299,6 +314,7 @@ document.querySelectorAll("nav button").forEach((btn) => {
       sensors: ["Сенсоры", "ЛДС-01 · камера · детекции"],
       safety: ["Безопасность", "гейт /cmd_vel · вотчдог · АКБ"],
       logs: ["Журнал", "протокол модулей и Nav2"],
+      console: ["Сервисный пульт", "ячейка хранения · двигатели · АКБ · статистика"],
     };
     document.getElementById("page-title").textContent = titles[v][0];
     document.getElementById("page-sub").textContent = titles[v][1];
@@ -635,9 +651,16 @@ function seedStationPads() {
     }
   }
 }
+function originLabel() {
+  for (const st of WORLD.stations || []) {
+    if (Math.hypot(st.x - state.x, st.y - state.y) < 2.2) return st.id === "D" ? "база" : "площадка " + st.id;
+  }
+  return "цех";
+}
 function goToStation(kind) {
   const st = stationOf(kind);
   if (!st) return false;
+  state.origin = originLabel();
   seedStationPads();
   const g = { x: st.x, y: st.y };
   const cur = state.waypoints[0];
@@ -675,6 +698,7 @@ function confirmUnload() {
   }
 }
 function doLoad() {
+  if (!state.cargoLock) { toast("Закройте ячейку после укладки груза"); return false; }
   if (state.cargo) { toast("Уже загружен"); return false; }
   if (!nearStation("load")) { toast("Подъедьте к площадке А"); return false; }
   state.cargo = true;
@@ -688,6 +712,11 @@ function doLoad() {
   return true;
 }
 function doUnload() {
+  // Забрать груз можно только из открытой ячейки (интерлок окна «Сервис»).
+  if (window.RSConsole && window.RSConsole.isLockOpen && !window.RSConsole.isLockOpen()) {
+    toast("Откройте ячейку PIN-кодом в окне «Сервис»");
+    return false;
+  }
   if (!state.cargo) { toast("Отсек пуст"); return false; }
   if (!nearStation("unload")) { toast("Подъедьте к площадке Б"); return false; }
   state.cargo = false;
@@ -818,6 +847,12 @@ function runProgram() {
 }
 
 function followRoute() {
+  if (state.serviceStand) {
+    state.vx = state.vy = state.wz = 0;
+    state.auto = false;
+    state.progRun = false;
+    return;
+  }
   if (state.estop) return;
   if (state.pause) {
     state.vx = state.vy = state.wz = 0;
@@ -1073,18 +1108,54 @@ function sim(dt) {
   }
   const spd = Math.hypot(state.spdVx, state.spdVy);
   state.current = 2.2 + spd * 6 + Math.abs(state.wz) * 2;
+  const RSP = window.RS && window.RS.pack;
+  const distStep = spd * dt;
   if (!state.charging) {
-    state.bat = Math.max(44, state.bat - dt * 0.0008 * state.current);
-    state.soc = ((state.bat - 44) / (54.6 - 44)) * 100;
+    if (RSP) {
+      // Терминальное напряжение под током → шаг разряда по энергии (dE = U·I·dt/3600).
+      const terminal = RSP.terminalVoltage(state.soc, state.current);
+      state.soc = RSP.stepSoc(state.soc, terminal, state.current, dt);
+      state.bat = RSP.voltageFromSoc(state.soc) - state.current * RSP.PACK.internalR;
+    } else {
+      state.bat = Math.max(44, state.bat - dt * 0.0008 * state.current);
+      state.soc = ((state.bat - 44) / (54.6 - 44)) * 100;
+    }
   }
+  // Метрики сервисного пульта: пробег, энергия, рейсы, события.
+  if (window.RSConsole) {
+    try { window.RSConsole.onSimTick(dt, state, { distanceM: distStep }); } catch (e) { console.error(e); }
+  }
+  // Препятствие: фиксируем каждый эпизод объезда (spinClear false → true).
+  if (state.spinClear && !state._wasSpin) {
+    if (window.RSConsole) window.RSConsole.noteObstacle(1);
+    emit("warn", "препятствие: объезд");
+  }
+  state._wasSpin = !!state.spinClear;
   if (!state.trail) state.trail = [];
   const lastT = state.trail[state.trail.length - 1];
   if (!lastT || Math.hypot(state.x - lastT.x, state.y - lastT.y) > 0.35) {
     state.trail.push({ x: state.x, y: state.y });
     if (state.trail.length > 400) state.trail.shift();
   }
-  state.lightGreen = true;
-  const nowMs = performance.now();
+  // Светофор стенда: зелёный 6 с → жёлтый 1,5 с → красный 5 с.
+  const lightCycle = (nowMs0() % 12500) / 1000;
+  state.lightGreen = lightCycle < 6;
+  state.lightAmber = lightCycle >= 6 && lightCycle < 7.5;
+  if (state.lightGreen !== state._lastLight) {
+    state._lastLight = state.lightGreen;
+    if (window.RSConsole && !state._lightInit) window.RSConsole.noteLight(state.lightGreen ? "green" : "red");
+    state._lightInit = true;
+  }
+  const lightSign = (WORLD.signs || []).find((sg) => sg.kind === "light");
+  if (lightSign && !state.lightGreen) {
+    const dl = Math.hypot(lightSign.x - state.x, lightSign.y - state.y);
+    if (dl < 2.4 && state.auto && spd > 0.05) {
+      state.vx = 0;
+      state.wz = 0;
+      state.bubble = state.lightAmber ? "жёлтый" : "красный";
+    }
+  }
+  const nowMs = nowMs0();
   if (nowMs - (state.lastSign || 0) > 2500) {
     for (const sg of WORLD.signs || []) {
       if (sg.kind === "light") continue;
@@ -1093,6 +1164,7 @@ function sim(dt) {
       if (sg.kind === "stop") state.bubble = "СТОП";
       else if (sg.kind === "cross") { state.bubble = "переход"; state.vx = Math.min(state.vx, 0.6); }
       else if (sg.kind === "bump") { state.bubble = "неровность"; state.vx = Math.min(state.vx, 0.45); }
+      if (window.RSConsole) window.RSConsole.noteSign(sg.kind);
     }
   }
   if (state.charging) {
@@ -1104,12 +1176,14 @@ function sim(dt) {
       state.auto = false;
       state.docking = false;
       state.soc = Math.min(100, state.soc + dt * 7);
-      state.bat = 44 + (state.soc / 100) * (54.6 - 44);
+      state.bat = RSP ? RSP.voltageFromSoc(state.soc) + state.current * RSP.PACK.internalR
+                      : 44 + (state.soc / 100) * (54.6 - 44);
       state.bubble = "заряд " + state.soc.toFixed(0) + "% → " + (state.chargeTo || 80) + "%";
       if (state.soc >= (state.chargeTo || 80) - 0.2) {
         state.soc = state.chargeTo || 80;
-        state.bat = 44 + (state.soc / 100) * (54.6 - 44);
+        state.bat = RSP ? RSP.voltageFromSoc(state.soc) : 44 + (state.soc / 100) * (54.6 - 44);
         state.charging = false;
+        if (window.RSConsole) window.RSConsole.noteChargeCycle(1);
         state.bubble = "заряд готов";
         emit("ok", "заряжен до " + state.soc.toFixed(0) + "%");
         toast("Зарядка завершена");
@@ -1124,6 +1198,13 @@ function sim(dt) {
   const kin = compute4WIS(state.spdVx, state.spdVy, state.spdWz);
   state.kin = kin;
   state.modules.forEach((m) => {
+    if (state.serviceStand) {
+      // В режиме стенда модуль отрабатывает ручное задание (кадр 10 Б), корпус стоит.
+      m.steer = Number(m.svcSteer) || 0;
+      m.rpm = (Number(m.svcPwm) || 0) * 8;
+      m.temp = 34 + Math.abs(m.rpm) * 0.02 + Math.random();
+      return;
+    }
     const k = kin.find((q) => q.id === m.id);
     m.rpm = k ? k.rpm : spd * 180;
     m.steer = k ? k.steer * 180 / Math.PI : 0;
@@ -1148,6 +1229,8 @@ function sim(dt) {
   document.getElementById("spd").textContent = (spd * 3.6).toFixed(1);
   document.getElementById("spd-delta").textContent = `${spd.toFixed(2)} м/с · разгон · max 18 км/ч`;
   document.getElementById("gate-delta").textContent = `e-stop ${state.estop ? "вкл" : "выкл"} · вотчдог ${state.watchdogMs.toFixed(0)} мс`;
+  const modeEl = document.getElementById("mode-label");
+  if (modeEl && state.serviceStand) modeEl.textContent = "СЕРВИС · стенд · автономия заблокирована";
   document.getElementById("wd").textContent = state.watchdogMs.toFixed(0) + " мс";
   renderModules();
 }
@@ -1165,6 +1248,7 @@ function loop(now) {
     drawChassisPanel();
     drawCam(now);
     drawLidar();
+    if (window.RSConsole && window.RSConsole.frame) window.RSConsole.frame(now);
   } catch (err) {
     console.error(err);
   }
@@ -1265,6 +1349,7 @@ function goCharge() {
   emit("nav", "база · заряд до " + state.chargeTo + "%");
 }
 function goDock() {
+  state.origin = originLabel();
   seedStationPads();
   const dock = stationOf("dock") || { x: 0, y: -1.2 };
   const s = snapToDriveable(dock.x, dock.y) || dock;
@@ -1366,7 +1451,11 @@ document.getElementById("btn-charge")?.addEventListener("click", () => {
 const elBeac = document.getElementById("beacon");
 if (elBeac) elBeac.addEventListener("change", (e) => { state.beacon = e.target.checked; });
 const elCargo = document.getElementById("cargo");
-if (elCargo) elCargo.addEventListener("change", (e) => { state.cargoLock = e.target.checked; });
+if (elCargo) elCargo.addEventListener("change", (e) => {
+  state.cargoLock = e.target.checked;
+  // Ручной тумблер в телеоперации не должен расходиться с замком окна «Сервис».
+  if (!e.target.checked && window.RSConsole && window.RSConsole.closeLock) window.RSConsole.closeLock("тумблер");
+});
 const elHorn = document.getElementById("btn-horn");
 if (elHorn) elHorn.addEventListener("click", () => { toast("Бип 85 дБ"); emit("warn", "зуммер"); });
 
@@ -1377,6 +1466,8 @@ document.querySelectorAll(".prog-add [data-blk]").forEach((btn) => {
   });
 });
 document.getElementById("btn-prog-run")?.addEventListener("click", () => {
+  if (!state.cargoLock) { toast("Закройте ячейку хранения (окно «Сервис»)"); return; }
+  if (state.serviceStand) { toast("Выключите сервисный режим «стенд»"); return; }
   if (!state.program.length) {
     state.program = ["goA", "load", "goB", "unload", "dock"];
   }
@@ -1418,6 +1509,7 @@ document.getElementById("btn-theme")?.addEventListener("click", () => {
   applyTheme(!document.body.classList.contains("dark"));
 });
 document.getElementById("btn-refresh")?.addEventListener("click", () => location.reload());
+document.getElementById("btn-main-screen")?.addEventListener("click", () => { location.href = "main.html"; });
 
 renderModules();
 renderFsm();
@@ -1426,5 +1518,8 @@ log("ok", "пульт RUS SLAM онлайн");
 log("warn", "CAM-01 нет сигнала — perception выключен");
 log("ok", "знаки СТОП/переход/светофор · маяк · груз до 250 кг");
 seedStationPads();
+window.addEventListener("beforeunload", () => {
+  if (window.RSConsole && window.RSConsole.stats) window.RSConsole.stats.flush();
+});
 requestAnimationFrame(loop);
 

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RUS SLAM — основной экран робота</title>
+  <meta name="theme-color" content="#0b1411" />
+  <link rel="stylesheet" href="main.css" />
+</head>
+<!--
+  Основной экран робота — статичная страница на дисплее борта: данные на ней
+  обновляются постоянно, а PIN-код, введённый здесь, открывает грузовой отсек
+  на самом роботе. Сервер (gui/backend.py) только отдаёт страницу и данные —
+  сам он ничего не открывает. Адреса:
+      на дисплее робота               →  http://127.0.0.1:8080/
+      с планшета или ноутбука         →  http://<ip-робота>:8080/
+      инженерный пульт (удалённо)     →  http://<ip-робота>:8080/console
+  Из чего состоит:
+      • Двигатели    — 4 модуля, угол, об/мин, температура, состояние;
+      • Грузовой отсек — PIN-клавиатура, состояние замка, груз;
+      • АКБ          — заряд в процентах, напряжение, ток, запас хода.
+  Данные берутся из бэкенда gui/backend.py (GET /api/state, POST /api/lock/open|close).
+  Если сервера нет — экран работает в демо-режиме (см. gui/main.js).
+  Одно действие — один орган управления: очистка PIN — клавиша «СБРОС» клавиатуры,
+  открытие и закрытие отсека — одна кнопка, меняющая надпись по состоянию.
+-->
+<body>
+  <!-- 1. Шапка: название, часы, режим, связь -->
+  <header class="sc-head">
+    <div class="sc-brand">
+      <span class="sc-logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M4 14h16M7 10h10M9 6h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="7" cy="18" r="2.2" fill="currentColor"/>
+          <circle cx="17" cy="18" r="2.2" fill="currentColor"/>
+        </svg>
+      </span>
+      <div>
+        <b>RUS SLAM</b>
+        <small>робот-курьер 4WIS/4WID</small>
+      </div>
+    </div>
+
+    <div class="sc-mode" id="sc-mode">АВТОНОМНЫЙ РЕЖИМ</div>
+
+    <div class="sc-head-right">
+      <span class="sc-chip sc-chip-warn" id="sc-data" title="источник показаний">данные: демо</span>
+      <div class="sc-link" id="sc-link-wrap">
+        <span class="sc-dot" id="sc-link-dot"></span>
+        <span id="sc-link-text">связь с бортом: есть</span>
+      </div>
+      <div class="sc-clock" id="sc-clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- 2. Основная сетка: двигатели | АКБ | отсек -->
+  <main class="sc-grid">
+    <section class="sc-panel sc-motors" aria-label="Двигатели">
+      <div class="sc-panel-head">
+        <h1>Двигатели</h1>
+        <span class="sc-note">4 модуля · руль + тяга</span>
+      </div>
+      <div class="sc-motor-grid" id="sc-motor-grid"></div>
+      <div class="sc-motor-foot">
+        <span>рулевые: NEMA 23 · тяговые: BLDC 260 Вт</span>
+        <span id="sc-motors-sum">в движении: 0 из 4</span>
+      </div>
+    </section>
+
+    <section class="sc-panel sc-batt" aria-label="Аккумулятор">
+      <div class="sc-panel-head">
+        <h1>Аккумулятор</h1>
+        <span class="sc-note">LiFePO4 12S3P · 714 Вт·ч</span>
+      </div>
+
+      <div class="sc-ring-wrap">
+        <svg class="sc-ring" viewBox="0 0 140 140" role="img" aria-label="Заряд аккумулятора">
+          <circle class="sc-ring-bg" cx="70" cy="70" r="60" />
+          <circle class="sc-ring-fill" id="sc-ring-fill" cx="70" cy="70" r="60" />
+        </svg>
+        <div class="sc-ring-center">
+          <b id="sc-soc">78<span>%</span></b>
+          <small id="sc-soc-label">заряд</small>
+        </div>
+      </div>
+
+      <div class="sc-batt-rows">
+        <div class="sc-batt-row"><span>Напряжение</span><b id="sc-volts">41,2 В</b></div>
+        <div class="sc-batt-row"><span>Ток</span><b id="sc-amps">12,4 А</b></div>
+        <div class="sc-batt-row"><span>Запас хода</span><b id="sc-range">14 км</b></div>
+        <div class="sc-batt-row"><span>Состояние</span><b id="sc-batt-state">разряд</b></div>
+      </div>
+
+      <div class="sc-batt-foot">
+        <span id="sc-batt-hint">пороги: 35,5 В предупреждение · 33,5 В авария</span>
+      </div>
+    </section>
+
+    <section class="sc-panel sc-lock" aria-label="Грузовой отсек">
+      <div class="sc-panel-head">
+        <h1>Грузовой отсек</h1>
+        <span class="sc-chip sc-chip-closed" id="sc-lock-state">ЗАКРЫТО</span>
+      </div>
+
+      <div class="sc-pin" id="sc-pin-dots" aria-live="polite">— — — —</div>
+      <div class="sc-pin-msg" id="sc-pin-msg" aria-live="polite">Введите PIN-код и нажмите «Открыть»</div>
+
+      <div class="sc-keypad" id="sc-keypad"></div>
+
+      <div class="sc-lock-buttons">
+        <button type="button" class="sc-btn sc-btn-primary" id="sc-btn-open">Открыть отсек</button>
+      </div>
+
+      <div class="sc-cargo">
+        <span>груз: <b id="sc-cargo-kg">80 кг</b></span>
+        <span id="sc-cargo-state">закреплён и заперт</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- 3. Подвал: маршрут, питание, подсказка -->
+  <footer class="sc-foot">
+    <span id="sc-foot-route">маршрут: склад → зона выгрузки</span>
+    <span id="sc-foot-power">тяга: 2,4 кВт · КПД 0,86</span>
+    <span id="sc-foot-event">журнал: —</span>
+    <a class="sc-foot-link" id="sc-console-link" href="index.html"
+       title="Служебные функции: карта SLAM, сервис двигателей, статистика">инженерный пульт →</a>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
