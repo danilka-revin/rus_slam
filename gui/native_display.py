@@ -21,7 +21,6 @@ except ImportError:  # Tkinter может быть отдельным пакет
     tk = None  # type: ignore[assignment]
     tkfont = None  # type: ignore[assignment]
 
-import webbrowser
 from datetime import datetime
 from typing import Any
 
@@ -258,8 +257,6 @@ class NativeDisplay:
                     self._press_key(str(value))
                 elif kind == "submit":
                     self._submit_lock_action()
-                elif kind == "console":
-                    self._open_console()
                 return
 
     def _press_key(self, key: str) -> None:
@@ -306,14 +303,6 @@ class NativeDisplay:
             pin = ""
         self.draw()
         threading.Thread(target=self._run_action, args=(action, pin), daemon=True).start()
-
-    def _open_console(self) -> None:
-        try:
-            webbrowser.open(self.api.base_url + "/console")
-        except Exception as exc:  # noqa: BLE001 - окружение может не иметь браузера
-            self.message = "Не удалось открыть инженерный пульт: %s" % exc
-            self.message_kind = "warning"
-            self.draw()
 
     # ------------------------------------------------------------------
     # State helpers
@@ -524,17 +513,26 @@ class NativeDisplay:
         inner_w = width - 24 * s
         grid_h = max(100.0, height - (grid_top - y) - foot_h - 9 * s)
         card_gap = 8 * s
-        card_w = (inner_w - card_gap) / 2
-        card_h = (grid_h - card_gap) / 2
+        # На сверхшироком/низком дисплее 4 карточки идут в один ряд:
+        # так ширина панели не раздувает карточки и цифры остаются собранными.
+        columns = 4 if width / max(height, 1) >= 1.45 else 2
+        rows = 4 // columns
+        card_w = (inner_w - card_gap * (columns - 1)) / columns
+        if columns == 4:
+            card_h = min(grid_h, max(190 * s, card_w * 1.05))
+            grid_y = grid_top + (grid_h - card_h) / 2
+        else:
+            card_h = (grid_h - card_gap) / 2
+            grid_y = grid_top
         moving = 0
         online = 0
         motors = {str(item.get("id", "")).upper(): item
                   for item in (self.data or {}).get("motors", [])
                   if isinstance(item, dict)}
         for index, motor_id in enumerate(MOTOR_ORDER):
-            row, col = divmod(index, 2)
+            row, col = divmod(index, columns)
             cx = inner_x + col * (card_w + card_gap)
-            cy = grid_top + row * (card_h + card_gap)
+            cy = grid_y + row * (card_h + card_gap)
             motor = motors.get(motor_id, {"id": motor_id, "online": False})
             self._draw_motor_card(cx, cy, card_w, card_h, motor_id, motor)
             if abs(as_number(motor.get("rpm"))) > 4:
@@ -565,7 +563,7 @@ class NativeDisplay:
 
         body_top = y + 31 * s
         body_h = max(38 * s, height - 37 * s)
-        radius = min(width * 0.205, body_h * 0.42, 48 * s)
+        radius = min(width * 0.205, body_h * 0.42, 72 * s)
         center_x = x + 12 * s + radius
         center_y = body_top + body_h * 0.45
         self.canvas.create_oval(center_x - radius, center_y - radius,
@@ -635,7 +633,7 @@ class NativeDisplay:
         ring_area_h = max(90 * s, height * 0.44)
         ring_cx = x + width / 2
         ring_cy = y + 49 * s + ring_area_h / 2
-        radius = max(29 * s, min(width * 0.27, ring_area_h * 0.42, 85 * s))
+        radius = max(29 * s, min(width * 0.27, ring_area_h * 0.42, 100 * s))
         self.canvas.create_oval(ring_cx - radius, ring_cy - radius,
                                 ring_cx + radius, ring_cy + radius,
                                 outline="#1d2b25", width=max(7, int(10 * s)))
@@ -783,24 +781,27 @@ class NativeDisplay:
         power = format_ru((self.data or {}).get("powerKw"), 2, "—")
         event = self.latest_audit
         if not event:
-            event_text = "журнал: —"
+            event_text = "ЖУРНАЛ: —"
         elif event.get("ok"):
-            event_text = "журнал: доступ разрешён"
+            event_text = "ЖУРНАЛ: ДОСТУП РАЗРЕШЁН"
         else:
-            event_text = "журнал: отказ в доступе"
+            event_text = "ЖУРНАЛ: ОТКАЗ В ДОСТУПЕ"
+
+        split_a = x + width * 0.48
+        split_b = x + width * 0.73
+        divider_top, divider_bottom = y + 8 * s, y + height - 8 * s
+        for divider_x in (split_a, split_b):
+            self.canvas.create_line(divider_x, divider_top, divider_x, divider_bottom,
+                                    fill=COLORS["line"], width=max(1, int(s)))
         self._text(x + 14 * s, y + height / 2, "МАРШРУТ: " + route,
-                   8.5, COLORS["muted"], anchor="w", width=width * 0.40)
-        self._text(x + width * 0.47, y + height / 2,
+                   8.5, COLORS["muted"], anchor="w", width=split_a - x - 28 * s)
+        self._text((split_a + split_b) / 2, y + height / 2,
                    "ТЯГА: %s кВт · КПД 0,86" % power,
-                   8.5, COLORS["muted"], anchor="center")
-        self._text(x + width - 180 * s, y + height / 2, event_text,
-                   8, COLORS["muted"], anchor="e", width=145 * s, justify="right")
-        link_w = min(154 * s, width * 0.20)
-        link_h = min(height - 8 * s, 34 * s)
-        link_x = x + width - link_w - 8 * s
-        link_y = y + (height - link_h) / 2
-        self._button(link_x, link_y, link_w, link_h, "ПУЛЬТ ИНЖЕНЕРА →",
-                     ("console", None), enabled=True, primary=False, font_size=8.5)
+                   8.5, COLORS["muted"], anchor="center",
+                   width=split_b - split_a - 16 * s, justify="center")
+        self._text(x + width - 14 * s, y + height / 2, event_text,
+                   8, COLORS["muted"], anchor="e", width=width - (split_b - x) - 28 * s,
+                   justify="right")
 
     def _tick(self) -> None:
         if not self.root.winfo_exists():
