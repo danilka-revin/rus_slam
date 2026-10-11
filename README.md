@@ -24,10 +24,11 @@
 | 💻 **Прошивка микроконтроллеров** | C++ исходный код для 4 плат Arduino Mega Pro с 6-тактной коммутацией собственного драйвера BLDC и телеметрией 20 Гц | [`firmware/module_controller/`](firmware/module_controller/module_controller.ino) |
 | 🎛 **Печатная плата модуля (PCB)** | Полный пакет для разводки платы (BOM, Netlist KiCad/EasyEDA, распиновки, гайд) | [`pcb/`](pcb/README.md) |
 | 🧠 **Архитектура ПО (ROS 2)** | Полная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) |
+| 🔗 **Причинно-следственная карта** | Сквозные связи «требование → железо → прошивка → ROS → навигация/GUI», разрывы интеграции и проверенные ограничения | [`docs/CAUSAL_MAP.md`](docs/CAUSAL_MAP.md) · [`PDF`](docs/CAUSAL_MAP.pdf) |
 | 🔌 **Протокол обмена** | Кадры команд и телеметрии между бортовым ПК и модулями (CRC16) | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) |
 | 🤖 **Пакеты ROS 2** | 8 пакетов: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск | [`ros2_ws/src/`](ros2_ws/src/) |
 | 🖥 **GUI — пульт робота** | Веб-пульт: карта SLAM (pan/zoom), окно камеры, тумблер Карта/Камера, кастомизация (дизайн ZMK Vision) | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) |
-| 🖥 **Основной экран робота** | Киоск на дисплее: 4 двигателя, заряд АКБ в процентах, PIN-код и состояние грузового отсека; бэкенд `gui/backend.py` (HTTP API, замок, источники sim/serial/ROS 2) | [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
+| 🖥 **Основной экран робота** | Киоск: 4 двигателя, АКБ, PIN и грузовой отсек; доступны веб-страница и нативное Tkinter-приложение без HTML, собираемое в `.exe`/Linux-бинарник | [`gui/native_display.py`](gui/native_display.py) · [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
 | 🔐 **Сервисный пульт (окно «Сервис»)** | Ячейка хранения по PIN/QR/RFID с аудитом доступа, ручная подача команд каждому двигателю (кадр UART + CRC16), панель АКБ 12S3P, статистика рейсов и отчёты | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) |
 
 Каждый Markdown-документ в `docs/` продублирован в PDF рядом с исходником

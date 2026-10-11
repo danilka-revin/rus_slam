@@ -24,3 +24,8 @@ maps_data/
 
 # Состояние на роботе: PIN-хеш, аудит, статистика смены
 gui/state/
+
+# Нативный экран: временная среда и PyInstaller-сборки
+gui/.build-venv/
+gui/build/
+gui/dist/

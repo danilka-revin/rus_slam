@@ -1,0 +1,2 @@
+# Build-only dependency; the application uses Python's built-in Tkinter and urllib.
+pyinstaller>=6.0
