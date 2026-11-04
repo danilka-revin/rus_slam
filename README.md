@@ -25,9 +25,8 @@
 > сначала правятся скетч и [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md)
 > здесь, затем парсер в Zapret.
 >
-> ROS 2-пакеты (`ros2_ws/`) и веб-пульт (`gui/`) в этом репозитории оставлены
-> **как справочный (legacy) стек**: они описывают архитектуру и интерфейсы, но
-> не являются рабочим ПО робота. Рабочий софт — в Zapret.
+> ROS 2-пакеты (`ros2_ws/`) и веб-пульт (`gui/`) описывают архитектуру и
+> интерфейсы робота; рабочий софт — в Zapret.
 >
 > Старая прошивка `firmware/module_controller` (бинарный протокол `0xAA 0x55` /
 > `0xBB 0x44`, собственная 6-тактная коммутация MOSFET) **удалена из репозитория**:
@@ -49,13 +48,13 @@
 | 🧪 **Проверка прошивки без железа** | Хост-симуляция четырёх плат (TB6600, оптодатчик, потенциометр, EEPROM) — 58 сценариев; сборка avr-gcc без Arduino IDE | [`firmware/firmware_sim/`](firmware/firmware_sim/sim.cpp) · [`firmware/tools/avr_build.py`](firmware/tools/avr_build.py) | — |
 | 📐 **Эталонный скетч руля** | Проверенный на реальной механике скетч, с которым сверяются пины, уровни и скорости | [`firmware/reference/`](firmware/reference/steering_tested/steering_tested.ino) | — |
 | 🎛 **Печатная плата модуля (PCB)** | Инженерный архив v1.0: BOM, Netlist, распиновки, гайд. **Пины не совпадают с fw25** — см. [`pcb/STATUS.md`](pcb/STATUS.md) | [`pcb/`](pcb/README.md) | — |
-| 🧠 **Архитектура ПО (ROS 2) — legacy** | Справочная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска. Рабочий софт — в Zapret | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) | [`PDF`](docs/pdf/SOFTWARE_ARCHITECTURE.pdf) |
+| 🧠 **Архитектура ПО (ROS 2)** | Справочная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска. Рабочий софт — в Zapret | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) | [`PDF`](docs/pdf/SOFTWARE_ARCHITECTURE.pdf) |
 | 🔗 **Причинно-следственная карта** | Сквозные связи «требование → железо → прошивка → ROS → навигация/GUI», разрывы интеграции и проверенные ограничения | [`docs/CAUSAL_MAP.md`](docs/CAUSAL_MAP.md) | [`PDF`](docs/pdf/CAUSAL_MAP.pdf) |
 | 🔌 **Протокол обмена** | Текстовые команды и кадры `@F`/`@TLM`/`@Z` между бортовым ПК и платами колёс, CRC16/Modbus, таймауты | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) | [`PDF`](docs/pdf/SERIAL_PROTOCOL.pdf) |
-| 🤖 **Пакеты ROS 2 — legacy** | Справочно: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск. Для реального железа требуется доработка моста | [`ros2_ws/README.md`](ros2_ws/README.md) | — |
-| 🖥 **GUI — пульт робота — legacy** | Справочно: веб-пульт, карта SLAM, окно камеры. Рабочий пульт — в Zapret | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) | [`PDF`](docs/pdf/GUI.pdf) |
-| 🖥 **Основной экран робота — legacy** | Справочно: киоск, 4 двигателя, АКБ, PIN и грузовой отсек; нативное Tkinter-приложение | [`gui/native_display.py`](gui/native_display.py) · [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) | [`PDF`](docs/pdf/MAIN_SCREEN.pdf) |
-| 🔐 **Сервисный пульт (окно «Сервис») — legacy** | Справочно: ячейка хранения по PIN/QR/RFID с аудитом, ручная подача команд двигателю (строка протокола), панель АКБ 12S3P, статистика рейсов | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) | [`PDF`](docs/pdf/SERVICE_CONSOLE.pdf) |
+| 🤖 **Пакеты ROS 2** | Справочно: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск. Для реального железа требуется доработка моста | [`ros2_ws/README.md`](ros2_ws/README.md) | — |
+| 🖥 **GUI — пульт робота** | Справочно: веб-пульт, карта SLAM, окно камеры. Рабочий пульт — в Zapret | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) | [`PDF`](docs/pdf/GUI.pdf) |
+| 🖥 **Основной экран робота** | Справочно: киоск, 4 двигателя, АКБ, PIN и грузовой отсек; нативное Tkinter-приложение | [`gui/native_display.py`](gui/native_display.py) · [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) | [`PDF`](docs/pdf/MAIN_SCREEN.pdf) |
+| 🔐 **Сервисный пульт (окно «Сервис»)** | Справочно: ячейка хранения по PIN/QR/RFID с аудитом, ручная подача команд двигателю (строка протокола), панель АКБ 12S3P, статистика рейсов | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) | [`PDF`](docs/pdf/SERVICE_CONSOLE.pdf) |
 
 ### Тесты прошивки без железа
 
@@ -93,7 +92,9 @@ rus_slam/
 ├── docs/                      документация (Markdown)
 │   ├── *.md                   10 документов, список ниже
 │   ├── pdf/                   готовые PDF-копии тех же 10 документов
-│   └── assets/images/         14 иллюстраций, вставленных в документы
+│   └── assets/
+│       ├── images/            14 иллюстраций, вставленных в документы
+│       └── screens/           9 настоящих скриншотов пульта и экрана робота
 ├── firmware/                  прошивка контроллеров колёс (главное содержимое)
 │   ├── README.md              руководство по прошивке fw25
 │   ├── motor_wheel/           боевой скетч motor_wheel.ino
@@ -106,10 +107,10 @@ rus_slam/
 ├── deploy/                    автозапуск на бортовом ПК
 │   ├── README.md              инструкция по установке юнитов
 │   └── systemd/               три .service + скрипт запуска дисплея
-├── gui/                       веб-пульт и нативный дисплей (legacy)
+├── gui/                       веб-пульт и нативный дисплей
 │   ├── tools/                 сборка исполняемого файла дисплея
 │   └── tests/                 JS- и Python-тесты интерфейса
-├── ros2_ws/src/               восемь ROS 2-пакетов (legacy)
+├── ros2_ws/src/               восемь ROS 2-пакетов
 └── tools/pdf/                 сборщик PDF из Markdown
 ```
 
@@ -126,10 +127,10 @@ rus_slam/
 | Электрические схемы и распиновка | [`ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md) | [`PDF`](docs/pdf/ELECTRICAL_AND_PINOUTS.pdf) |
 | Протокол обмена с платами | [`SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) | [`PDF`](docs/pdf/SERIAL_PROTOCOL.pdf) |
 | Причинно-следственная карта | [`CAUSAL_MAP.md`](docs/CAUSAL_MAP.md) | [`PDF`](docs/pdf/CAUSAL_MAP.pdf) |
-| Архитектура ПО (ROS 2, legacy) | [`SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) | [`PDF`](docs/pdf/SOFTWARE_ARCHITECTURE.pdf) |
-| Веб-пульт и карта SLAM (legacy) | [`GUI.md`](docs/GUI.md) | [`PDF`](docs/pdf/GUI.pdf) |
-| Основной экран робота (legacy) | [`MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) | [`PDF`](docs/pdf/MAIN_SCREEN.pdf) |
-| Сервисный пульт (legacy) | [`SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) | [`PDF`](docs/pdf/SERVICE_CONSOLE.pdf) |
+| Архитектура ПО (ROS 2) | [`SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) | [`PDF`](docs/pdf/SOFTWARE_ARCHITECTURE.pdf) |
+| Веб-пульт и карта SLAM | [`GUI.md`](docs/GUI.md) | [`PDF`](docs/pdf/GUI.pdf) |
+| Основной экран робота | [`MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) | [`PDF`](docs/pdf/MAIN_SCREEN.pdf) |
+| Сервисный пульт | [`SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) | [`PDF`](docs/pdf/SERVICE_CONSOLE.pdf) |
 | Запуск и доступ к роботу | [`RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) | [`PDF`](docs/pdf/RUN_AND_ACCESS.pdf) |
 
 Иллюстрации к документам лежат в [`docs/assets/images/`](docs/assets/images):
@@ -145,6 +146,23 @@ rus_slam/
 [`swerve_drive_chassis.png`](docs/assets/images/swerve_drive_chassis.png),
 [`system_architecture.svg`](docs/assets/images/system_architecture.svg),
 [`tb6600_driver.jpg`](docs/assets/images/tb6600_driver.jpg).
+
+### 🖼 Скриншоты интерфейсов `docs/assets/screens/`
+
+Сняты с работающего сервера (`python3 gui/backend.py --port 8080 --source sim`),
+браузер 1600×1000 — не макеты и не рендеры.
+
+| Скриншот | Что на нём | Где описан |
+| :--- | :--- | :--- |
+| [`main-screen.png`](docs/assets/screens/main-screen.png) | основной экран робота: 4 модуля, АКБ, грузовой отсек | [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
+| [`console-dashboard.png`](docs/assets/screens/console-dashboard.png) | пульт: метрики, карта SLAM, программа доставки, камеры, телеоперация | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-light.png`](docs/assets/screens/console-light.png) | тот же пульт в светлой теме | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-drive.png`](docs/assets/screens/console-drive.png) | вкладка «Ходовая»: 4 модуля 4WIS/4WID | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-mission.png`](docs/assets/screens/console-mission.png) | вкладка «Миссия»: FSM доставки | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-sensors.png`](docs/assets/screens/console-sensors.png) | вкладка «Сенсоры»: радар лидара, детекции | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-safety.png`](docs/assets/screens/console-safety.png) | вкладка «Безопасность»: E-stop, вотчдог, АКБ, CRC | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-logs.png`](docs/assets/screens/console-logs.png) | вкладка «Журнал»: события пульта | [`docs/GUI.md`](docs/GUI.md) |
+| [`console-service.png`](docs/assets/screens/console-service.png) | вкладка «Сервис»: замок, двигатели, АКБ, статистика | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) |
 
 ### ⚙️ Прошивка `firmware/`
 
@@ -189,7 +207,7 @@ rus_slam/
 [`kicad_netlist.net`](pcb/kicad_netlist.net).
 **Пины платы не совпадают с fw25** — она прошивкой не используется, см. `STATUS.md`.
 
-### 🖥 Интерфейсы `gui/` (legacy)
+### 🖥 Интерфейсы `gui/`
 
 | Файл | Что это |
 | :--- | :--- |
@@ -204,7 +222,7 @@ rus_slam/
 | [`gui/tools/build-native-linux.sh`](gui/tools/build-native-linux.sh) · [`gui/tools/build-native-windows.bat`](gui/tools/build-native-windows.bat) | Сборка `RUS-SLAM-Display` через PyInstaller |
 | [`gui/tests/`](gui/tests) | 8 тестов интерфейса: [`backend.test.py`](gui/tests/backend.test.py), [`native_display.test.py`](gui/tests/native_display.test.py), [`console.test.js`](gui/tests/console.test.js), [`console.api.test.js`](gui/tests/console.api.test.js), [`jsdom.console.test.js`](gui/tests/jsdom.console.test.js), [`main.api.test.js`](gui/tests/main.api.test.js), [`main.screen.test.js`](gui/tests/main.screen.test.js), [`ui.audit.test.js`](gui/tests/ui.audit.test.js) |
 
-### 🤖 ROS 2 `ros2_ws/src/` (legacy)
+### 🤖 ROS 2 `ros2_ws/src/`
 
 [`ros2_ws/README.md`](ros2_ws/README.md) | — общее описание и порядок сборки.
 В каждом пакете также лежат штатные файлы упаковки (`package.xml`, `setup.py`,
@@ -402,11 +420,11 @@ udev-правила [`99-rus-slam.rules`](ros2_ws/src/rus_slam_bringup/udev/99-r
 
 ---
 
-### Экран робота и веб-пульт (legacy, демо-режим)
+### Экран робота и веб-пульт (демо-режим)
 
-> Рабочие экраны робота — в Zapret (`slam_gui/`, `run.py`). Здесь оставлен
-> справочный вариант `gui/` с демо-источником `sim`; бинарные кадры 10/16 Б в нём
-> **не соответствуют** прошивке fw25.
+> `gui/` работает с демо-источником `sim`; бинарные кадры 10/16 Б в `backend.py`
+> **не соответствуют** прошивке fw25 — актуальный протокол в
+> [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md).
 
 ```bash
 python3 gui/backend.py --port 8080     # /  → основной экран робота (киоск)
@@ -423,6 +441,16 @@ python3 gui/tests/main.api.test.js     # 19 сквозных: экран ↔ ж�
 Источник данных для экрана: `--source sim` (стенд), `--source serial`
 (4 USB, кадры протокола) или `--source ros` (ROS 2). Доступ к экранам
 с планшета — `http://<ip-робота>:8080/`; подробно — [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md).
+
+Как это выглядит — скриншоты с работающего сервера:
+
+| Пульт управления | Основной экран робота |
+| :---: | :---: |
+| [![Пульт управления](docs/assets/screens/console-dashboard.png)](docs/assets/screens/console-dashboard.png) | [![Основной экран робота](docs/assets/screens/main-screen.png)](docs/assets/screens/main-screen.png) |
+
+Остальные вкладки пульта («Ходовая», «Миссия», «Сенсоры», «Безопасность»,
+«Журнал», «Сервис») — в [`docs/GUI.md`](docs/GUI.md), §1.1, и в
+[`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md), §8.
 
 Окно **«Сервис»** (вкладка в сайдбаре) закрывает требования задания № 2 по
 защите груза: доступ к ячейке хранения по PIN (заводской `2580`; 5 неудачных
@@ -478,7 +506,7 @@ cd robot-control
 По умолчанию `RC_SLAM_SOURCE=master`: бортовой экран сам находит четыре платы по
 CRC-защищённой роли FL/FR/RL/RR из прошивки fw22+ — порты вручную не назначаются.
 
-### 3. Справочный ROS 2-стек (legacy, не является рабочим ПО)
+### 3. ROS 2-стек
 
 ```bash
 cd ros2_ws

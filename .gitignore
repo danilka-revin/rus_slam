@@ -40,10 +40,8 @@ var/firmware-flash.log
 *.elf
 firmware/firmware_sim/sim
 
-# Виртуальное окружение для тестов прошивки и PDF
-.venv-test/
-
-# Тестовая виртуалка и локальные сборки
+# Виртуальные окружения и локальные сборки
+.venv/
 .venv-test/
 gui/.build-venv/
 gui/dist/

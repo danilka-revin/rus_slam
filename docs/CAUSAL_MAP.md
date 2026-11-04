@@ -9,7 +9,7 @@
 >
 > Карта была построена против **удалённой** прошивки `firmware/module_controller`
 > (бинарные кадры `0xAA`/`0xBB`, собственная 6-тактная коммутация MOSFET) и
-> legacy-стека `ros2_ws/` + `gui/`. Этих исходников больше нет: прошивка робота —
+> `ros2_ws/` + `gui/`. Этих исходников больше нет: прошивка робота —
 > [`firmware/motor_wheel`](../firmware/motor_wheel/motor_wheel.ino) (**fw25**,
 > текстовый протокол по USB, драйвер тяги ZS-Z11H), рабочий софт — в
 > [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret).
@@ -70,7 +70,7 @@ Nav2 / ручная команда ─► /cmd_vel_nav ─► safety_node ─►
 Внешний источник /e_stop ───────────────────────────────────────────────► safety
 ```
 
-Ссылки на первичные точки реализации: файлы прошивки — `firmware/motor_wheel/motor_wheel.ino` и `firmware/README.md`; формат кадров — `docs/SERIAL_PROTOCOL.md`; ROS-граф (legacy) — `docs/SOFTWARE_ARCHITECTURE.md` и `ros2_ws/src/rus_slam_bringup/launch/`; рабочий софт — репозиторий Zapret (`slam_gui/backend.py`, `robot_control/`).
+Ссылки на первичные точки реализации: файлы прошивки — `firmware/motor_wheel/motor_wheel.ino` и `firmware/README.md`; формат кадров — `docs/SERIAL_PROTOCOL.md`; ROS-граф — `docs/SOFTWARE_ARCHITECTURE.md` и `ros2_ws/src/rus_slam_bringup/launch/`; рабочий софт — репозиторий Zapret (`slam_gui/backend.py`, `robot_control/`).
 
 ### 2.1. Командный поток: причина → действие
 
@@ -277,7 +277,7 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 > (6-секторная коммутация, `CURRENT_FULL_MA`, таймеры D8–D13, homing без
 > различения таймаута), относились к **удалённой** прошивке и больше не
 > воспроизводятся. Остальные пункты — про `ros2_ws/` и `gui/` — остаются в силе,
-> пока этот legacy-стек не переведён на fw25 (см.
+> пока этот стек не переведён на fw25 (см.
 > [`SOFTWARE_ARCHITECTURE.md`](SOFTWARE_ARCHITECTURE.md), §10). Актуальные риски
 > прошивки: калибровка нуля после каждого перезапуска платы, необходимость `q`
 > для доводки, `zfault` при повреждённой EEPROM, отсутствие сертифицированного
