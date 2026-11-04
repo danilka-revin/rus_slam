@@ -1,5 +1,14 @@
 # КОНЦЕПТ ИСПОЛЬЗОВАНИЯ: ЭКРАНЫ РОБОТА И ДОСТУП К НИМ
 
+> ## ⚠ Legacy (справочно)
+>
+> Этот документ описывает **справочный** GUI-стек `gui/`. Рабочие экраны робота —
+> в [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret)
+> (`slam_gui/`, `run.py`). Протокол в `gui/backend.py` — бинарные кадры 10/16 Б,
+> которых прошивка **не выдаёт**; реальный протокол — текстовый
+> ([`SERIAL_PROTOCOL.md`](SERIAL_PROTOCOL.md), прошивка fw25).
+
+
 > **Документ:** `docs/RUN_AND_ACCESS.md`
 > **Версия:** 1.2 · **Дата:** 2026-10
 > **Связанные документы:** [`MAIN_SCREEN.md`](MAIN_SCREEN.md) · [`GUI.md`](GUI.md) ·
@@ -81,7 +90,7 @@ python3 gui/backend.py --port 8080        # или короткий синони
         ▼                            ▼                              ▼
   4 × UART ttyUSB0…3          ROS 2 (rclpy)                  gui/state/lock.json
   двигатели, 115200           /screen/state · /battery/*     соль, SHA-256 PIN,
-  кадры 10 Б → 16 Б, 20 Гц    /screen/motors                 попытки, аудит
+  строки + @F/@TLM, CRC16     /screen/motors                 попытки, аудит
 ```
 
 ### 2.1. Что и куда подключается
@@ -90,7 +99,7 @@ python3 gui/backend.py --port 8080        # или короткий синони
 | :--- | :--- | :--- |
 | дисплей робота → борт | HTTP JSON API, `127.0.0.1:8080` | `GET /api/state` (300 мс), `POST /api/lock/open` — веб- и нативный клиент используют общий PIN и состояние замка |
 | пульт инженера → борт | HTTP по Wi-Fi/LAN, `<ip-робота>:8080` | `GET /api/state`, `/api/audit`, `POST /api/lock/*` — то же состояние замка и тот же журнал |
-| борт → модули двигателей | 4 × UART `/dev/ttyUSB0…3`, 115200 8N1 (pyserial) | команды 10 Б с CRC16; телеметрия 16 Б на 20 Гц (протокол — `docs/SERIAL_PROTOCOL.md`) |
+| борт → платы колёс | 4 × USB `ttyUSB*`/`ttyACM*`, 115200 8N1 (pyserial) | текстовые команды (`w`, `v`, `t`, `b`, `k`, `q`, `ph`, `zq`/`zc`); телеметрия `@F` ~30 мс и `@TLM` 200 мс с CRC16 (протокол — `docs/SERIAL_PROTOCOL.md`) |
 | борт ↔ ROS 2 | DDS через `rclpy` | подписки `/screen/state` (JSON), `/battery/voltage`, `/battery/current`, `/screen/motors` |
 | борт → замок отсека | команда ОС из окружения | `RUS_SLAM_LOCK_CMD` (открыть), `RUS_SLAM_LOCK_CMD_CLOSE` (закрыть): реле, соленоид, GPIO |
 | борт → диск | файл `gui/state/lock.json` | соль, хеш PIN, счётчик неудач, блокировка, журнал доступа |

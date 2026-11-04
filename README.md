@@ -2,13 +2,37 @@
 
 [![ROS 2](https://img.shields.io/badge/ROS_2-Humble%20%7C%20Jazzy-blue.svg)](https://docs.ros.org/)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04%20%7C%2026.04%20LTS-E95420.svg)](https://ubuntu.com/)
-[![Arduino](https://img.shields.io/badge/MCU-Arduino%20Mega%20Pro%20(ATmega2560)-00979D.svg)](https://www.arduino.cc/)
+[![Firmware](https://img.shields.io/badge/Прошивка-motor__wheel%20fw25-00979D.svg)](firmware/README.md)
+[![MCU](https://img.shields.io/badge/MCU-Arduino%20Mega%202560%20%2F%20Mega%20Mini-00979D.svg)](firmware/README.md)
+[![Drive](https://img.shields.io/badge/Тяга-ZS--Z11H%20%2B%20Servo-22c55e.svg)](firmware/README.md)
 [![Payload](https://img.shields.io/badge/Payload-250%20kg-red.svg)](#2-основные-технические-характеристики)
 [![Battery](https://img.shields.io/badge/Battery-LiFePO4%2012S3P%20(32700)-22c55e.svg)](#-спецификация-батарейного-блока-lifepo4-12s-3p)
 [![Chassis](https://img.shields.io/badge/Kinematics-4WIS%2F4WID%20Swerve%20Drive-orange.svg)](#-кинематика-крабового-хода-4wis--4wid)
 [![Competition](https://img.shields.io/badge/Регламент-Задание%20№2%20НТЦ%20АВТОВАЗ-red.svg)](docs/EXPLANATORY_NOTE_AVTOVAZ.md)
 
-Комплект инженерно-технической документации, сборочных схем, принципиальных электрических схем, алгоритмов кинематики, прошивок микроконтроллеров и узлов ROS 2 для тяжелого автономного робота грузоподъемностью **250 кг** с полноуправляемым шасси (**4WIS / 4WID** — независимый поворот и тяга каждого из 4 колес).
+Комплект инженерно-технической документации, сборочных схем, принципиальных электрических схем, алгоритмов кинематики, **прошивки микроконтроллеров** и справочных узлов ROS 2 для тяжелого автономного робота грузоподъемностью **250 кг** с полноуправляемым шасси (**4WIS / 4WID** — независимый поворот и тяга каждого из 4 колес).
+
+> ### 📍 Что где лежит
+>
+> | Репозиторий | Роль | Содержимое |
+> | :--- | :--- | :--- |
+> | **этот** (`rus_slam`) | **главный по прошивке и железу** | `firmware/` — единственный источник истины для контроллеров колёс, `docs/ELECTRICAL_AND_PINOUTS.md`, `pcb/`, механическая документация |
+> | [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret) | **побочный, весь бортовой софт** | `robot_control/`, `slam_gui/`, `run.py`, веб-пульт, киоск, навигация, лидар, BMS |
+>
+> Прошивка робота — [`firmware/motor_wheel/motor_wheel.ino`](firmware/motor_wheel/motor_wheel.ino)
+> (**fw25**, 4 платы по одному USB на колесо, текстовый протокол).
+> Бортовой софт из Zapret только *потребляет* этот протокол; при изменении кадров
+> сначала правятся скетч и [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md)
+> здесь, затем парсер в Zapret.
+>
+> ROS 2-пакеты (`ros2_ws/`) и веб-пульт (`gui/`) в этом репозитории оставлены
+> **как справочный (legacy) стек**: они описывают архитектуру и интерфейсы, но
+> не являются рабочим ПО робота. Рабочий софт — в Zapret.
+>
+> Старая прошивка `firmware/module_controller` (бинарный протокол `0xAA 0x55` /
+> `0xBB 0x44`, собственная 6-тактная коммутация MOSFET) **удалена из репозитория**:
+> она не соответствует ни железу, ни софту робота. Соответствующие разделы
+> документов переписаны под fw25.
 
 Проект разработан в соответствии с требованиями конкурсного задания № 2: **«Автономное роботизированное устройство для внутренней логистики Научно-технического центра (НТЦ) АО «АВТОВАЗ»»** ([Регламент соревнований](https://pervye-events.hb.ru-msk.vkcloud-storage.ru/projects/documents/aac931ed623a48abb28c4cf1d844b4da.pdf)).
 
@@ -20,16 +44,31 @@
 | :--- | :--- | :--- |
 | 📘 **Полный технический паспорт** | Инженерные расчеты прочности рамы под 250 кг, редуктора GT2 150/20, ступиц Subaru, АКБ | [`docs/TECHNICAL_SPECIFICATION.md`](docs/TECHNICAL_SPECIFICATION.md) |
 | 📑 **Пояснительная записка по регламенту** | Пояснительная записка по критериям задания № 2 (экономика, сравнение с 3 аналогами, методика тестов) | [`docs/EXPLANATORY_NOTE_AVTOVAZ.md`](docs/EXPLANATORY_NOTE_AVTOVAZ.md) |
-| ⚡ **Электрические схемы и подключения** | Таблицы соединений Mega Pro, TB6600 и собственного драйвера BLDC (MOSFET), расчет предохранителей | [`docs/ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md) |
-| 💻 **Прошивка микроконтроллеров** | C++ исходный код для 4 плат Arduino Mega Pro с 6-тактной коммутацией собственного драйвера BLDC и телеметрией 20 Гц | [`firmware/module_controller/`](firmware/module_controller/module_controller.ino) |
-| 🎛 **Печатная плата модуля (PCB)** | Полный пакет для разводки платы (BOM, Netlist KiCad/EasyEDA, распиновки, гайд) | [`pcb/`](pcb/README.md) |
-| 🧠 **Архитектура ПО (ROS 2)** | Полная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) |
+| ⚡ **Электрические схемы и подключения** | Распиновка Mega (D2–D8, D18, D19, A0), TB6600, драйвер тяги ZS-Z11H, питание и предохранители | [`docs/ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md) |
+| 💻 **Прошивка микроконтроллеров** | `motor_wheel` **fw25**: 4 платы Mega 2560/Mega Mini, по одному USB на колесо, роль в CRC-телеметрии, калибровка по оптодатчику и потенциометру, активное удержание угла, сохранённый полный ноль, команды тяги и руля | [`firmware/README.md`](firmware/README.md) · [`motor_wheel.ino`](firmware/motor_wheel/motor_wheel.ino) |
+| 🧪 **Проверка прошивки без железа** | Хост-симуляция четырёх плат (TB6600, оптодатчик, потенциометр, EEPROM) — 58 сценариев; сборка avr-gcc без Arduino IDE | [`tests/firmware_sim/`](tests/firmware_sim/sim.cpp) · [`firmware/tools/avr_build.py`](firmware/tools/avr_build.py) |
+| 📐 **Эталонный скетч руля** | Проверенный на реальной механике скетч, с которым сверяются пины, уровни и скорости | [`firmware/reference/`](firmware/reference/steering_tested/steering_tested.ino) |
+| 🎛 **Печатная плата модуля (PCB)** | Инженерный архив v1.0: BOM, Netlist, распиновки, гайд. **Пины не совпадают с fw25** — см. [`pcb/STATUS.md`](pcb/STATUS.md) | [`pcb/`](pcb/README.md) |
+| 🧠 **Архитектура ПО (ROS 2) — legacy** | Справочная архитектура: пакеты, узлы, топики, дерево TF, режимы запуска. Рабочий софт — в Zapret | [`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md) |
 | 🔗 **Причинно-следственная карта** | Сквозные связи «требование → железо → прошивка → ROS → навигация/GUI», разрывы интеграции и проверенные ограничения | [`docs/CAUSAL_MAP.md`](docs/CAUSAL_MAP.md) · [`PDF`](docs/CAUSAL_MAP.pdf) |
-| 🔌 **Протокол обмена** | Кадры команд и телеметрии между бортовым ПК и модулями (CRC16) | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) |
-| 🤖 **Пакеты ROS 2** | 8 пакетов: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск | [`ros2_ws/src/`](ros2_ws/src/) |
-| 🖥 **GUI — пульт робота** | Веб-пульт: карта SLAM (pan/zoom), окно камеры, тумблер Карта/Камера, кастомизация (дизайн ZMK Vision) | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) |
-| 🖥 **Основной экран робота** | Киоск: 4 двигателя, АКБ, PIN и грузовой отсек; доступны веб-страница и нативное Tkinter-приложение без HTML, собираемое в `.exe`/Linux-бинарник | [`gui/native_display.py`](gui/native_display.py) · [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
-| 🔐 **Сервисный пульт (окно «Сервис»)** | Ячейка хранения по PIN/QR/RFID с аудитом доступа, ручная подача команд каждому двигателю (кадр UART + CRC16), панель АКБ 12S3P, статистика рейсов и отчёты | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) |
+| 🔌 **Протокол обмена** | Текстовые команды и кадры `@F`/`@TLM`/`@Z` между бортовым ПК и платами колёс, CRC16/Modbus, таймауты | [`docs/SERIAL_PROTOCOL.md`](docs/SERIAL_PROTOCOL.md) |
+| 🤖 **Пакеты ROS 2 — legacy** | Справочно: кинематика, мост модулей, одометрия, лидар, восприятие, навигация, безопасность, запуск. Для реального железа требуется доработка моста | [`ros2_ws/README.md`](ros2_ws/README.md) |
+| 🖥 **GUI — пульт робота — legacy** | Справочно: веб-пульт, карта SLAM, окно камеры. Рабочий пульт — в Zapret | [`gui/`](gui/README.md) · [`docs/GUI.md`](docs/GUI.md) |
+| 🖥 **Основной экран робота — legacy** | Справочно: киоск, 4 двигателя, АКБ, PIN и грузовой отсек; нативное Tkinter-приложение | [`gui/native_display.py`](gui/native_display.py) · [`docs/MAIN_SCREEN.md`](docs/MAIN_SCREEN.md) · [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md) |
+| 🔐 **Сервисный пульт (окно «Сервис») — legacy** | Справочно: ячейка хранения по PIN/QR/RFID с аудитом, ручная подача команд двигателю (строка протокола), панель АКБ 12S3P, статистика рейсов | [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md) · [`gui/console-core.js`](gui/console-core.js) |
+
+### Тесты прошивки без железа
+
+```bash
+python3 -m venv .venv-test && .venv-test/bin/pip install pytest
+.venv-test/bin/python -m pytest tests/test_firmware_sim.py -q   # 5 проверок + 58 сценариев
+```
+
+Тест собирает `firmware/motor_wheel` g++ в четырёх экземплярах, прогоняет все
+сценарии симуляции и **сверяет документы со скетчем**: пины, 133.33 шага/град,
+предел ±100°, watchdog 650 мс и формат `@F`/`@TLM` не могут разойтись молча.
+
+### PDF-копии документации
 
 Каждый Markdown-документ в `docs/` продублирован в PDF рядом с исходником
 (`docs/*.pdf`). Актуализация копий после правок `.md`:
@@ -48,10 +87,10 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
 | :---: | :---: | :--- |
 | **Опорно-поворотный узел**<br>(Ступицы Subaru) | <img src="docs/images/subaru_hub_bearing.jpg" width="220"/> | Автомобильные ступицы Subaru Forester/Impreza с двухрядным радиально-упорным подшипником. Нулевой люфт, динамическая стойкость >38 кН (с избытком выдерживает нагрузку 250 кг). |
 | **Привод поворота**<br>(NEMA 23 + Редуктор 1:7.5) | <img src="docs/images/nema23_motor.jpg" width="180"/><br><img src="docs/images/belt_reduction_drive.png" width="200"/> | Шаговый двигатель NEMA 23 (1.9 Н·м, 2.8 А) с зубчато-ременной передачей **GT2 10 мм** (шкивы $z_1=20$, $z_2=150$, $i=7.5$). Итоговый момент на ступице: **13.68 Н·м**, дискретность: **0.03°**. |
-| **Тяговый привод 4WD**<br>(Мотор-колеса Xiaomi M365 Pro) | <img src="docs/images/scooter_hub_motor.jpg" width="200"/> | 4 мотор-колеса Xiaomi Mijia M365 Pro (10", BLDC) номинальной мощностью **260 Вт** каждое со встроенными квадратурными энкодерами и датчиками Холла. Суммарно 1040 Вт ном. |
-| **Локальный контроллер**<br>(Arduino Mega Pro Embed) | <img src="docs/images/arduino_mega_pro.jpg" width="210"/> | Микроконтроллер ATmega2560 (16 МГц, 54 I/O). По 1 плате на каждый из 4 модулей. Аппаратный ШИМ 31.25 кГц, прерывания Холла, UART-связь с CRC16. |
-| **Драйвер шаговика**<br>(TB6600) | <img src="docs/images/tb6600_driver.jpg" width="200"/> | Микрошаговый драйвер (ток 2.8 А, микрошаг 1/8). Оптоизолированные входы PUL/DIR/ENA. |
-| **Собственный драйвер BLDC**<br>(3-фазный MOSFET-инвертор) | <img src="docs/images/bldc_mosfet_driver.jpg" width="210"/> | **Собственная разработка, покупные ESC не применяются:** 6 силовых N-MOSFET (IRFB4110 / 100V 180A, $R_{DS(on)} \le 4.5$ мОм), драйвер затворов FD6288Q/IR2101, токовый шунт, собственная печатная плата. |
+| **Тяговый привод 4WD**<br>(Мотор-колеса Xiaomi M365 Pro) | <img src="docs/images/scooter_hub_motor.jpg" width="200"/> | 4 мотор-колеса Xiaomi Mijia M365 Pro (10", BLDC) номинальной мощностью **260 Вт** каждое, с датчиками Холла и выходом тахометра `SC`. Суммарно 1040 Вт ном. |
+| **Локальный контроллер**<br>(Arduino Mega 2560 / Mega Mini) | <img src="docs/images/arduino_mega_pro.jpg" width="210"/> | ATmega2560 (16 МГц, 54 I/O), по 1 плате на каждый из 4 модулей, **свой USB-кабель на каждое колесо**. Шаги руля — Timer2 (10 кГц), тяга — библиотека `Servo` на D3, телеметрия — текстовые кадры с CRC16. |
+| **Драйвер шаговика**<br>(TB6600) | <img src="docs/images/tb6600_driver.jpg" width="200"/> | Микрошаговый драйвер (ток 2.8 А), оптоизолированные входы PUL/DIR/ENA на **D6/D7/D8**, 133.33 шага/град по прошивке, ≈75 °/с. |
+| **Драйвер тяги**<br>(RioRand ZS-Z11H) | <img src="docs/images/bldc_mosfet_driver.jpg" width="210"/> | **Фактический драйвер робота:** готовый 3-фазный драйвер BLDC (ZS-Z11H, бездатчиковый аналог — ZS-X11F). Arduino задаёт тягу сигналом Servo на вход «P» (D3), сторону — DIR (D4), тормоз — BRAKE (D5), разрешение — STOP (D2), читает тахометр SC (D19). Собственный MOSFET-инвертор в `pcb/` — архив v1.0, прошивкой **не используется**. |
 | **Тяговая батарея**<br>(LiFePO4 32700 12S3P) | <img src="docs/images/lifepo4_32700.png" width="200"/> | 36 ячеек LiFePO4 32700 (3.2 В, 6200 мА·ч). Номинал 38.4 В, 18.6 А·ч, 714.2 Вт·ч. Высокая безопасность (не горит, не взрывается), ресурс >2500 циклов. |
 
 ---
@@ -60,7 +99,7 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
 
 Комплекс построен по двухуровневой схеме управления:
 1. **Верхний уровень:** Бортовой компьютер под управлением **Ubuntu 24.04/26.04 LTS** со стеком **ROS 2**. Обеспечивает картографирование и локализацию (SLAM), планирование маршрута (Nav2) на основе данных **Лидара LDC 01**, распознавание дорожных знаков («Стоп», «Пешеходный переход», «Искусственная неровность») и светофоров камерой, а также расчет кинематики 4WIS/4WID.
-2. **Нижний уровень:** 4 независимых контроллера поворотно-тяговых модулей (**Arduino Mega Pro Embed**), каждый из которых управляет шаговиком NEMA 23 (TB6600) и собственным драйвером BLDC — 3-фазным MOSFET-инвертором мотор-колеса 260 Вт.
+2. **Нижний уровень:** 4 независимых контроллера поворотно-тяговых модулей (**Arduino Mega 2560 / Mega Mini**), каждый со своим USB-кабелем в бортовой ПК. Контроллер выдаёт шаги NEMA 23 (TB6600, D6/D7/D8), управляет драйвером тяги **RioRand ZS-Z11H** (Servo D3, DIR D4, BRAKE D5, STOP D2), читает оптодатчик нуля (D18), потенциометр положения (A0) и тахометр SC (D19), и отдаёт текстовую телеметрию `@F`/`@TLM` с CRC16.
 
 ![Архитектура системы](docs/images/system_architecture.svg)
 
@@ -116,9 +155,11 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
 
 ![Схема платы модуля](docs/images/module_circuit.svg)
 
-Каждая из 4 плат объединяет микроконтроллер ATmega2560, драйвер TB6600 и силовую часть собственного драйвера BLDC: 3-фазный мост на 6 транзисторах IRFB4110 с драйвером затворов FD6288Q (своя печатная плата, покупные ESC не используются).
+Каждая из 4 плат объединяет микроконтроллер ATmega2560, интерфейс драйвера шагового привода TB6600 (D6/D7/D8) и интерфейс драйвера тяги RioRand ZS-Z11H (STOP D2, Servo D3, DIR D4, BRAKE D5, тахометр SC D19). Плюс оптодатчик нуля руля (D18) и потенциометр положения колеса (A0).
 
----
+Полная распиновка и уровни сигналов — [`docs/ELECTRICAL_AND_PINOUTS.md`](docs/ELECTRICAL_AND_PINOUTS.md).
+Плата из `pcb/` (собственный MOSFET-инвертор) — **проектный архив v1.0**; её пины
+не совпадают с текущей прошивкой, см. [`pcb/STATUS.md`](pcb/STATUS.md).
 
 ## 🔋 Спецификация батарейного блока LiFePO4 12S 3P
 
@@ -145,17 +186,22 @@ python3 -m venv .venv && .venv/bin/pip install -r tools/requirements-pdf.txt
 | **Защита груза** | Герметичный отсек IP65 + замок с авторизацией по QR/RFID | Защита от осадков и несанкционированного доступа ✅ |
 | **Материал рамы** | Стальная профильная труба 40×40×2 мм, сварная | Прочный цельносварной металлокаркас ✅ |
 | **Опорно-поворотные узлы** | Автомобильные ступицы Subaru Forester/Impreza | Двухрядные подшипники, запас прочности под 250 кг груза ✅ |
-| **Привод поворота** | 4 × NEMA 23 + ремень **GT2 10 мм** (шкивы 150 и 20) | Редукция 1:7.5, момент 13.68 Н·м, точность 0.03° ✅ |
-| **Тяговый привод** | 4 × мотор-колеса Xiaomi M365 Pro 10" (по **260 Вт** BLDC с энкодерами) | Полноприводное шасси 4WD, суммарно 1040 Вт ном. ✅ |
-| **Управление модулями** | 4 платы (Arduino Mega Pro + TB6600 + собственный драйвер BLDC на MOSFET) | Распределенная микроконтроллерная сеть ✅ |
-| **Бортовой компьютер** | Ubuntu 24.04/26.04 LTS (ROS 2 Nav2, SLAM) | Автономная навигация без оператора ✅ |
+| **Привод поворота** | 4 × NEMA 23 + ремень **GT2 10 мм** (шкивы 150 и 20), TB6600 на D6/D7/D8 | Редукция 1:7.5, момент 13.68 Н·м, **133.33 шага/град (0.0075°)** по прошивке ✅ |
+| **Тяговый привод** | 4 × мотор-колеса Xiaomi M365 Pro 10" (по **260 Вт** BLDC) + драйверы RioRand ZS-Z11H | Полноприводное шасси 4WD, суммарно 1040 Вт ном. ✅ |
+| **Управление модулями** | 4 платы (Arduino Mega 2560/Pro + TB6600 + драйвер тяги ZS-Z11H), по одному USB на колесо | Распределённая сеть контроллеров с CRC-телеметрией ✅ |
+| **Прошивка** | `firmware/motor_wheel` **fw25**: калибровка по оптодатчику, потенциометр A0, активное удержание угла, сохранённый полный ноль | Единый источник истины для контроллеров ✅ |
+| **Бортовой компьютер** | Ubuntu 24.04/26.04 LTS, софт из репозитория **Zapret** (лидар через ROS 2-драйверы, навигация по карте) | Автономная навигация без оператора ✅ |
 | **Сенсоры навигации** | **Лидар LDC 01** (360°) + Камера машинного зрения | Распознавание знаков («Стоп», светофор, неровность) ✅ |
 | **Световая/звуковая сигнализация**| Светоотражающая оклейка 3M, янтарный маячок, звуковой зуммер 85 дБ | Безопасность в темное время суток и на производстве ✅ |
 | **Статус испытаний** | Программа контрольных тестов разработана по регламенту | Готовность к полигонным испытаниям на этапе соревнований ✅ |
 
 ---
 
-### Экран робота и веб-пульт (без ROS 2, демо-режим)
+### Экран робота и веб-пульт (legacy, демо-режим)
+
+> Рабочие экраны робота — в Zapret (`slam_gui/`, `run.py`). Здесь оставлен
+> справочный вариант `gui/` с демо-источником `sim`; бинарные кадры 10/16 Б в нём
+> **не соответствуют** прошивке fw25.
 
 ```bash
 python3 gui/backend.py --port 8080     # /  → основной экран робота (киоск)
@@ -170,80 +216,76 @@ python3 gui/tests/main.api.test.js     # 19 сквозных: экран ↔ ж�
 ```
 
 Источник данных для экрана: `--source sim` (стенд), `--source serial`
-(4 UART, кадры телеметрии 16 Б) или `--source ros` (ROS 2). Доступ к экранам
+(4 USB, кадры протокола) или `--source ros` (ROS 2). Доступ к экранам
 с планшета — `http://<ip-робота>:8080/`; подробно — [`docs/RUN_AND_ACCESS.md`](docs/RUN_AND_ACCESS.md).
 
 Окно **«Сервис»** (вкладка в сайдбаре) закрывает требования задания № 2 по
 защите груза: доступ к ячейке хранения по PIN (заводской `2580`; 5 неудачных
 попыток — блокировка 30 с), журнал доступа с хеш-цепочкой, ручное управление
-каждым из 4 модулей (руль + тяга, кадр 10 Б с CRC16), контроль АКБ 12S3P и
+каждым из 4 модулей (руль + тяга, строки протокола fw25), контроль АКБ 12S3P и
 статистика с выгрузкой CSV/JSON/печатью. Подробности — [`docs/SERVICE_CONSOLE.md`](docs/SERVICE_CONSOLE.md).
 
 ---
 
-## 🚀 Инструкция по сборке и запуску ПО
+## 🚀 Прошивка, сборка и запуск
 
-### 1. Прошивка плат Arduino Mega Pro
-1. Откройте файл [`firmware/module_controller/module_controller.ino`](firmware/module_controller/module_controller.ino) в среде Arduino IDE.
-2. Для каждого из 4 модулей установите уникальный `#define MODULE_ID` (1 для FL, 2 для FR, 3 для RL, 4 для RR).
-3. Выберите плату **Arduino Mega or Mega 2560** и порт подключения `/dev/ttyUSB0`...`/dev/ttyUSB3`.
-4. Загрузите прошивку в микроконтроллеры.
+### 1. Прошивка плат колёс (главный шаг этого репозитория)
 
-### 2. Сборка ПО (бортовой компьютер, Ubuntu 24.04/26.04 + ROS 2)
+Одна плата — одно колесо. Каждая плата прошивается **своей ролью**.
+
 ```bash
-cd ~/rus_slam/ros2_ws
+# 1. Проверить, что скетч вообще собирается (без железа)
+g++ -std=c++17 -O1 -w -I tests/firmware_sim/stubs \
+    tests/firmware_sim/sim.cpp -o /tmp/wheel-sim && /tmp/wheel-sim
 
-# Зависимости (один раз)
-sudo apt install -y python3-serial python3-opencv \
-     ros-$ROS_DISTRO-slam-toolbox ros-$ROS_DISTRO-navigation2 \
-     ros-$ROS_DISTRO-nav2-bringup ros-$ROS_DISTRO-robot-state-publisher \
-     ros-$ROS_DISTRO-xacro python3-colcon-common-extensions
+# 2. Собрать .hex тем же avr-gcc, что в Arduino IDE (без IDE)
+AVR_ROOT=/путь/к/avr CORE_ROOT=/путь/к/ArduinoCore-avr SERVO_ROOT=/путь/к/Servo \
+python3 firmware/tools/avr_build.py firmware/motor_wheel/motor_wheel.ino
 
-# Сборка всех пакетов
-colcon build --symlink-install
-source install/setup.bash
+# 3. Или собрать и залить одну плату без Arduino IDE
+python3 scripts/avr_upload.py --check
+python3 scripts/avr_upload.py --sketch-dir firmware/motor_wheel --port /dev/ttyUSB0
 
-# Права на порты и стабильные имена устройств (один раз)
-sudo usermod -a -G dialout $USER
-sudo cp src/rus_slam_bringup/udev/99-rus-slam.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
+# 4. Прочитать версию прошивки с плат (fw=25)
+python3 scripts/firmware_probe.py
 ```
 
-### 3. Запуск робота
+В Arduino IDE: откройте [`firmware/motor_wheel/motor_wheel.ino`](firmware/motor_wheel/motor_wheel.ino),
+задайте `MODULE_ID` (`"FL"`, `"FR"`, `"RL"`, `"RR"`), выберите **Arduino Mega or
+Mega 2560** и прошейте **по одной плате**, сверяя кабель с реальным колесом.
+Подробно, с калибровками и диагностикой — [`firmware/README.md`](firmware/README.md).
+
+> Перед первым включением: вывесить колёса, закрепить раму, подготовить
+> **независимый физический E-STOP**. Прошивка не является сертифицированным
+> аварийным остановом.
+
+### 2. Бортовой софт (репозиторий Zapret)
+
+Веб-пульт, киоск, навигация и работа с BMS/лидаром живут в
+[danilka-revin/Zapret](https://github.com/danilka-revin/Zapret):
+
 ```bash
-# Базовый запуск (железо + кинематика + сенсоры + безопасность)
-ros2 launch rus_slam_bringup robot.launch.py
-
-# Проверка стека без железа (симуляция модулей)
-ros2 launch rus_slam_bringup robot.launch.py sim:=true
-
-# Полный запуск: картирование полигона (запись карты, телеуправление)
-ros2 launch rus_slam_bringup full.launch.py slam:=true
-
-# Полный запуск: навигация по готовой карте + миссия доставки
-ros2 launch rus_slam_bringup full.launch.py slam:=false map:=~/maps/ntc.yaml
-
-# Хоминг модулей (поиск нулевого азимута) перед первой поездкой
-ros2 service call /home_modules rus_slam_interfaces/srv/HomeModules {}
+git clone https://github.com/danilka-revin/Zapret.git robot-control
+cd robot-control
+./scripts/install_ubuntu.sh        # окружение, .env, оператор, ярлык «Запустить робот»
 ```
 
-### 4. Тестирование движения (телеуправление через гейт безопасности)
+По умолчанию `RC_SLAM_SOURCE=master`: бортовой экран сам находит четыре платы по
+CRC-защищённой роли FL/FR/RL/RR из прошивки fw22+ — порты вручную не назначаются.
+
+### 3. Справочный ROS 2-стек (legacy, не является рабочим ПО)
+
 ```bash
-# Команды подаются на /cmd_vel_nav — узел безопасности проверяет здоровье
-# модулей и АКБ и транслирует их в /cmd_vel
-
-# Движение вперед со скоростью 0.8 м/с
-ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.8, y: 0.0, z: 0.0}, angular: {z: 0.0}}"
-
-# Крабовый ход: диагональное движение под 45 градусов
-ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.5, y: 0.5, z: 0.0}, angular: {z: 0.0}}"
-
-# Разворот на месте с нулевым радиусом (вращение вокруг центра)
-ros2 topic pub --once /cmd_vel_nav geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {z: 0.8}}"
+cd ros2_ws
+colcon build --symlink-install && source install/setup.bash
+ros2 launch rus_slam_bringup robot.launch.py sim:=true   # проверка графа без железа
 ```
 
-Полное описание узлов, топиков и режимов — в
-[`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md).
+Эти пакеты описывают архитектуру (кинематика, одометрия, мост модулей, Nav2,
+восприятие) и **не используются на роботе**. Мост `module_bridge_node` в них
+рассчитан на удалённый бинарный протокол; для реального железа нужен
+`module_link.py` под текстовый протокол fw25 — см.
+[`docs/SOFTWARE_ARCHITECTURE.md`](docs/SOFTWARE_ARCHITECTURE.md), §10.
 
 ---
 
