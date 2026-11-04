@@ -5,11 +5,11 @@
     (tool "Eeschema 8.0")
     (sheet (number "1") (name "/") (tstamps "/")
       (title_block
-        (title "Smart Wheel Pod Controller Board")
+        (title "Smart Wheel Pod Controller Board (v1.0 ARCHIVE - pins differ from firmware fw25)")
         (company "NTC AVTOVAZ Logistics Robot")
         (rev "v1.0")
         (comment (number "1") (value "4WIS/4WID Crab Drive Pod Module"))
-        (comment (number "2") (value "Arduino Mega Pro + TB6600 + Custom in-house 3-Phase MOSFET BLDC Driver")))))
+        (comment (number "2") (value "ARCHIVE v1.0: does NOT match firmware/motor_wheel fw25 (ZS-Z11H drive, TB6600 D6/D7/D8, opto D18, pot A0)"))))
   (components
     (comp (ref "Q1") (value "IRFB4110PBF") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical") (fields (field (name "LCSC") "C112959")))
     (comp (ref "Q2") (value "IRFB4110PBF") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical") (fields (field (name "LCSC") "C112959")))

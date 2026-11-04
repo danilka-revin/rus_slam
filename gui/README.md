@@ -1,3 +1,13 @@
+> ## ⚠ Legacy (справочно)
+>
+> Веб-пульт и бортовой экран этого репозитория — **справочный стек**. Рабочий
+> софт робота (веб-пульт, киоск, BMS, лидар, навигация) — в
+> [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret).
+> `gui/backend.py` собран под **бинарные** кадры `0xAA 0x55` / `0xBB 0x44`,
+> которых прошивка не выдаёт: реальный протокол — текстовый (`@F`/`@TLM`,
+> см. [`../docs/SERIAL_PROTOCOL.md`](../docs/SERIAL_PROTOCOL.md)). Для реального
+> железа используйте Zapret, а этот каталог — как описание интерфейсов экранов.
+
 # Пульт RUS SLAM
 
 Веб-панель управления роботом-курьером 4WIS/4WID в визуальном языке [ZMK Vision](https://github.com/danilka-revin/zmk-videoanalytics): тёмный сайдбар `#101b17`, акцент `#d5ff45`, светлая рабочая зона `#f3f5f7`.
@@ -33,11 +43,11 @@ sudo systemctl enable --now rus-slam-server rus-slam-display   # штатный 
 # исходный код — полноэкранно; для отладки добавьте --windowed
 python3 gui/native_display.py --url http://127.0.0.1:8080
 
-# на Windows: запустить gui/build-native-windows.bat, затем
+# на Windows: запустить gui/tools/build-native-windows.bat, затем
 # gui/dist/RUS-SLAM-Display.exe --url http://IP-РОБОТА:8080
 
 # на Ubuntu/Linux: установить python3-tk и python3-venv, затем
-cd gui && ./build-native-linux.sh
+cd gui && ./tools/build-native-linux.sh
 # результат: gui/dist/RUS-SLAM-Display
 ```
 
@@ -47,7 +57,7 @@ cd gui && ./build-native-linux.sh
 экран явно показывает отсутствие связи и **не разрешает менять состояние замка**.
 F11 переключает полноэкранный режим; PIN также вводится физической клавиатурой.
 Для автозапуска на дисплее Linux используйте альтернативный сервис
-`deploy/rus-slam-native-display.service`, не включая одновременно
+`deploy/systemd/rus-slam-native-display.service`, не включая одновременно
 `rus-slam-display.service`.
 
 PyInstaller собирает приложение на целевой ОС: Windows `.exe` следует собирать

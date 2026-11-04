@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 where py >nul 2>nul
 if errorlevel 1 (
@@ -26,6 +26,6 @@ python -m PyInstaller --clean --noconfirm --onefile --windowed ^
 if errorlevel 1 exit /b 1
 
 echo.
-echo Built: %~dp0dist\RUS-SLAM-Display.exe
+echo Built: %~dp0..\dist\RUS-SLAM-Display.exe
 echo Run with: RUS-SLAM-Display.exe --url http://ROBOT-IP:8080
 endlocal

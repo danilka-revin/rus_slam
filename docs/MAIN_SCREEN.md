@@ -1,5 +1,14 @@
 # ОСНОВНОЙ ЭКРАН РОБОТА (КИОСК): ДВИГАТЕЛИ, ГРУЗОВОЙ ОТСЕК, АКБ
 
+> ## ⚠ Legacy (справочно)
+>
+> Этот документ описывает **справочный** GUI-стек `gui/`. Рабочие экраны робота —
+> в [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret)
+> (`slam_gui/`, `run.py`). Протокол в `gui/backend.py` — бинарные кадры 10/16 Б,
+> которых прошивка **не выдаёт**; реальный протокол — текстовый
+> ([`SERIAL_PROTOCOL.md`](SERIAL_PROTOCOL.md), прошивка fw25).
+
+
 > **Документ:** `docs/MAIN_SCREEN.md`
 > **Файлы:** веб-экран `gui/main.html`, `gui/main.css`, `gui/main.js`; нативный экран `gui/native_display.py`, `gui/native_display_core.py`; API `gui/backend.py`
 > **Версия:** 2.0 (визуал + бэкенд) · **Дата:** 2026-10
@@ -36,8 +45,8 @@ python3 gui/native_display.py --url http://127.0.0.1:8080 --windowed
 # без --windowed запускается на весь экран; --url можно задать адресом удалённого сервера
 ```
 
-Сборка запускаемого файла: Windows — `gui/build-native-windows.bat` (создаёт
-`gui/dist/RUS-SLAM-Display.exe`); Ubuntu/Linux — `cd gui && ./build-native-linux.sh`
+Сборка запускаемого файла: Windows — `gui/tools/build-native-windows.bat` (создаёт
+`gui/dist/RUS-SLAM-Display.exe`); Ubuntu/Linux — `cd gui && ./tools/build-native-linux.sh`
 (создаёт `gui/dist/RUS-SLAM-Display`). PyInstaller следует запускать на той же
 ОС и архитектуре, где будет работать результат. Сервер `backend.py` остаётся
 отдельным процессом и должен быть запущен.
@@ -47,7 +56,7 @@ python3 gui/native_display.py --url http://127.0.0.1:8080 --windowed
 | Значение | Источник | Когда использовать |
 | :--- | :--- | :--- |
 | `sim` (по умолчанию) | демонстрационная физика внутри бэкенда | стенд, показ, отладка экрана без робота |
-| `serial` | 4 UART, кадры телеметрии 16 Б (CRC16/Modbus), нужен `pyserial` | реальные модули напрямую с бортового ПК |
+| `serial` | 4 USB, строки `@F`/`@TLM` с CRC16/Modbus (прошивка fw25), нужен `pyserial` | реальные платы колёс напрямую с бортового ПК |
 | `ros` / `auto` | ROS 2: `/screen/state`, `/battery/voltage`, `/battery/current`, `/screen/motors` | штатная работа через ROS 2; при отсутствии `rclpy` автоматически падает в `sim` |
 
 Адреса печатаются в консоли: `http://127.0.0.1:8080/main.html` (сам робот) и
@@ -192,7 +201,7 @@ curl -s -X POST http://127.0.0.1:8080/api/lock/open \
 
 | Данные | `sim` | `serial` (UART) | `ros` |
 | :--- | :--- | :--- | :--- |
-| Угол, об/мин, состояние модуля | модель | поля кадра 16 Б | `/screen/motors` |
+| Угол, об/мин, состояние модуля | модель | поля `@TLM`: `deg`, `sc_rpm`, `cal`, `err`, `pm`, `ph` | `/screen/motors` |
 | Напряжение и ток | модель | усреднение по 4 модулям | `/battery/*` |
 | Заряд в процентах | по расходу энергии | по OCV-кривой 12S3P | по OCV-кривой |
 | Запас хода | 714,2 Вт·ч ÷ расход | то же | то же |

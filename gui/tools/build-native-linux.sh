@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+GUI_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$GUI_DIR"
 PYTHON="${PYTHON:-python3}"
 
 if ! "$PYTHON" -c 'import tkinter' >/dev/null 2>&1; then
@@ -21,5 +22,5 @@ fi
   --distpath dist --workpath build/native --specpath build/native \
   native_display.py
 
-echo "Built: $SCRIPT_DIR/dist/RUS-SLAM-Display"
-echo "Run with: $SCRIPT_DIR/dist/RUS-SLAM-Display --url http://127.0.0.1:8080"
+echo "Built: $GUI_DIR/dist/RUS-SLAM-Display"
+echo "Run with: $GUI_DIR/dist/RUS-SLAM-Display --url http://127.0.0.1:8080"

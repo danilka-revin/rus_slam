@@ -9,7 +9,7 @@ PartOf=graphical.target
 Type=simple
 
 # Страница на дисплее робота: тот же адрес, что открывает инженер удалённо.
-ExecStart=/opt/rus_slam/deploy/display.sh http://127.0.0.1:8080/
+ExecStart=/opt/rus_slam/deploy/systemd/display.sh http://127.0.0.1:8080/
 
 Restart=always
 RestartSec=3

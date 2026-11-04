@@ -4,6 +4,27 @@
 > **Область:** состояние репозитория на ветке `arena/ee1f408a-rus-slam`; карта описывает прежде всего то, что связано исходниками, а не подтверждает готовность физического робота.
 > **Связанные документы:** [README](../README.md), [архитектура ПО](SOFTWARE_ARCHITECTURE.md), [протокол](SERIAL_PROTOCOL.md), [электрика](ELECTRICAL_AND_PINOUTS.md), [технический паспорт](TECHNICAL_SPECIFICATION.md), [экраны и доступ](RUN_AND_ACCESS.md).
 
+
+> ## ⚠ Ревизия карты: прошивка заменена на реальную
+>
+> Карта была построена против **удалённой** прошивки `firmware/module_controller`
+> (бинарные кадры `0xAA`/`0xBB`, собственная 6-тактная коммутация MOSFET) и
+> legacy-стека `ros2_ws/` + `gui/`. Этих исходников больше нет: прошивка робота —
+> [`firmware/motor_wheel`](../firmware/motor_wheel/motor_wheel.ino) (**fw25**,
+> текстовый протокол по USB, драйвер тяги ZS-Z11H), рабочий софт — в
+> [danilka-revin/Zapret](https://github.com/danilka-revin/Zapret).
+>
+> Поэтому:
+>
+> * строки карты, где упоминаются `module_controller.ino`, «6-секторная
+>   коммутация», «300 мс watchdog», «PWM ±1000», кадры 10/16 Б и MOSFET-инвертор,
+>   относятся к **истории** и помечены ниже;
+> * актуальные причинные связи «прошивка → сервер» описаны в
+>   [`SERIAL_PROTOCOL.md`](SERIAL_PROTOCOL.md) и [`firmware/README.md`](../firmware/README.md);
+> * раздел 6 (расхождения) сохранён как список **уроков**: большинство P1-пунктов
+>   про ROS 2 и GUI остаются в силе, пока этот стек не переведён на fw25 (см.
+>   [`SOFTWARE_ARCHITECTURE.md`](SOFTWARE_ARCHITECTURE.md), §10).
+
 ## 1. Короткий вывод
 
 В репозитории есть **две разные причинно-следственные системы**, которые важно не смешивать:
@@ -24,11 +45,12 @@
         │ обеспечивают опоры, тягу и питание; сами по себе автономность не дают
         ▼
 ДАТЧИКИ И ИСПОЛНИТЕЛИ МОДУЛЯ
-NEMA23/TB6600 + BLDC/MOSFET + Hall + энкодер + концевик
+NEMA23/TB6600 (руль) + драйвер ZS-Z11H (тяга) + оптодатчик нуля
++ потенциометр положения + тахометр SC
         │ локальная коммутация и низкоуровневое измерение
         ▼
-ПРОШИВКА ATmega2560  ⇄  UART 115200, кадры 10/16 Б, CRC16
-        │ перевод команды в шаги/коммутацию; возврат статуса и измерений
+ПРОШИВКА ATmega2560 fw25  ⇄  USB 115200, строки + кадры @F/@TLM, CRC16
+        │ шаги руля по Timer2; Servo.write на «P» драйвера; возврат статуса
         ▼
 ROS: module_bridge_node ⇄ /modules/state, /battery
         │                      │
@@ -48,7 +70,7 @@ Nav2 / ручная команда ─► /cmd_vel_nav ─► safety_node ─►
 Внешний источник /e_stop ───────────────────────────────────────────────► safety
 ```
 
-Ссылки на первичные точки реализации: ROS-граф и заявленные топики — `docs/SOFTWARE_ARCHITECTURE.md`; запуск робота — `ros2_ws/src/rus_slam_bringup/launch/robot.launch.py`; запуск полной системы — `.../full.launch.py`; ROS-типы — `ros2_ws/src/rus_slam_interfaces/{msg,srv}/`; физические кадры — `docs/SERIAL_PROTOCOL.md`, `rus_slam_base/protocol.py` и `firmware/module_controller/module_controller.ino`.
+Ссылки на первичные точки реализации: файлы прошивки — `firmware/motor_wheel/motor_wheel.ino` и `firmware/README.md`; формат кадров — `docs/SERIAL_PROTOCOL.md`; ROS-граф (legacy) — `docs/SOFTWARE_ARCHITECTURE.md` и `ros2_ws/src/rus_slam_bringup/launch/`; рабочий софт — репозиторий Zapret (`slam_gui/backend.py`, `robot_control/`).
 
 ### 2.1. Командный поток: причина → действие
 
@@ -56,8 +78,8 @@ Nav2 / ручная команда ─► /cmd_vel_nav ─► safety_node ─►
 |---|---|---|---|
 | 1 | Nav2 публикует `Twist` на `/cmd_vel_nav` | `safety_node` проверяет свежесть телеметрии, аварийный стоп, неисправности, напряжение и лимит миссии | публикует ограниченную команду на `/cmd_vel`, либо нулевую |
 | 2 | `/cmd_vel` | `crab_drive_node` применяет обратную кинематику по координатам четырёх модулей; команды старше `cmd_timeout_sec` превращаются в останов | `/wheel_commands`: для каждого модуля угол, скорость и `enable` |
-| 3 | `/wheel_commands` | `module_bridge_node` переводит угол в сотые доли градуса, скорость — в PWM ±1000; watchdog гасит устаревшее задание | отдельный 10-байтовый кадр каждому UART-порту |
-| 4 | UART-кадр | прошивка проверяет заголовок, `MODULE_ID` и CRC; угол превращается в целевые шаги; PWM управляет таблицей BLDC-коммутации по Hall | импульсы PUL/DIR/ENA и состояния силового моста |
+| 3 | `/wheel_commands` | `module_bridge_node` переводит угол в градусы со знаком, скорость — в `v 0…150`; уничтожение устаревшего задания | отдельная **текстовая** строка на USB-порт своего колеса |
+| 4 | Текстовая команда | плата проверяет адресацию и состояние (ноль, блокировки), угол превращается в шаги руля; `v` идёт в `Servo.write` драйвера ZS-Z11H | импульсы PUL/DIR/ENA на TB6600 и скважность на входе «P» драйвера тяги |
 | 5 | Питание и механика исправны | шаговик поворачивает модуль, BLDC создаёт тягу на колесе | фактическое перемещение робота; оно зависит также от сцепления, нагрузки, тока и калибровки |
 
 Важное следствие: **выход обратной кинематики — ещё не движение**. Для движения должны последовательно работать safety-гейт, публикация ROS, мост, CRC/совпадение ID, прошивка, питание и силовые каскады.
@@ -66,8 +88,8 @@ Nav2 / ручная команда ─► /cmd_vel_nav ─► safety_node ─►
 
 | Измерение | Путь данных | На что влияет |
 |---|---|---|
-| Угол руля, encoder delta, PWM, напряжение/ток | Hall/энкодер/АЦП → 16-байтовая телеметрия → `TelemetryParser` → `module_bridge_node` | состояние модулей, батарейная сводка, признаки потери связи |
-| Тики колеса и фактический угол | `/modules/state` → `SwerveOdometry.estimate_twist()` | скорость корпуса, интегрированная поза, `/odom`, TF `odom→base_link` |
+| Угол руля, цель, тяга, SC, ошибки калибровки | потенциометр A0 и счётчик шагов → `@F`/`@TLM` → парсер сервера | состояние модулей, признаки потери связи, запреты движения |
+| Фронты SC и фактический угол | телеметрия → `/modules/state` → `SwerveOdometry.estimate_twist()` (в ROS 2) или одометрия Zapret | скорость корпуса, оценка пути; SC не имеет знака |
 | `LaserScan` | UART-лидар → `lds01_driver_node` → `/scan` | SLAM-карта или costmap препятствий; далее изменяется план Nav2 |
 | Цвета/форма в кадре | камера → OpenCV-детектор → `/perception/signs` и `/perception/traffic_light` | `mission_manager_node` публикует коэффициент ограничения скорости |
 | Состояние модулей, АКБ, `/e_stop` | подписки safety-гейта | разрешение движения, ползущий режим либо нулевая команда |
@@ -146,7 +168,7 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 - `native_display.py`/`native_display_core.py` (нативный Tkinter-клиент) опрашивает те же API, не грузит HTML и при потере API блокирует действия замка, чтобы не изображать неподтверждённый успех.
 - `backend.py` является авторитетным хранилищем PIN на борту: соль + SHA-256, счётчик попыток, блокировка и аудит в `gui/state/lock.json`.
 - `console.js` использует API бэкенда для замка, если доступен тот же HTTP-сервер. Остальная ручная ходовая команда — локальная модель и журнал HEX.
-- `deploy/rus-slam-server.service` поднимает backend; для дисплея выбирают либо браузерный `rus-slam-display.service`, либо нативный `rus-slam-native-display.service`. Это независимые процессы, оба клиента подключаются к API сервера.
+- `deploy/systemd/rus-slam-server.service` поднимает backend; для дисплея выбирают либо браузерный `rus-slam-display.service`, либо нативный `rus-slam-native-display.service`. Это независимые процессы, оба клиента подключаются к API сервера.
 
 ### 4.3. ROS-источник GUI — отдельный нестыкованный интерфейс
 
@@ -166,17 +188,21 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 | `docs/GUI.md`, `gui/README.md` | Описывают область GUI, его симуляционный характер, страницы, ввод и тестирование; помогают не принимать визуальную модель за бортовое управление. |
 | `docs/MAIN_SCREEN.md`, `docs/RUN_AND_ACCESS.md` | Объясняют основной экран, API, PIN, роли пользователей и systemd-доступ; причинно связаны с `main.js`, `backend.py`, `deploy/`. |
 | `docs/SERVICE_CONSOLE.md` | ТЗ и описание сервисного UI: PIN, ручные действия, АКБ, статистика, интерлоки; часть требований пока реализована только на стороне GUI-симулятора. |
-| `docs/*.pdf` | Девять существующих PDF являются производными копиями девяти исходных MD; редактируемый источник — Markdown, сборщик — `tools/md2pdf.py`. После добавления этой карты собирается десятый PDF. |
-| `docs/images/system_architecture.svg` | Иллюстрирует верхнеуровневую архитектуру; содержит заявления про PID, которые расходятся с текущей прошивкой. |
-| `docs/images/kinematics_diagram.svg` | Иллюстрирует геометрию swerve и направления векторов; соответствует уравнениям `kinematics.py` по смыслу, но не задаёт параметры рабочего узла. |
-| `docs/images/module_circuit.svg` | Визуализирует электрические блоки; для реального монтажа первичны pinout, BOM, netlist и электрическая проверка. |
-| `docs/images/pod_assembly.svg` | Иллюстрирует вертикальный стек шкив → ступица → вилка → мотор-колесо; не заменяет рабочий чертёж. |
-| `docs/images/arduino_mega_pro.jpg`, `arduino_mega_pro.png` | Иллюстративные изображения контроллера, не CAD-модель и не проверка исполнения платы. |
-| `docs/images/belt_reduction_drive.png`, `nema23_motor.jpg`, `tb6600_driver.jpg`, `subaru_hub_bearing.jpg`, `scooter_hub_motor.jpg` | Иллюстрации механических и электрических компонентов, связь с расчётами паспорта/электрики. |
-| `docs/images/bldc_mosfet_driver.jpg`, `lifepo4_32700.png`, `swerve_drive_chassis.png` | Иллюстрации драйвера, аккумуляторной химии и шасси; не являются доказательством завершённой платы или испытаний. |
-| `docs/images/chassis_top.jpg`, `chassis_side.jpg`, `chassis_perspective.jpg` | На них ссылается технический паспорт как на фото изготовленной рамы; файлов в текущем checkout нет, поэтому доказательная ссылка сейчас битая. |
-| `firmware/module_controller/module_controller.ino` | Низкоуровневая причинная связь между проверенным UART-кадром и шагами/BLDC/телеметрией; физическое поведение зависит от конкретной платы и калибровки. |
-| `pcb/README.md` | Перечисляет производственные артефакты и характеристики платы, задаёт дальнейшие действия для сборки. |
+| `docs/pdf/*.pdf` | Девять существующих PDF являются производными копиями девяти исходных MD; редактируемый источник — Markdown, сборщик — `tools/pdf/md2pdf.py`. После добавления этой карты собирается десятый PDF. |
+| `docs/assets/images/system_architecture.svg` | Иллюстрирует верхнеуровневую архитектуру; содержит заявления про PID, которые расходятся с текущей прошивкой. |
+| `docs/assets/images/kinematics_diagram.svg` | Иллюстрирует геометрию swerve и направления векторов; соответствует уравнениям `kinematics.py` по смыслу, но не задаёт параметры рабочего узла. |
+| `docs/assets/images/module_circuit.svg` | Визуализирует электрические блоки; для реального монтажа первичны pinout, BOM, netlist и электрическая проверка. |
+| `docs/assets/images/pod_assembly.svg` | Иллюстрирует вертикальный стек шкив → ступица → вилка → мотор-колесо; не заменяет рабочий чертёж. |
+| `docs/assets/images/arduino_mega_pro.jpg`, `arduino_mega_pro.png` | Иллюстративные изображения контроллера, не CAD-модель и не проверка исполнения платы. |
+| `docs/assets/images/belt_reduction_drive.png`, `nema23_motor.jpg`, `tb6600_driver.jpg`, `subaru_hub_bearing.jpg`, `scooter_hub_motor.jpg` | Иллюстрации механических и электрических компонентов, связь с расчётами паспорта/электрики. |
+| `docs/assets/images/bldc_mosfet_driver.jpg`, `lifepo4_32700.png`, `swerve_drive_chassis.png` | Иллюстрации драйвера, аккумуляторной химии и шасси; не являются доказательством завершённой платы или испытаний. |
+| `docs/assets/images/chassis_top.jpg`, `chassis_side.jpg`, `chassis_perspective.jpg` | На них ссылается технический паспорт как на фото изготовленной рамы; файлов в текущем checkout нет, поэтому доказательная ссылка сейчас битая. |
+| `firmware/motor_wheel/motor_wheel.ino` | **Единственный источник истины по прошивке (fw25).** Причинная связь между текстовой командой по USB и шагами руля (Timer2 → TB6600), сигналом Servo на вход «P» драйвера ZS-Z11H, оптодатчиком D18, потенциометром A0 и телеметрией `@F`/`@TLM`. Физическое поведение зависит от платы и калибровки. |
+| `firmware/reference/steering_tested/steering_tested.ino` | Эталон, проверенный на реальной механике: пины, уровни и `133.33` шага/град сверяются с ним тестами; любая правка ядра руля обязана совпасть с этим ориентиром. |
+| `firmware/tools/avr_build.py`, `firmware/scripts/avr_upload.py` | Сборка и заливка без Arduino IDE (avr-gcc + avrdude, ядро и Servo с GitHub): причина, по которой прошивку вообще можно воспроизвести там, где `downloads.arduino.cc` недоступен. |
+| `firmware/scripts/firmware_probe.py`, `firmware/scripts/flash_firmware.sh` | Читают `fw=` с плат и заливают прошивку по `RC_WHEEL_*_PORT`; **не являются** автопоиском ролей — требуют подтверждения человеком. |
+| `firmware/firmware_sim/` | Хост-симуляция четырёх плат (TB6600, оптодатчик, потенциометр, EEPROM) на настоящем скетче: 58 сценариев проверяют логику до выезда. Не доказывает уровни на реальных выводах. |
+| `pcb/README.md`, `pcb/STATUS.md` | Инженерный архив v1.0: перечисляет артефакты и **явно фиксирует расхождение пинов с fw25** (TB6600 D6/D7/D8, Servo D3, опто D18, потенциометр A0). |
 | `pcb/SCHEMATIC_CIRCUIT_DESIGN.md` | Описывает силовой каскад и расчёты; требует сверки с фактической схемой/DRC и компонентами. |
 | `pcb/BOM.csv` | Связывает позиционные обозначения с компонентами и артикулами; покупка BOM не гарантирует правильную распайку или электрическую безопасность. |
 | `pcb/CONNECTOR_PINOUTS.csv` | Связывает контакты, цвета, напряжения и сигналы с кодовыми пинами; должен совпасть с прошивкой. |
@@ -218,22 +244,22 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 | `gui/tests/backend.test.py` | Unit/API проверки backend, источников, CRC, PIN и аудита. |
 | `gui/tests/native_display.test.py` | Проверяет JSON-клиент нативного экрана против живого локального API, обработку PIN и состояния. |
 | `gui/tests/console.api.test.js`, `main.api.test.js` | Сквозные браузерные проверки между страницей и HTTP backend; не поднимают ROS или реальные UART-модули. |
-| `deploy/rus-slam-server.service`, оба display service, `display.sh`, `deploy/README.md` | Делают backend доступным и запускают один выбранный экран; не запускают ROS-робота и не управляют ходовыми приводами. |
-| `tools/md2pdf.py`, `tools/requirements-pdf.txt` | Генерируют документальные копии Markdown и проверяют наличие/время PDF; не тестируют код системы. |
+| `deploy/systemd/rus-slam-server.service`, оба display service, `deploy/systemd/display.sh`, `deploy/README.md` | Делают backend доступным и запускают один выбранный экран; не запускают ROS-робота и не управляют ходовыми приводами. |
+| `tools/pdf/md2pdf.py`, `tools/pdf/requirements.txt` | Генерируют документальные копии Markdown и проверяют наличие/время PDF; не тестируют код системы. |
 
 ### 5.1. Полный состав файлов checkout по слоям
 
 Для исключения неоднозначности ниже перечислены все tracked-файлы по их месту в репозитории; имена уже подробно разобранных функциональных файлов не повторяют описание из таблицы выше.
 
 - **Корень:** `.gitignore`, `README.md`.
-- **Развёртывание:** `deploy/README.md`, `deploy/display.sh`, `deploy/rus-slam-display.service`, `deploy/rus-slam-native-display.service`, `deploy/rus-slam-server.service`.
+- **Развёртывание:** `deploy/README.md`, `deploy/systemd/{display.sh,rus-slam-display.service,rus-slam-native-display.service,rus-slam-server.service}`.
 - **Документы-источники:** `docs/ELECTRICAL_AND_PINOUTS.md`, `EXPLANATORY_NOTE_AVTOVAZ.md`, `GUI.md`, `MAIN_SCREEN.md`, `RUN_AND_ACCESS.md`, `SERIAL_PROTOCOL.md`, `SERVICE_CONSOLE.md`, `SOFTWARE_ARCHITECTURE.md`, `TECHNICAL_SPECIFICATION.md` и эта карта `CAUSAL_MAP.md`.
-- **Производные PDF:** `docs/ELECTRICAL_AND_PINOUTS.pdf`, `EXPLANATORY_NOTE_AVTOVAZ.pdf`, `GUI.pdf`, `MAIN_SCREEN.pdf`, `RUN_AND_ACCESS.pdf`, `SERIAL_PROTOCOL.pdf`, `SERVICE_CONSOLE.pdf`, `SOFTWARE_ARCHITECTURE.pdf`, `TECHNICAL_SPECIFICATION.pdf`, `CAUSAL_MAP.pdf`.
-- **Иллюстрации:** `docs/images/arduino_mega_pro.jpg`, `arduino_mega_pro.png`, `belt_reduction_drive.png`, `bldc_mosfet_driver.jpg`, `kinematics_diagram.svg`, `lifepo4_32700.png`, `module_circuit.svg`, `nema23_motor.jpg`, `pod_assembly.svg`, `scooter_hub_motor.jpg`, `subaru_hub_bearing.jpg`, `swerve_drive_chassis.png`, `system_architecture.svg`, `tb6600_driver.jpg`. Отсутствующие `chassis_top.jpg`, `chassis_side.jpg`, `chassis_perspective.jpg` являются ссылками, но не файлами checkout.
-- **Прошивка:** `firmware/module_controller/module_controller.ino`.
-- **GUI:** `gui/README.md`, `app.js`, `backend.py`, `build-native-linux.sh`, `build-native-windows.bat`, `console-core.js`, `console.js`, `index.html`, `main.css`, `main.html`, `main.js`, `native_display.py`, `native_display_core.py`, `requirements-native-display.txt`, `serve.py`, `styles.css`, `vision.js`; тесты `gui/tests/backend.test.py`, `console.api.test.js`, `console.test.js`, `jsdom.console.test.js`, `main.api.test.js`, `main.screen.test.js`, `native_display.test.py`, `ui.audit.test.js`.
+- **Производные PDF:** `docs/pdf/ELECTRICAL_AND_PINOUTS.pdf`, `docs/pdf/EXPLANATORY_NOTE_AVTOVAZ.pdf`, `docs/pdf/GUI.pdf`, `docs/pdf/MAIN_SCREEN.pdf`, `docs/pdf/RUN_AND_ACCESS.pdf`, `docs/pdf/SERIAL_PROTOCOL.pdf`, `docs/pdf/SERVICE_CONSOLE.pdf`, `docs/pdf/SOFTWARE_ARCHITECTURE.pdf`, `docs/pdf/TECHNICAL_SPECIFICATION.pdf`, `docs/pdf/CAUSAL_MAP.pdf`.
+- **Иллюстрации:** `docs/assets/images/arduino_mega_pro.jpg`, `arduino_mega_pro.png`, `belt_reduction_drive.png`, `bldc_mosfet_driver.jpg`, `kinematics_diagram.svg`, `lifepo4_32700.png`, `module_circuit.svg`, `nema23_motor.jpg`, `pod_assembly.svg`, `scooter_hub_motor.jpg`, `subaru_hub_bearing.jpg`, `swerve_drive_chassis.png`, `system_architecture.svg`, `tb6600_driver.jpg`. Отсутствующие `chassis_top.jpg`, `chassis_side.jpg`, `chassis_perspective.jpg` являются ссылками, но не файлами checkout.
+- **Прошивка:** `firmware/README.md`, `firmware/motor_wheel/motor_wheel.ino`, `firmware/reference/README.md`, `firmware/reference/steering_tested/steering_tested.ino`, `firmware/tools/avr_build.py`; тестовая обвязка `firmware/firmware_sim/{arduino_sim.h,board_prelude.h,sim.cpp,stubs/*}`; утилиты `firmware/scripts/{avr_upload.py,firmware_probe.py,flash_firmware.sh,install_arduino_cli.sh,sync_firmware_desktop.sh}`.
+- **GUI:** `gui/README.md`, `app.js`, `backend.py`, `tools/build-native-linux.sh`, `tools/build-native-windows.bat`, `console-core.js`, `console.js`, `index.html`, `main.css`, `main.html`, `main.js`, `native_display.py`, `native_display_core.py`, `requirements-native-display.txt`, `serve.py`, `styles.css`, `vision.js`; тесты `gui/tests/backend.test.py`, `console.api.test.js`, `console.test.js`, `jsdom.console.test.js`, `main.api.test.js`, `main.screen.test.js`, `native_display.test.py`, `ui.audit.test.js`.
 - **PCB:** `pcb/README.md`, `BOM.csv`, `CONNECTOR_PINOUTS.csv`, `SCHEMATIC_CIRCUIT_DESIGN.md`, `easyeda_schematic_guide.md`, `kicad_netlist.net`.
-- **Инструменты документации:** `tools/md2pdf.py`, `tools/requirements-pdf.txt`.
+- **Инструменты документации:** `tools/pdf/md2pdf.py`, `tools/pdf/requirements.txt`.
 - **ROS 2 — `rus_slam_base`:** `package.xml`, `resource/rus_slam_base`, `setup.cfg`, `setup.py`; `rus_slam_base/__init__.py`, `crab_drive_node.py`, `kinematics.py`, `module_bridge_node.py`, `module_link.py`, `odometry_core.py`, `odometry_node.py`, `protocol.py`; тесты `test/test_kinematics.py`, `test/test_odometry.py`, `test/test_protocol.py`.
 - **ROS 2 — `rus_slam_bringup`:** `package.xml`, `resource/rus_slam_bringup`, `setup.cfg`, `setup.py`, `rus_slam_bringup/__init__.py`; `config/lidar.yaml`, `mission.yaml`, `perception.yaml`, `robot.yaml`, `safety.yaml`; `launch/full.launch.py`, `launch/robot.launch.py`; `udev/99-rus-slam.rules`.
 - **ROS 2 — `rus_slam_description`:** `package.xml`, `resource/rus_slam_description`, `setup.cfg`, `setup.py`, `rus_slam_description/__init__.py`, `launch/description.launch.py`, `urdf/rus_slam.urdf.xacro`.
@@ -246,6 +272,16 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 `package.xml`, `setup.py`, `setup.cfg`, `resource/*` и `__init__.py` — не скрытые управляющие алгоритмы: они обеспечивают обнаружение, установку, entry points и зависимости пакетов. PDF, фотографии и схемы иллюстрируют/дублируют смысл, но causal source остаётся соответствующим `.md`, `.py`, `.ino`, `.msg/.srv`, YAML или сетевым файлом.
 
 ## 6. Расхождения, которые разрывают причинную цепочку
+
+> **Исторические строки.** Пункты, ссылающиеся на `module_controller.ino`
+> (6-секторная коммутация, `CURRENT_FULL_MA`, таймеры D8–D13, homing без
+> различения таймаута), относились к **удалённой** прошивке и больше не
+> воспроизводятся. Остальные пункты — про `ros2_ws/` и `gui/` — остаются в силе,
+> пока этот legacy-стек не переведён на fw25 (см.
+> [`SOFTWARE_ARCHITECTURE.md`](SOFTWARE_ARCHITECTURE.md), §10). Актуальные риски
+> прошивки: калибровка нуля после каждого перезапуска платы, необходимость `q`
+> для доводки, `zfault` при повреждённой EEPROM, отсутствие сертифицированного
+> E-STOP и дрейф числа переходов SC на оборот.
 
 Приоритеты: **P1** — устранить или подтвердить до подключения к движущемуся роботу; **P2** — устранить до заявлений о готовности/приёмке; **P3** — документация/удобство. Это анализ дерева файлов, не заключение о неизвестном внешнем оборудовании.
 
@@ -270,24 +306,25 @@ PyInstaller на целевой ОС; сервер остаётся отдель
 | **P2** | Конфигурация миссии содержит фиксированные точки, а карта реального цеха отсутствует; паспорт прямо описывает испытания как запланированные | Успех автономного маршрута на целевой площадке не следует из наличия Nav2/FSM и тестов кинематики | `mission.yaml`; `maps/README.md`; `TECHNICAL_SPECIFICATION.md` §10 |
 | **P2** | В browser-sim зона знака `stop` обновляет только текстовую подсказку; движение там явно не обнуляется. В ROS-менеджере знак ограничивается на 3 секунды | Демо GUI может визуально показать проезд мимо STOP, даже если документ описывает остановку; GUI-сценарий и ROS-политика имеют разную причинную семантику | `gui/app.js` около обработки `WORLD.signs`; `mission_manager_node.py:99–116` |
 | **P2** | В `SOFTWARE_ARCHITECTURE.md` написаны `respawn:=true` и публикация пустых сканов при отказе лидара, но launch-узлы не включают respawn, а lidar node без порта scan не публикует | Документ обещает восстановление/поведение при отказе, которых текущая конфигурация не задаёт | `SOFTWARE_ARCHITECTURE.md` §8; `robot.launch.py`; `lds01_driver_node.py:48–64,67–83` |
-| **P3** | В `docs/TECHNICAL_SPECIFICATION.md` есть ссылки на chassis-фото, которых нет; `README.md` заявляет фото промежуточной сборки | Часть документального подтверждения механики недоступна из checkout | `docs/TECHNICAL_SPECIFICATION.md` §3.1; отсутствуют `docs/images/chassis_*.jpg` |
+| **P3** | В `docs/TECHNICAL_SPECIFICATION.md` есть ссылки на chassis-фото, которых нет; `README.md` заявляет фото промежуточной сборки | Часть документального подтверждения механики недоступна из checkout | `docs/TECHNICAL_SPECIFICATION.md` §3.1; отсутствуют `docs/assets/images/chassis_*.jpg` |
 | **P3** | Абсолютные заявления «LiFePO4 не горит / отсутствует риск возгорания» сильнее инженерного основания; химия устойчивее NMC, но батарея/проводка/BMS всё ещё требуют защиты и испытаний | Нельзя превращать сравнительную характеристику химии в обещание нулевого пожарного риска | `README.md`, `TECHNICAL_SPECIFICATION.md` §8, `ELECTRICAL_AND_PINOUTS.md` |
 
 ## 7. Что именно проверено тестами
 
 В этом окружении выполнены:
 
+- **Прошивка:** хост-симуляция четырёх плат `firmware/firmware_sim` — **58/58 сценариев** (калибровка, потенциометр, удержание, тяга ZS-Z11H, watchdog, EEPROM, телеметрия). Сборка avr-gcc через `firmware/tools/avr_build.py` выполняется только при наличии тулчейна.
 - 25 pure-Python тестов ROS-ядра и lidar parser: `test_kinematics.py`, `test_odometry.py`, `test_protocol.py`, `test_lds_protocol.py` — **25 passed**.
 - GUI: `console.test.js` — 32; `backend.test.py` — 40; jsdom `jsdom.console.test.js` — 93; `main.screen.test.js` — 38; `ui.audit.test.js` — 20; `console.api.test.js` — 17; `main.api.test.js` — 20; новый `native_display.test.py` — 9. Всего по GUI/API — **269 passed**.
-- Нативный экран и его API-клиент проверены на синтаксис Python, а Linux build-script — `bash -n`; `tools/md2pdf.py --check` подтверждает актуальность PDF для 10 Markdown-документов.
+- Нативный экран и его API-клиент проверены на синтаксис Python, а Linux build-script — `bash -n`; `tools/pdf/md2pdf.py --check` подтверждает актуальность PDF для 10 Markdown-документов.
 
-Эти тесты подтверждают внутреннюю арифметику, сериализацию, поведение API замка и DOM. **Нативный экран не был визуально запущен, а `.exe`/PyInstaller-сборка не создавалась**: в текущем окружении нет Tkinter/графической сессии и Windows. Тесты не подтверждают сборку ROS 2/colcon, запуск Nav2, прошивку Arduino, правильность пинов, реальный LiDAR, физический E-STOP, токовую калибровку, тепловой режим MOSFET, грузоподъёмность 250 кг или прохождение полигона. В окружении нет `ros2`, `colcon` и `arduino-cli`; документация технического паспорта описывает натурные тесты как планируемые.
+Эти тесты подтверждают внутреннюю арифметику, сериализацию, поведение API замка и DOM. **Нативный экран не был визуально запущен, а `.exe`/PyInstaller-сборка не создавалась**: в текущем окружении нет Tkinter/графической сессии и Windows. Тесты не подтверждают сборку ROS 2/colcon, запуск Nav2, **заливку прошивки на реальную плату**, правильность пинов на конкретной механике, реальный LiDAR, физический E-STOP, реальные обороты SC, грузоподъёмность 250 кг или прохождение полигона. В окружении нет `ros2`, `colcon` и `arduino-cli`; документация технического паспорта описывает натурные тесты как планируемые.
 
 ## 8. Рекомендуемый порядок замыкания причинных цепочек
 
 1. **Сначала аппаратные безопасные условия:** проверить физическую схему аварийного отключения, предохранители, BMS, драйвер затворов, dead-time, токовую калибровку и температуру; не подключать нагруженные моторы только по документации.
-2. **Протокол:** прошить один модуль, измерить кадры логическим анализатором, проверить CRC/ID/масштабы и watchdog; отдельно подтвердить каждый параметр реального лидара его паспортом и эталонными raw-кадрами.
-3. **Хоминг и телеметрия:** исправить/подтвердить конечный статус хоминга и тестировать концевик, затем откалибровать `encoder_ticks_per_rev`, скорость колеса, напряжение и ток.
+2. **Прошивка:** прошить **одну** плату с ролью FL ([`firmware/README.md`](../firmware/README.md)), проверить `p` (`fw=25`) и `fw=` из `firmware/scripts/firmware_probe.py`, затем `k` и `q` на вывешенном колесе; сверить 133.33 шага/град транспортиром при `d 90 f`, направление `v 3 f/b` и уровни STOP/BRAKE осциллографом; только после этого — остальные три платы.
+3. **Хоминг и телеметрия:** проверить, что `k` ставит `cal=1` и `home=opto` (а не таймаут), что `q` сохраняется после перезапуска платы, и что `sc_ppr=90` соответствует реальному числу переходов на оборот вашего мотора.
 4. **ROS без тяги:** собрать workspace, проверить типы, частоты, freshness, TF, `/scan`, `/odom`, `map→odom`; запустить симуляцию только явным `sim:=true`. Для физического робота отключить `sim_on_fail`, иначе отказ UART маскируется виртуальным модулем; затем проверить Nav2 endpoints.
 5. **Проверить, что все velocity publishers проходят через safety:** в частности recovery behaviors; при любой неоднозначности remap-ить их на `/cmd_vel_nav`, а `/cmd_vel` оставить только выходом safety.
 6. **Замкнуть GUI только отдельным мостом:** выбрать контракт команд/состояния, аутентифицировать и ограничить ручные операции, затем подключить web UI к этому мосту; не считать HEX-предпросмотр отправкой команды.

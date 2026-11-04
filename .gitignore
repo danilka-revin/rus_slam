@@ -29,3 +29,22 @@ gui/state/
 gui/.build-venv/
 gui/build/
 gui/dist/
+
+# Прошивка: артефакты сборки avr-gcc и служебные каталоги утилит заливки
+firmware/vendor/
+var/toolchain/
+var/firmware-build/
+var/firmware-flashed/
+var/firmware-flash.log
+*.hex
+*.elf
+firmware/firmware_sim/sim
+
+# Виртуальное окружение для тестов прошивки и PDF
+.venv-test/
+
+# Тестовая виртуалка и локальные сборки
+.venv-test/
+gui/.build-venv/
+gui/dist/
+gui/build/

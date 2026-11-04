@@ -241,7 +241,7 @@ class TestServerNoWindows(unittest.TestCase):
     """Сервер борта сам ничего не открывает: страницы смотрят в браузере.
 
     Основной экран на дисплее робота показывает отдельный сервис
-    (deploy/rus-slam-display.service), поэтому запуск backend.py без флагов
+    (deploy/systemd/rus-slam-display.service), поэтому запуск backend.py без флагов
     не должен трогать браузер робота.
     """
 
