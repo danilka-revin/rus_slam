@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Ставит arduino-cli без sudo — чтобы автопрошивка плат колёс работала сама.
 #
-# Нужен для scripts/flash_firmware.sh: он собирает прошивку колеса и загружает её
+# Нужен для firmware/scripts/flash_firmware.sh: он собирает прошивку колеса и загружает её
 # в плату. Если arduino-cli нет, скрипт вызывает этот и, получив успех, прошивает
 # платы сам. Ничего системного не трогаем: бинарник кладётся в
 # ${RC_ARDUINO_CLI_DIR:-$HOME/.local/bin}, конфигурация и ядра — в
@@ -9,7 +9,7 @@
 #
 # Качаем сначала с **GitHub** (в России он работает, а downloads.arduino.cc
 # часто недоступен), и только потом с сайта Arduino. Если не вышло ни там, ни
-# там — прошивать всё равно можно: scripts/avr_upload.py собирает прошивку
+# там — прошивать всё равно можно: firmware/scripts/avr_upload.py собирает прошивку
 # обычным avr-gcc и заливает avrdude (sudo apt install gcc-avr avr-libc avrdude).
 #
 # Флаги: --check (только проверить, ничего не ставить),
@@ -115,7 +115,7 @@ if ! CLI="$(find_cli)"; then
   if [[ -z "$got" ]]; then
     warn "не удалось скачать arduino-cli ни с GitHub, ни с сайта Arduino."
     warn "ничего страшного: прошивка работает и без него —"
-    warn "  python3 scripts/avr_upload.py --install   (gcc-avr, avr-libc, avrdude)"
+    warn "  python3 firmware/scripts/avr_upload.py --install   (gcc-avr, avr-libc, avrdude)"
     warn "  или вручную: motor_wheel_*.ino с рабочего стола в Arduino IDE."
     exit 1
   fi

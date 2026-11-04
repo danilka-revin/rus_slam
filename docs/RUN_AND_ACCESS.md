@@ -216,7 +216,7 @@ sudo systemctl enable --now rus-slam-display    # браузер без рамо
 
 ```bash
 sudo apt install -y python3-tk python3-venv
-cd /opt/rus_slam/gui && ./build-native-linux.sh
+cd /opt/rus_slam/gui && ./tools/build-native-linux.sh
 sudo systemctl disable --now rus-slam-display
 sudo systemctl enable --now rus-slam-native-display
 ```
@@ -226,7 +226,7 @@ sudo systemctl enable --now rus-slam-native-display
 300 мс; PIN и команды замка отправляются в `/api/lock/*`. Без связи с API экран
 показывает ошибку и блокирует действия с замком. Собранный запускной файл
 получается через PyInstaller. Windows `.exe` собирается на Windows командой
-`gui/build-native-windows.bat`; для удалённого робота задайте `--url`
+`gui/tools/build-native-windows.bat`; для удалённого робота задайте `--url`
 (например, `RUS-SLAM-Display.exe --url http://192.168.1.10:8080`).
 
 Установочные команды, параметры пользователя и дисплея описаны в

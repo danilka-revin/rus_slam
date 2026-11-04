@@ -3,8 +3,9 @@
 """
 md2pdf.py — генерация PDF-копий Markdown-документов проекта.
 
-Для каждого `*.md` в целевом каталоге (по умолчанию `docs/`) рядом создаётся
-одноимённый `*.pdf` с тем же именем файла.
+Для каждого `*.md` в целевом каталоге (по умолчанию `docs/`) создаётся
+одноимённый `*.pdf` в каталоге вывода — по умолчанию `docs/pdf/`
+(HTML, картинки и скрипты лежат отдельно от готовых PDF).
 
 Поддерживаемое подмножество Markdown (то, что реально используется в docs/):
   * заголовки ATX (#..######), горизонтальные линейки (---);
@@ -19,9 +20,10 @@ md2pdf.py — генерация PDF-копий Markdown-документов п
     python3 -m venv .venv
     .venv/bin/pip install reportlab svglib pillow
 Запуск:
-    .venv/bin/python tools/md2pdf.py             # docs/*.md -> docs/*.pdf
-    .venv/bin/python tools/md2pdf.py docs pcb    # несколько каталогов
-    .venv/bin/python tools/md2pdf.py --check     # проверить актуальность PDF
+    .venv/bin/python tools/pdf/md2pdf.py            # docs/*.md -> docs/pdf/*.pdf
+    .venv/bin/python tools/pdf/md2pdf.py --out out  # свой каталог для PDF
+    .venv/bin/python tools/pdf/md2pdf.py docs firmware   # несколько каталогов
+    .venv/bin/python tools/pdf/md2pdf.py --check    # проверить актуальность PDF
 """
 
 from __future__ import annotations
@@ -885,7 +887,7 @@ def convert(md_path: str, pdf_path: str, fonts: dict, ss: StyleSheet1) -> int:
         bottomMargin=18 * mm,
         author="rus_slam",
         subject=f"PDF-копия {os.path.basename(md_path)}",
-        creator="tools/md2pdf.py (reportlab)",
+        creator="tools/pdf/md2pdf.py (reportlab)",
     )
     flowables = parse_markdown(
         text, os.path.dirname(os.path.abspath(md_path)), ss, doc.width
@@ -906,12 +908,36 @@ def collect_targets(paths):
     return targets
 
 
+def pdf_target(md_path: str, out_dir: str | None) -> str:
+    """Куда положить PDF для исходного .md.
+
+    Без ``--out`` PDF ложится в ``docs/pdf/`` для документов из ``docs/`` и рядом
+    с .md для остальных каталогов — так готовые PDF не смешиваются с исходниками.
+    """
+    stem = os.path.splitext(os.path.basename(md_path))[0] + ".pdf"
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+        return os.path.join(out_dir, stem)
+    md_dir = os.path.abspath(os.path.dirname(md_path) or ".")
+    docs_dir = os.path.abspath("docs")
+    if md_dir == docs_dir:
+        target = os.path.join(docs_dir, "pdf", stem)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        return target
+    return os.path.splitext(md_path)[0] + ".pdf"
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="Markdown -> PDF: дублирует .md-документацию в .pdf"
     )
     parser.add_argument(
         "paths", nargs="*", default=["docs"], help="каталоги или файлы .md (по умолчанию docs)"
+    )
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="каталог для PDF (по умолчанию docs/pdf для docs/, рядом с .md для остальных)",
     )
     parser.add_argument(
         "--check",
@@ -928,7 +954,7 @@ def main(argv=None) -> int:
     if args.check:
         stale = []
         for md in targets:
-            pdf = os.path.splitext(md)[0] + ".pdf"
+            pdf = pdf_target(md, args.out)
             if not os.path.isfile(pdf) or os.path.getmtime(pdf) < os.path.getmtime(md):
                 stale.append(md)
         if stale:
@@ -942,7 +968,7 @@ def main(argv=None) -> int:
 
     failed = 0
     for md in targets:
-        pdf = os.path.splitext(md)[0] + ".pdf"
+        pdf = pdf_target(md, args.out)
         try:
             pages = convert(md, pdf, fonts, ss)
             size_kb = os.path.getsize(pdf) / 1024

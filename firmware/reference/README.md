@@ -21,7 +21,7 @@
 
 ## Проверка
 
-Тест [`tests/test_firmware_sim.py`](../../tests/test_firmware_sim.py) утверждает,
+Тест [`firmware/tests/test_firmware_sim.py`](../tests/test_firmware_sim.py) утверждает,
 что эталон на месте и что пины/уровни/скорости в `motor_wheel` совпадают с ним.
 Расхождение — повод остановиться и разобраться, а не «поправить тест».
 

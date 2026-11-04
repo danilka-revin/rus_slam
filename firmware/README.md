@@ -569,7 +569,7 @@ PPR, счётчик, свежий фронт, `brake_id`, `neutral_id`, блок
    обеспечьте механическую фиксацию. Для каждой платы подключайте и прошивайте
    **только одну**, сверяя кабель с реальным колесом.
 2. В Arduino IDE выберите плату **Arduino Mega or Mega 2560** и исходник с
-   нужным `MODULE_ID` (`FL`/`FR`/`RL`/`RR`). `scripts/sync_firmware_desktop.sh`
+   нужным `MODULE_ID` (`FL`/`FR`/`RL`/`RR`). `firmware/scripts/sync_firmware_desktop.sh`
    может создать четыре отдельных копии `motor_wheel_FL/FR/RL/RR.ino`; проверьте,
    что они созданы из актуального исходника.
 3. Проверьте версию **fw25** (`p` печатает `fw=25`), отсутствие дубликатов ролей,
@@ -580,16 +580,16 @@ PPR, счётчик, свежий фронт, `brake_id`, `neutral_id`, блок
 
 ```bash
 # что нашлось в системе и можно ли шить
-python3 scripts/avr_upload.py --check
+python3 firmware/scripts/avr_upload.py --check
 
 # только собрать .hex
-python3 scripts/avr_upload.py --sketch-dir firmware/motor_wheel --hex-only
+python3 firmware/scripts/avr_upload.py --sketch-dir firmware/motor_wheel --hex-only
 
 # собрать и прошить конкретную плату
-python3 scripts/avr_upload.py --sketch-dir firmware/motor_wheel --port /dev/ttyUSB0
+python3 firmware/scripts/avr_upload.py --sketch-dir firmware/motor_wheel --port /dev/ttyUSB0
 
 # доставить avr-gcc/avrdude (если их нет)
-sudo python3 scripts/avr_upload.py --install
+sudo python3 firmware/scripts/avr_upload.py --install
 ```
 
 Скрипт сам ищет `avr-gcc`/`avrdude` в PATH, в Arduino IDE и в `~/.arduino15`,
@@ -610,7 +610,7 @@ arduino-cli compile --fqbn arduino:avr:mega firmware/motor_wheel
 
 ### 12.3. Массовая прошивка (только после физической проверки)
 
-`scripts/flash_firmware.sh` — средство обслуживания, **не автопоиск**: он
+`firmware/scripts/flash_firmware.sh` — средство обслуживания, **не автопоиск**: он
 доверяет старым `RC_WHEEL_*_PORT` в `.env` и не проверяет физическое
 расположение. По умолчанию он ничего не открывает и отказывается работать; флаг
 `--confirm-physical-roles` допустим только после свежей физической проверки
@@ -619,13 +619,13 @@ arduino-cli compile --fqbn arduino:avr:mega firmware/motor_wheel
 
 ```bash
 # план без заливки (всё равно открывает порты!)
-scripts/flash_firmware.sh --check --confirm-physical-roles
+firmware/scripts/flash_firmware.sh --check --confirm-physical-roles
 
 # заливка на все платы из .env
-scripts/flash_firmware.sh --confirm-physical-roles --reason "плановое обновление fw25"
+firmware/scripts/flash_firmware.sh --confirm-physical-roles --reason "плановое обновление fw25"
 ```
 
-`scripts/firmware_probe.py` читает `fw=` с плат, не мешая программе:
+`firmware/scripts/firmware_probe.py` читает `fw=` с плат, не мешая программе:
 `FL=25 FR=25 RL=25 RR=25` (или JSON с `--json`). `-` — плата не ответила.
 
 **Обновление софта не прошивает Arduino автоматически.** Прошивка обновляется
@@ -644,7 +644,7 @@ sudo usermod -aG dialout $USER    # затем выйти из сеанса и �
 
 ## 13. Проверка без железа
 
-* **Симуляция четырёх плат** (`tests/firmware_sim/`): прошивка собирается `g++`
+* **Симуляция четырёх плат** (`firmware/firmware_sim/` от корня репозитория): прошивка собирается `g++`
   в четырёх независимых экземплярах (FL/FR/RL/RR — как четыре настоящие платы со
   своими USB) с моделями TB6600, оптодатчика, потенциометра и EEPROM. Сценарии:
   калибровка из разных положений, датчика нет/залип, отмена, команды монитора,
@@ -656,8 +656,8 @@ sudo usermod -aG dialout $USER    # затем выйти из сеанса и �
   `w`, сохранение нуля, перезапуск EEPROM, частичная/повреждённая запись.
 
   ```bash
-  g++ -std=c++17 -O1 -w -I tests/firmware_sim/stubs \
-      tests/firmware_sim/sim.cpp -o /tmp/wheel-sim
+  g++ -std=c++17 -O1 -w -I firmware/firmware_sim/stubs \
+      firmware/firmware_sim/sim.cpp -o /tmp/wheel-sim
   /tmp/wheel-sim                 # все сценарии
   /tmp/wheel-sim snapshot_dump   # @F и @TLM одной платы
   /tmp/wheel-sim tlm_dump        # телеметрия всех четырёх колёс

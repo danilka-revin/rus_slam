@@ -267,7 +267,7 @@ def crc16(data: bytes) -> int:
 * `robot_control/rus_core/protocol.py` — сборка/разбор строк протокола и CRC16,
   общий для сервера и тестов;
 * `tests/test_firmware.py` в Zapret читает `FIRMWARE_PROTOCOL` **из этого скетча**
-  и сверяет с сервером; симуляция прошивки (`tests/firmware_sim` здесь) отдаёт
+  и сверяет с сервером; симуляция прошивки (`firmware/firmware_sim` здесь) отдаёт
   настоящие кадры через PTY.
 
 Порядок изменений: сначала этот документ и скетч, потом парсер и тесты в Zapret.

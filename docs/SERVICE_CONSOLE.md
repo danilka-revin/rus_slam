@@ -507,7 +507,7 @@ NODE_PATH=/tmp/harness/node_modules node gui/tests/jsdom.console.test.js
 * все модульные тесты проходят (`node gui/tests/console.test.js`);
 * интеграционные DOM-тесты — без ошибок (`jsdom.console.test.js`);
 * существующие вкладки пульта работают без регрессий;
-* PDF-документация пересобрана (`tools/md2pdf.py --check` — успех);
+* PDF-документация пересобрана (`tools/pdf/md2pdf.py --check` — успех);
 * сценарий С-1 (получение груза по PIN) воспроизводится в симуляторе.
 
 ### 12.5. Результаты прогонов (2026-10-02)

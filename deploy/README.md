@@ -3,78 +3,41 @@
 Сервер и экран запускаются независимо. Для отображения можно выбрать браузерный
 экран или отдельное нативное приложение без HTML/браузера:
 
-| Сервис | Что делает | Когда нужен |
+| Сервис | Файл | Что делает |
 | :--- | :--- | :--- |
-| `rus-slam-server.service` | поднимает `gui/backend.py` — отдаёт страницы и JSON API по сети `0.0.0.0:8080`. **Окон не открывает** | всегда |
-| `rus-slam-display.service` | показывает основной экран в браузере без рамок | если выбран веб-экран |
-| `rus-slam-native-display.service` | показывает основной экран нативным Tkinter-приложением; браузер и HTML для главного экрана не используются | если выбрана нативная сборка |
+| `rus-slam-server.service` | [`systemd/`](systemd/rus-slam-server.service) | поднимает `gui/backend.py` — отдаёт страницы и JSON API на `0.0.0.0:8080`, окон не открывает |
+| `rus-slam-display.service` | [`systemd/`](systemd/rus-slam-display.service) | показывает основной экран в браузере без рамок |
+| `rus-slam-native-display.service` | [`systemd/`](systemd/rus-slam-native-display.service) | показывает экран нативным Tkinter-приложением |
 
-Одновременно включают только один сервис дисплея. Инженерный пульт на роботе
-не запускается: в него заходят **удалённо** — с ноутбука или планшета по адресу
-`http://<ip-робота>:8080/console`.
+Одновременно включают только один сервис дисплея. Инженерный пульт на роботе не
+запускается — в него заходят удалённо по `http://<ip-робота>:8080/console`.
+
+> **Legacy.** Это автозапуск справочного `gui/`. Рабочий автозапуск робота —
+> ярлык «Запустить робот» в репозитории
+> [Zapret](https://github.com/danilka-revin/Zapret) (`scripts/autostart.sh`).
 
 ## Установка
 
 ```bash
-# 1. код на роботе
-sudo git clone <репозиторий> /opt/rus_slam      # или скопировать папку целиком
+sudo git clone <репозиторий> /opt/rus_slam
+sudo cp /opt/rus_slam/deploy/systemd/rus-slam-server.service /etc/systemd/system/
+sudo cp /opt/rus_slam/deploy/systemd/rus-slam-display.service /etc/systemd/system/
+sudo chmod +x /opt/rus_slam/deploy/systemd/display.sh
 
-# 2. установить сервис сервера и выбранный вариант дисплея
-sudo cp /opt/rus_slam/deploy/rus-slam-server.service /etc/systemd/system/
-sudo cp /opt/rus_slam/deploy/rus-slam-display.service /etc/systemd/system/
-sudo cp /opt/rus_slam/deploy/rus-slam-native-display.service /etc/systemd/system/
-sudo chmod +x /opt/rus_slam/deploy/display.sh
-
-# 3. В выбранном display.service проверьте User=rus, DISPLAY=:0 и XAUTHORITY.
-#    Для веб-варианта:
+# проверьте User=, DISPLAY=:0 и XAUTHORITY в display.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now rus-slam-server
 sudo systemctl enable --now rus-slam-display
 ```
 
-### Выбор нативного приложения вместо браузера
-
-Сборка создаётся **на той же ОС и архитектуре, где будет запускаться**. Для
-Ubuntu/Linux установите Tkinter и инструменты сборки, затем запустите скрипт:
+Нативный вариант вместо браузера:
 
 ```bash
 sudo apt install -y python3-tk python3-venv
-cd /opt/rus_slam/gui
-./build-native-linux.sh
-
+cd /opt/rus_slam/gui && ./tools/build-native-linux.sh
 sudo systemctl disable --now rus-slam-display
-sudo systemctl daemon-reload
-sudo systemctl enable --now rus-slam-native-display
+sudo cp /opt/rus_slam/deploy/systemd/rus-slam-native-display.service /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now rus-slam-native-display
 ```
 
-Скрипт создаёт `gui/dist/RUS-SLAM-Display` — PyInstaller-приложение с нативным
-полноэкранным интерфейсом. Для переключения обратно выключите
-`rus-slam-native-display` и включите `rus-slam-display`. Не включайте оба
-сервиса дисплея одновременно.
-
-Для Windows отдельная инструкция и `.exe`-сборщик — `gui/README.md`;
-PyInstaller собирает Windows `.exe` на Windows, кросс-сборка из Linux не
-поддерживается.
-
-Проверка:
-
-```bash
-systemctl status rus-slam-server --no-pager
-curl -s http://127.0.0.1:8080/api/health          # {"ok": true, "source": "..."}
-xdg-open http://127.0.0.1:8080/console            # с ноутбука — пульт
-```
-
-## Что важно знать
-
-* **PIN грузового отсека** задаётся на борту: заводской `2580`, меняется из
-  сервисного окна пульта (удалённо) либо первым запуском с `--pin 1234`.
-  Хранится в `gui/state/lock.json` — файл переживает перезапуски и обновления
-  кода, поэтому его стоит сохранять.
-* **Замок на железе**: раскомментируйте `RUS_SLAM_LOCK_CMD` и
-  `RUS_SLAM_LOCK_CMD_CLOSE` в `rus-slam-server.service`. Без них отсек
-  «открывается» только программно.
-* **Обновление кода** не требует переустановки сервисов:
-  `sudo git -C /opt/rus_slam pull && sudo systemctl restart rus-slam-server`.
-* Если робот без дисплея — `rus-slam-display.service` не нужен: страницы
-  открывают с планшета или ноутбука, сервер для этого уже работает.
-* Подробности про роли, PIN и сетевые адреса — `docs/RUN_AND_ACCESS.md`.
+Не включайте оба сервиса дисплея одновременно. Windows-сборка — `gui/README.md`.

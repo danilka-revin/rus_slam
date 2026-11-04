@@ -1,11 +1,11 @@
 """Проверки прошивки и документации без железа.
 
-Запуск:  python3 -m pytest tests/test_firmware_sim.py -q
+Запуск:  python3 -m pytest firmware/tests/test_firmware_sim.py -q
 
 Что проверяется:
 
 * скетч `firmware/motor_wheel` собирается g++ в четырёх экземплярах
-  (FL/FR/RL/RR) и проходит все сценарии хост-симуляции (`tests/firmware_sim`);
+  (FL/FR/RL/RR) и проходит все сценарии хост-симуляции (`firmware/firmware_sim`);
 * телеметрия, которую отдаёт симулятор, соответствует описанию в
   `docs/SERIAL_PROTOCOL.md` (поля `@F` и `@TLM`, версия fw, роль);
 * распиновка в `docs/ELECTRICAL_AND_PINOUTS.md` и `firmware/README.md`
@@ -24,10 +24,11 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-SKETCH = ROOT / "firmware" / "motor_wheel" / "motor_wheel.ino"
-SIM_DIR = ROOT / "tests" / "firmware_sim"
-FIRMWARE_README = ROOT / "firmware" / "README.md"
+FIRMWARE = Path(__file__).resolve().parents[1]
+ROOT = FIRMWARE.parent
+SKETCH = FIRMWARE / "motor_wheel" / "motor_wheel.ino"
+SIM_DIR = FIRMWARE / "firmware_sim"
+FIRMWARE_README = FIRMWARE / "README.md"
 PINOUT = ROOT / "docs" / "ELECTRICAL_AND_PINOUTS.md"
 PROTOCOL = ROOT / "docs" / "SERIAL_PROTOCOL.md"
 
@@ -125,14 +126,14 @@ def test_docs_and_sketch_agree_on_pins():
 
 
 def test_old_binary_firmware_is_gone():
-    assert not (ROOT / "firmware" / "module_controller").exists()
+    assert not (FIRMWARE / "module_controller").exists()
     for doc in (PROTOCOL,):
         text = _text(doc)
         assert "0xAA" not in text and "0xBB" not in text, doc
 
 
 def test_reference_sketch_is_untouched_benchmark():
-    reference = ROOT / "firmware" / "reference" / "steering_tested" / "steering_tested.ino"
+    reference = FIRMWARE / "reference" / "steering_tested" / "steering_tested.ino"
     assert reference.is_file()
     text = _text(reference)
     # Пины эталона: TB6600 6/7/8, оптодатчик 18 — с ними сверяется прошивка.

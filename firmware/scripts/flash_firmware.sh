@@ -9,7 +9,7 @@
 # Флаги: --check (план), --force (загрузить заново), --no-verify, --reason TEXT.
 # Инструмент выбирает arduino-cli или avr-gcc/avrdude. Код 64 — нет подтверждения.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 ROOT="$PWD"
 VAR_DIR="${RC_VAR_DIR:-$ROOT/var}"
 BUILD_DIR="$VAR_DIR/firmware-build"
@@ -120,8 +120,8 @@ probe_run() {
   else
     python="$ROOT/.venv/bin/python"
     [[ -x "$python" ]] || python="$(command -v python3 || true)"
-    [[ -n "$python" && -f "$ROOT/scripts/firmware_probe.py" ]] || return 1
-    cmd=("$python" "$ROOT/scripts/firmware_probe.py")
+    [[ -n "$python" && -f "$ROOT/firmware/scripts/firmware_probe.py" ]] || return 1
+    cmd=("$python" "$ROOT/firmware/scripts/firmware_probe.py")
   fi
   args=(--env-file "$ENV_FILE" --timeout "$PROBE_TIMEOUT")
   for module in "${modules[@]}"; do args+=(--module "$module"); done
@@ -160,7 +160,7 @@ for module in "${MODULES[@]}"; do
     fi
     if [[ "$known" == "$hash $real fail" ]]; then
       say "колесо $module: прошлая прошивка не удалась — проверьте кабель и питание," \
-          "и запустите ./scripts/flash_firmware.sh --force"
+          "и запустите ./firmware/scripts/flash_firmware.sh --force"
       known_failed=$((known_failed + 1))
       continue
     fi
@@ -239,7 +239,7 @@ fi
 # --- чем шить: arduino-cli или avr-gcc+avrdude ---------------------------------
 PYTHON="${ROOT}/.venv/bin/python"
 [[ -x "$PYTHON" ]] || PYTHON="$(command -v python3 || true)"
-AVR_UPLOAD="$ROOT/scripts/avr_upload.py"
+AVR_UPLOAD="$ROOT/firmware/scripts/avr_upload.py"
 BACKEND=""
 
 cli_ready() {
@@ -275,9 +275,9 @@ if [[ -z "$BACKEND" && "${RC_FIRMWARE_INSTALL:-1}" != "0" ]]; then
   fi
 fi
 if [[ -z "$BACKEND" && "${RC_FIRMWARE_AUTOCLI:-1}" != "0" \
-      && -f "$ROOT/scripts/install_arduino_cli.sh" ]]; then
+      && -f "$ROOT/firmware/scripts/install_arduino_cli.sh" ]]; then
   say "arduino-cli не найден — пробую поставить с GitHub (без sudo)…"
-  if bash "$ROOT/scripts/install_arduino_cli.sh" >>"$LOG_FILE" 2>&1; then
+  if bash "$ROOT/firmware/scripts/install_arduino_cli.sh" >>"$LOG_FILE" 2>&1; then
     cli_ready && BACKEND="cli"
   else
     tail -n 5 "$LOG_FILE" | while IFS= read -r line; do warn "  $line"; done
@@ -288,7 +288,7 @@ if [[ -z "$BACKEND" ]]; then
   warn "нечем прошивать: нет ни arduino-cli, ни avr-gcc/avrdude."
   warn "самый простой путь (работает в России, без сайта Arduino):"
   warn "  sudo apt install gcc-avr avr-libc avrdude"
-  warn "  ./scripts/flash_firmware.sh            # ядро AVR докачается с GitHub"
+  warn "  ./firmware/scripts/flash_firmware.sh            # ядро AVR докачается с GitHub"
   warn "или вручную: motor_wheel_*.ino с рабочего стола в Arduino IDE."
   for line in "${plan[@]}"; do warn "  $line"; done
   exit 2

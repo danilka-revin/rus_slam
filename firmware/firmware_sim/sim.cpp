@@ -2,7 +2,7 @@
 // (FL/FR/RL/RR), каждая со своим USB и прошивкой СВОЕГО колеса; связь — только UART.
 //
 // Сборка и запуск (это делает tests/test_firmware.py):
-//   g++ -std=c++17 -I tests/firmware_sim/stubs tests/firmware_sim/sim.cpp -o sim
+//   g++ -std=c++17 -I firmware/firmware_sim/stubs firmware/firmware_sim/sim.cpp -o sim
 //   ./sim            — все сценарии (каждый в своём процессе, как после сброса)
 //   ./sim moves      — один сценарий
 //   ./sim tlm_dump   — вывести @TLM всех четырёх колёс (для разбора сервером)

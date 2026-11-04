@@ -45,8 +45,8 @@ python3 gui/native_display.py --url http://127.0.0.1:8080 --windowed
 # без --windowed запускается на весь экран; --url можно задать адресом удалённого сервера
 ```
 
-Сборка запускаемого файла: Windows — `gui/build-native-windows.bat` (создаёт
-`gui/dist/RUS-SLAM-Display.exe`); Ubuntu/Linux — `cd gui && ./build-native-linux.sh`
+Сборка запускаемого файла: Windows — `gui/tools/build-native-windows.bat` (создаёт
+`gui/dist/RUS-SLAM-Display.exe`); Ubuntu/Linux — `cd gui && ./tools/build-native-linux.sh`
 (создаёт `gui/dist/RUS-SLAM-Display`). PyInstaller следует запускать на той же
 ОС и архитектуре, где будет работать результат. Сервер `backend.py` остаётся
 отдельным процессом и должен быть запущен.

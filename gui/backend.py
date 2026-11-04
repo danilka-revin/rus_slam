@@ -790,7 +790,7 @@ def main(argv=None):
         print("  с планшета/ПК   : http://%s:%d%s" % (ip, args.port, MAIN_PAGE))
     print("  пульт (удалённо): http://127.0.0.1:%d%s" % (args.port, CONSOLE_PAGE))
     print("  API             : /api/state · /api/lock/open · /api/lock/close · /api/audit · /api/health")
-    print("  дисплей робота  : страницу показывает deploy/rus-slam-display.service")
+    print("  дисплей робота  : страницу показывает deploy/systemd/rus-slam-display.service")
     print("                    (разово — флаг --kiosk); сервер только отдаёт данные")
     print("  Ctrl+C — остановить\n")
 

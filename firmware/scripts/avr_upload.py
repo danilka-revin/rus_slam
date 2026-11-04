@@ -23,10 +23,10 @@ GitHub в России работает, поэтому путь «скачат�
 
 Команды:
 
-    scripts/avr_upload.py --check                     # что нашлось, можно ли шить
-    scripts/avr_upload.py --sketch-dir DIR --port PORT  # собрать и прошить
-    scripts/avr_upload.py --sketch-dir DIR --hex-only   # только собрать .hex
-    scripts/avr_upload.py --install                     # доставить avr-gcc/avrdude
+    firmware/scripts/avr_upload.py --check                     # что нашлось, можно ли шить
+    firmware/scripts/avr_upload.py --sketch-dir DIR --port PORT  # собрать и прошить
+    firmware/scripts/avr_upload.py --sketch-dir DIR --hex-only   # только собрать .hex
+    firmware/scripts/avr_upload.py --install                     # доставить avr-gcc/avrdude
 
 Коды возврата: 0 — успех; 2 — нет инструментов (нужно `--install` или IDE);
 3 — нет ядра/библиотек и скачать не удалось; 1 — ошибка сборки/загрузки.
@@ -47,7 +47,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 MCU = "atmega2560"
 #: Mega 2560: файл платы в ядре Arduino AVR.
 VARIANT = "mega"

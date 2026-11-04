@@ -304,6 +304,6 @@ v_i  = hypot(vx_i, vy_i);  θ_i = atan2(vy_i, vx_i)
 `MasterSource._command_module`). Если переносить его в ROS 2, лучше вынести в
 общий модуль и переиспользовать в обоих репозиториях, чтобы формат не разошёлся.
 
-Проверка без железа: `tests/firmware_sim/sim.cpp` в режиме `pty /tmp/wheel`
+Проверка без железа: `firmware/firmware_sim/sim.cpp` в режиме `pty /tmp/wheel`
 поднимает четыре псевдотерминала с настоящей логикой прошивки — их можно
 подставить в `module_link.py` вместо `/dev/ttyUSB*`.
